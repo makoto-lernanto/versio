@@ -1,0 +1,35 @@
+# Manual formal verification for the Versio kernel.
+# Kani is not part of push/PR CI: the official action builds the verifier from
+# source, which takes tens of minutes. Run it on demand from the Actions tab or
+# with `gh workflow run kani.yml` when the data model or codec changes.
+name: Kani
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  kani-verify:
+    name: Kani verification
+    runs-on: ubuntu-latest
+    # The action compiles Kani from source (20-40 min) before running proofs.
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install just
+        uses: taiki-e/install-action@just
+
+      # `just kani` expands to the canonical proof command:
+      # cargo kani -p libversio
+      - name: Run Kani proofs via just
+        uses: model-checking/kani-github-action@v1
+        with:
+          command: just
+          args: kani

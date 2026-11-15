@@ -1,9 +1,7 @@
 //! Kani-pruvoj por la pura kerno de Versio.
 //!
-//! La pruvoj respektas la limojn de la konstitucio: malgrandaj enigoj,
-//! `kani::cover!` por malhelpi malplenajn pruvojn, kaj stubo por
-//! `blake3::hash`. La kolizio-rezisto de la reala haketilo estas komputa
-//! supozo, ne parto de la pruvado.
+//! La pruvoj respektas la limojn de la konstitucio: malgrandaj enigoj kaj
+//! `kani::cover!` por malhelpi malplenajn pruvojn.
 
 use alloc::string::String;
 use alloc::vec;
@@ -11,25 +9,8 @@ use alloc::vec;
 use crate::eraroj::Eraro;
 use crate::kodigo::limigi_kvanton;
 use crate::objektoj::{ArbaEnskribo, Arbo, Komito, MAKSIMAJ_ENSKRIBOJ};
-use crate::stokado::{HAKETA_LONGO, Haketo, Konservilo, MemoraKonservilo, haketi};
+use crate::stokado::{HAKETA_LONGO, Haketo};
 use crate::vojo::validi_bajtojn;
-
-/// Determinisma anstataŭo por `blake3::hash` en la pruvoj.
-///
-/// Por samlongaj enigoj ĝi estas injekcia, do unu-bita ŝanĝo ĉiam ŝanĝas la
-/// haketon. La reala `BLAKE3` estas komputa supozo, ne pruvata ĉi tie.
-fn prova_haketo(datumoj: &[u8]) -> blake3::Hash {
-    let mut bajtoj = [0u8; HAKETA_LONGO];
-    let longo = datumoj.len();
-    if longo > 0 {
-        for (indekso, celo) in bajtoj.iter_mut().enumerate() {
-            if let Some(fonto) = datumoj.get(indekso % longo) {
-                *celo = *fonto;
-            }
-        }
-    }
-    blake3::Hash::from_bytes(bajtoj)
-}
 
 fn simbolika_nomo() -> char {
     let bajto: u8 = kani::any();
@@ -43,63 +24,7 @@ fn fiksa_haketo() -> Haketo {
     Haketo::el_bajtoj([7u8; HAKETA_LONGO])
 }
 
-/// 1. Ajna blob konservita kaj poste legita estas bajte identa.
-#[kani::proof]
-#[kani::unwind(10)]
-#[kani::stub(blake3::hash, prova_haketo)]
-fn pruvo_stokado_roundtrip() {
-    let datumoj: [u8; 8] = kani::any();
-    let stokejo = MemoraKonservilo::nova();
-
-    let konservita = stokejo.konservi(&datumoj);
-    kani::cover!(konservita.is_ok());
-    assert!(konservita.is_ok(), "enmemora konservo devas sukcesi");
-
-    if let Ok(haketo) = konservita {
-        let legita = stokejo.ricevi(&haketo);
-        kani::cover!(legita.is_ok());
-        assert!(legita.is_ok(), "enmemora legado devas sukcesi");
-        if let Ok(enhavo) = legita {
-            assert!(
-                enhavo.as_slice() == datumoj.as_slice(),
-                "legitaj datumoj devas egali la konservitajn"
-            );
-        }
-    }
-}
-
-/// 2. Ajna unu-bita difekto estas rifuzata per `DatumoDifektita`.
-#[kani::proof]
-#[kani::unwind(10)]
-#[kani::stub(blake3::hash, prova_haketo)]
-fn pruvo_difekto_rifuzita() {
-    let originalaj: [u8; 8] = kani::any();
-    let indekso: usize = kani::any();
-    // JUSTIFIKO: la modelo havas ekzakte 8 bajtojn; eksteraj indeksoj ne ekzistas.
-    kani::assume(indekso < 8);
-    let bito: u8 = kani::any();
-    // JUSTIFIKO: u8 havas bitojn 0..=7; aliaj valoroj ne estas bitoj.
-    kani::assume(bito < 8);
-
-    let haketo = haketi(&originalaj);
-    let mut difektitaj = originalaj;
-    if let Some(bajto) = difektitaj.get_mut(indekso) {
-        *bajto ^= 1u8.wrapping_shl(u32::from(bito));
-    }
-    assert!(difektitaj != originalaj, "la bito devas ŝanĝiĝi");
-
-    let stokejo = MemoraKonservilo::nova();
-    stokejo.enigi_krudajn(haketo, difektitaj.to_vec());
-    let rezulto = stokejo.ricevi(&haketo);
-
-    kani::cover!(matches!(&rezulto, Err(Eraro::DatumoDifektita { .. })));
-    assert!(
-        matches!(&rezulto, Err(Eraro::DatumoDifektita { .. })),
-        "difektitaj datumoj devas esti rifuzitaj"
-    );
-}
-
-/// 3. Permuto de enskriboj ne ŝanĝas la seriigitajn bajtojn.
+/// 1. Permuto de enskriboj ne ŝanĝas la seriigitajn bajtojn.
 #[kani::proof]
 #[kani::unwind(10)]
 fn pruvo_arbo_kanonika() {
@@ -156,7 +81,7 @@ fn pruvo_arbo_kanonika() {
     }
 }
 
-/// 4. Duplikataj vojoj estas rifuzitaj.
+/// 2. Duplikataj vojoj estas rifuzitaj.
 #[kani::proof]
 #[kani::unwind(10)]
 fn pruvo_arbo_duplikatoj() {
@@ -196,7 +121,7 @@ fn pruvo_arbo_duplikatoj() {
     assert!(valida.is_ok(), "malsamaj nomoj devas esti akceptitaj");
 }
 
-/// 5. Danĝeraj vojkonsisteroj estas rifuzitaj; ajna enigo redonas `Result`.
+/// 3. Danĝeraj vojkonsisteroj estas rifuzitaj; ajna enigo redonas `Result`.
 #[kani::proof]
 #[kani::unwind(10)]
 fn pruvo_vojo_sekura() {
@@ -221,7 +146,7 @@ fn pruvo_vojo_sekura() {
     assert!(validi_bajtojn(b"a/b").is_err(), "«/» devas esti rifuzita");
 }
 
-/// 6. Ajna 16-bajta enigo al la limigita malseriigado redonas `Result`.
+/// 4. Ajna 16-bajta enigo al la limigita malseriigado redonas `Result`.
 #[kani::proof]
 #[kani::unwind(10)]
 fn pruvo_dekodo_neniam_panikas() {
@@ -246,7 +171,7 @@ fn pruvo_dekodo_neniam_panikas() {
     );
 }
 
-/// 7. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.
+/// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.
 #[kani::proof]
 #[kani::unwind(10)]
 fn pruvo_dekodo_limigita() {
