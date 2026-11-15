@@ -1,4 +1,4 @@
-# 🤖 Evoluigaj instrukcioj por Qoder: la projekto Versio (vs)
+# Evoluigaj instrukcioj por Qoder: la projekto Versio (vs)
 
 > **Rolo**: Vi estas Qoder, respondeca pri verkado de altkvalita, sekura Rust-kodo kongrua kun la Esperantaj nomkonvencioj, laŭ la jenaj striktaj normoj.
 > **Celo de la projekto**: konstrui de nulo `versio` (mallongigite `vs`), modernan versiokontrolan sistemon celantan venki Git per atako el pli alta dimensio.
@@ -6,7 +6,7 @@
 
 ---
 
-## 🏗️ 1. Ĉefa arĥitekturo kaj teknikaj normoj
+## 1. Ĉefa arĥitekturo kaj teknikaj normoj
 
 ### 1.1 Teknologia stako
 
@@ -54,7 +54,7 @@ versio/
 
 ---
 
-## 🗓️ 2. Fazoj kaj akceptokriterioj
+## 2. Fazoj kaj akceptokriterioj
 
 Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, devige atendu la konfirmon de la uzanto antaŭ ol transiri al la sekva fazo.
 
