@@ -1,0 +1,15 @@
+[package]
+name = "libversio"
+description = "Kernbiblioteko de la versiokontrola sistemo Versio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[features]
+default = ["std"]
+std = ["dep:zstd", "blake3/std", "thiserror/std"]
+
+[dependencies]
+blake3.workspace = true
+thiserror.workspace = true
+zstd = { workspace = true, optional = true }

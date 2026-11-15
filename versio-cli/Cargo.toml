@@ -1,0 +1,10 @@
+[package]
+name = "versio-cli"
+description = "Komandlinia interfaco de Versio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "vs"
+path = "src/main.rs"
