@@ -8,6 +8,8 @@ use alloc::vec::Vec;
 use core::fmt;
 use core::str::FromStr;
 
+use serde::{Deserialize, Serialize};
+
 use crate::eraroj::Eraro;
 
 /// Longo de BLAKE3-haketo en bajtoj.
@@ -16,7 +18,7 @@ pub const HAKETA_LONGO: usize = 32;
 const DEKSESUMO: &[u8; 16] = b"0123456789abcdef";
 
 /// Enhavadresita identigilo: la BLAKE3-haketo de objekto.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Haketo([u8; HAKETA_LONGO]);
 
 impl Haketo {
@@ -107,12 +109,23 @@ pub trait Konservilo {
 mod dosiera {
     use super::*;
     use std::fs;
+    use std::io::{Read, Write};
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
 
     const KUNPREMA_NIVELO: i32 = 3;
+    const LEGA_BLOKO: usize = 64 * 1024;
 
     static TEMP_NOMBRO: AtomicU64 = AtomicU64::new(0);
+
+    /// Forigas la provizoran dosieron, kiam la operacio finiĝas aŭ malsukcesas.
+    struct TempForigilo<'a>(&'a Path);
+
+    impl Drop for TempForigilo<'_> {
+        fn drop(&mut self) {
+            let _ = fs::remove_file(self.0);
+        }
+    }
 
     /// `Konservilo` bazita sur la loka dosiersistemo.
     ///
@@ -140,31 +153,59 @@ mod dosiera {
             self.dosierujo.join(format!("{haketo}.zst"))
         }
 
-        fn temp_vojo(&self, haketo: &Haketo) -> PathBuf {
+        fn temp_vojo(&self) -> PathBuf {
             let nombro = TEMP_NOMBRO.fetch_add(1, Ordering::Relaxed);
             self.dosierujo
-                .join(format!(".{haketo}.{}.{nombro}.tmp", std::process::id()))
+                .join(format!(".{}.{}.tmp", std::process::id(), nombro))
+        }
+
+        /// Legas dosieron kontinuante, kunpremas ĝin kaj konservas ĝin.
+        ///
+        /// La enhavo estas legata po 64 KB, do grandaj dosieroj ne devas
+        /// esti tute ŝarĝataj en memoro.
+        pub fn konservi_dosieron(&self, vojo: &Path) -> Result<(Haketo, u64), Eraro> {
+            let dosiero = fs::File::open(vojo)?;
+            self.konservi_fluon(dosiero)
+        }
+
+        /// Konservas fluon de datumoj kaj redonas la haketon kun la grandeco.
+        pub fn konservi_fluon<R: Read>(&self, mut legilo: R) -> Result<(Haketo, u64), Eraro> {
+            fs::create_dir_all(&self.dosierujo)?;
+
+            let provizora = self.temp_vojo();
+            let _forigilo = TempForigilo(&provizora);
+
+            let dosiero = fs::File::create(&provizora)?;
+            let mut kodilo = zstd::stream::write::Encoder::new(dosiero, KUNPREMA_NIVELO)?;
+            let mut haketilo = blake3::Hasher::new();
+            let mut bufujo = vec![0u8; LEGA_BLOKO];
+            let mut grandeco: u64 = 0;
+
+            loop {
+                let legita = legilo.read(&mut bufujo)?;
+                if legita == 0 {
+                    break;
+                }
+                haketilo.update(&bufujo[..legita]);
+                kodilo.write_all(&bufujo[..legita])?;
+                grandeco += legita as u64;
+            }
+
+            kodilo.finish()?.sync_all()?;
+            let haketo = Haketo(*haketilo.finalize().as_bytes());
+            let celo = self.vojo(&haketo);
+
+            if celo.exists() {
+                return Ok((haketo, grandeco));
+            }
+            fs::rename(&provizora, &celo)?;
+            Ok((haketo, grandeco))
         }
     }
 
     impl Konservilo for DosieraKonservilo {
         fn konservi(&self, datumoj: &[u8]) -> Result<Haketo, Eraro> {
-            let haketo = haketi(datumoj);
-            let celo = self.vojo(&haketo);
-            if celo.exists() {
-                return Ok(haketo);
-            }
-
-            fs::create_dir_all(&self.dosierujo)?;
-            let kunpremita = zstd::stream::encode_all(datumoj, KUNPREMA_NIVELO)?;
-
-            let provizora = self.temp_vojo(&haketo);
-            fs::write(&provizora, kunpremita)?;
-            if let Err(eraro) = fs::rename(&provizora, &celo) {
-                let _ = fs::remove_file(&provizora);
-                return Err(eraro.into());
-            }
-            Ok(haketo)
+            self.konservi_fluon(datumoj).map(|(haketo, _)| haketo)
         }
 
         fn ricevi(&self, haketo: &Haketo) -> Result<Vec<u8>, Eraro> {
@@ -288,5 +329,33 @@ mod testoj {
         assert_eq!(teksto.parse::<Haketo>().unwrap(), haketo);
         assert!("nevalida".parse::<Haketo>().is_err());
         assert!("g".repeat(64).parse::<Haketo>().is_err());
+    }
+
+    #[test]
+    fn testo_konservi_dosieron() {
+        let prov = ProvDosierujo::nova("fluo");
+        let stokejo = DosieraKonservilo::nova(&prov.vojo);
+        let datumoj = hazardaj_bajtoj(2 << 20, 0x9e37_79b9_7f4a_7c15);
+        let vojo = prov.vojo.join("granda.bin");
+        std::fs::write(&vojo, &datumoj).unwrap();
+
+        let (haketo, grandeco) = stokejo.konservi_dosieron(&vojo).unwrap();
+        assert_eq!(grandeco, datumoj.len() as u64);
+        assert_eq!(haketo, haketi(&datumoj));
+        assert_eq!(stokejo.ricevi(&haketo).unwrap(), datumoj);
+    }
+
+    #[test]
+    fn testo_konservi_fluon_sen_duobligo() {
+        let prov = ProvDosierujo::nova("duobligo");
+        let stokejo = DosieraKonservilo::nova(&prov.vojo);
+        let datumoj = b"ripetata enhavo";
+
+        let unua = stokejo.konservi_fluon(datumoj.as_slice()).unwrap();
+        let dua = stokejo.konservi_fluon(datumoj.as_slice()).unwrap();
+
+        assert_eq!(unua, dua);
+        assert_eq!(unua.1, datumoj.len() as u64);
+        assert_eq!(stokejo.ricevi(&unua.0).unwrap(), datumoj);
     }
 }

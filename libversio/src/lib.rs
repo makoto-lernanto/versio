@@ -9,11 +9,17 @@
 
 extern crate alloc;
 
+#[cfg(feature = "std")]
+pub mod deponejo;
 pub mod eraroj;
+pub mod objektoj;
 pub mod stokado;
 
 pub use eraroj::Eraro;
+pub use objektoj::{ArbaEnskribo, Arbo, Dosiero, Komito};
 pub use stokado::{HAKETA_LONGO, Haketo, Konservilo, haketi, kontroli};
 
+#[cfg(feature = "std")]
+pub use deponejo::Deponejo;
 #[cfg(feature = "std")]
 pub use stokado::DosieraKonservilo;

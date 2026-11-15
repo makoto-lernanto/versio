@@ -7,9 +7,12 @@ rust-version.workspace = true
 
 [features]
 default = ["std"]
-std = ["dep:zstd", "blake3/std", "thiserror/std"]
+std = ["dep:rayon", "dep:zstd", "blake3/std", "thiserror/std"]
 
 [dependencies]
 blake3.workspace = true
+postcard.workspace = true
+rayon = { workspace = true, optional = true }
+serde.workspace = true
 thiserror.workspace = true
 zstd = { workspace = true, optional = true }
