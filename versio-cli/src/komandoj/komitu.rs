@@ -7,7 +7,7 @@ use libversio::deponejo::Deponejo;
 use libversio::objektoj::Komito;
 
 /// Plenumas la komandon kun la donita mesaĝo.
-pub fn plenumi(mesagxo: &str) -> anyhow::Result<()> {
+pub(crate) fn plenumi(mesagxo: &str) -> anyhow::Result<()> {
     let mesagxo = mesagxo.trim();
     anyhow::ensure!(
         !mesagxo.is_empty(),

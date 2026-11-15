@@ -1,4 +1,4 @@
 //! La subkomandoj de `vs`.
 
-pub mod iniciati;
-pub mod komitu;
+pub(crate) mod iniciati;
+pub(crate) mod komitu;

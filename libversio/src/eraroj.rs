@@ -7,7 +7,7 @@ use crate::stokado::Haketo;
 /// Ĉiuj eraroj, kiujn povas produkti la kernbiblioteko.
 #[derive(Debug, thiserror::Error)]
 pub enum Eraro {
-    /// La teksto ne estas valida deksesuma reprezento de BLAKE3-haketo.
+    /// La teksto ne estas valida deksesuma reprezento de `BLAKE3`-haketo.
     #[error("nevalida haketo")]
     NevalidaHaketo,
 
@@ -35,6 +35,33 @@ pub enum Eraro {
     #[error("nevalida dosiernomo (ne estas UTF-8)")]
     NevalidaDosiernomo,
 
+    /// Voja komponanto estas malplena, tro longa aŭ enhavas malpermesitan signon.
+    #[error("nevalida voja komponanto")]
+    NevalidaVojaKomponanto,
+
+    /// Du enskriboj en la sama arbo havas la saman nomon.
+    #[error("duplikata vojo: {nomo}")]
+    DuplikataVojo {
+        /// La ripetita nomo.
+        nomo: String,
+    },
+
+    /// Longoprefikso aŭ kvanto superas la difinitan supran limon.
+    #[error("tro longa enigo: akirita {akirita}, maksimumo {maksimumo}")]
+    TrolongaEnigo {
+        /// La permesita maksimumo.
+        maksimumo: usize,
+        /// La valoro trovita en la enigo.
+        akirita: usize,
+    },
+
+    /// La bajtoj ne sekvas la atenditan formato-strukturon.
+    #[error("nevalida seriigaĵo: {kialo}")]
+    NevalidaDatumo {
+        /// Mallonga klarigo de la problemo.
+        kialo: &'static str,
+    },
+
     /// La laborspaco enhavas dosiertipon, kiun la komando ankoraŭ ne subtenas.
     #[error("nesubtenita dosiertipo: {vojo}")]
     NesubtenitaDosiertipo {
@@ -42,11 +69,11 @@ pub enum Eraro {
         vojo: String,
     },
 
-    /// Seriiga eraro de postcard.
+    /// Seriiga eraro de `postcard`.
     #[error("seriiga eraro: {0}")]
     Seriigo(postcard::Error),
 
-    /// Malseriiga eraro de postcard.
+    /// Malseriiga eraro de `postcard`.
     #[error("malseriiga eraro: {0}")]
     Malseriigo(postcard::Error),
 

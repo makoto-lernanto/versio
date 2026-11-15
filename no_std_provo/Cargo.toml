@@ -1,0 +1,13 @@
+[package]
+name = "no_std_provo"
+description = "Kompila sentinelo por la no_std-kongrueco de libversio"
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+libversio = { path = "../libversio", default-features = false }
+
+[lints]
+workspace = true

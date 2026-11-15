@@ -6,8 +6,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use rayon::prelude::*;
-
 use crate::eraroj::Eraro;
 use crate::objektoj::{ArbaEnskribo, Arbo, Komito};
 use crate::stokado::{DosieraKonservilo, Haketo, Konservilo};
@@ -47,6 +45,10 @@ impl Deponejo {
     ///
     /// La operacio estas idempotenta: ekzistanta `.vs`-strukturo ne estas
     /// forviŝita, kaj nur mankantaj partoj estas kreataj.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron, se la strukturo ne kreeblas.
     pub fn iniciati(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
         let radiko = radiko.into();
         let metadatumoj = radiko.join(VS_DOSIERUJO);
@@ -64,6 +66,11 @@ impl Deponejo {
     }
 
     /// Malfermas ekzistantan deponejon.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::Nedeponejo`], se la dosierujo ne enhavas `.vs`, aŭ
+    /// dosiersisteman eraron.
     pub fn malfermi(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
         let radiko = radiko.into();
         let metadatumoj = radiko.join(VS_DOSIERUJO);
@@ -79,11 +86,13 @@ impl Deponejo {
     }
 
     /// La radika dosierujo de la deponejo.
+    #[must_use]
     pub fn radiko(&self) -> &Path {
         &self.radiko
     }
 
     /// La objektstokejo de la deponejo.
+    #[must_use]
     pub fn stokejo(&self) -> &DosieraKonservilo {
         &self.stokejo
     }
@@ -93,6 +102,11 @@ impl Deponejo {
     }
 
     /// Legas la haketon en `HEAD`; `None` signifas, ke ankoraŭ ne ekzistas komito.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron aŭ [`Eraro::NevalidaHaketo`], se `HEAD`
+    /// enhavas nevalidan tekston.
     pub fn legi_head(&self) -> Result<Option<Haketo>, Eraro> {
         let teksto = fs::read_to_string(self.metadatumoj().join(HEAD_DOSIERO))?;
         let teksto = teksto.trim();
@@ -104,6 +118,10 @@ impl Deponejo {
     }
 
     /// Skribas la donitan komiton kiel la novan `HEAD`.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron.
     pub fn skribi_head(&self, haketo: &Haketo) -> Result<(), Eraro> {
         skribi_atome(
             &self.metadatumoj().join(HEAD_DOSIERO),
@@ -112,26 +130,46 @@ impl Deponejo {
     }
 
     /// Konservas arbon kaj redonas ĝian haketon.
+    ///
+    /// # Errors
+    ///
+    /// Redonas seriigan aŭ stokejan eraron.
     pub fn konservi_arbon(&self, arbo: &Arbo) -> Result<Haketo, Eraro> {
         self.stokejo.konservi(&arbo.seriigi()?)
     }
 
     /// Legas arbon el la stokejo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas stokejan aŭ malseriigan eraron.
     pub fn legi_arbon(&self, haketo: &Haketo) -> Result<Arbo, Eraro> {
         Arbo::malseriigi(&self.stokejo.ricevi(haketo)?)
     }
 
     /// Konservas komiton kaj redonas ĝian haketon.
+    ///
+    /// # Errors
+    ///
+    /// Redonas seriigan aŭ stokejan eraron.
     pub fn konservi_komiton(&self, komito: &Komito) -> Result<Haketo, Eraro> {
         self.stokejo.konservi(&komito.seriigi()?)
     }
 
     /// Legas komiton el la stokejo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas stokejan aŭ malseriigan eraron.
     pub fn legi_komiton(&self, haketo: &Haketo) -> Result<Komito, Eraro> {
         Komito::malseriigi(&self.stokejo.ricevi(haketo)?)
     }
 
     /// Kaptas la nunan laborspacon kaj redonas la haketon de la radika arbo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron aŭ eraron pri nesubtenita dosiertipo.
     pub fn kapti_arbon(&self) -> Result<Haketo, Eraro> {
         let arbo = self.konstrui_arbon(&self.radiko)?;
         self.konservi_arbon(&arbo)
@@ -157,13 +195,11 @@ impl Deponejo {
             });
         }
 
-        let mut enskriboj = eroj
-            .par_iter()
-            .map(|ero| self.enskribi(ero))
-            .collect::<Result<Vec<_>, Eraro>>()?;
-        enskriboj.sort_by(|a, b| a.nomo().cmp(b.nomo()));
-
-        Ok(Arbo { enskriboj })
+        let mut enskriboj = Vec::new();
+        for ero in &eroj {
+            enskriboj.push(self.enskribi(ero)?);
+        }
+        Arbo::el_enskriboj(enskriboj)
     }
 
     fn enskribi(&self, ero: &Ero) -> Result<ArbaEnskribo, Eraro> {
@@ -205,14 +241,13 @@ fn skribi_atome(vojo: &Path, datumoj: &[u8]) -> Result<(), Eraro> {
     let dosierujo = vojo.parent().unwrap_or_else(|| Path::new("."));
     let nomo = vojo
         .file_name()
-        .map(|nomo| nomo.to_string_lossy())
-        .unwrap_or_default();
+        .map_or_else(String::new, |nomo| nomo.to_string_lossy().into_owned());
     let nombro = TEMP_NOMBRO.fetch_add(1, Ordering::Relaxed);
     let provizora = dosierujo.join(format!(".{nomo}.{}.{}.tmp", std::process::id(), nombro));
 
     fs::write(&provizora, datumoj)?;
     if let Err(eraro) = fs::rename(&provizora, vojo) {
-        let _ = fs::remove_file(&provizora);
+        drop(fs::remove_file(&provizora));
         return Err(eraro.into());
     }
     Ok(())
@@ -220,7 +255,22 @@ fn skribi_atome(vojo: &Path, datumoj: &[u8]) -> Result<(), Eraro> {
 
 #[cfg(test)]
 mod testoj {
-    use super::*;
+    // PERMESO-JUSTIFIKO: nur testa kodo; panikigaj konstruaĵoj estas akcepteblaj.
+    #![allow(
+        clippy::unwrap_used,
+        clippy::expect_used,
+        clippy::panic,
+        clippy::indexing_slicing,
+        clippy::arithmetic_side_effects,
+        reason = "testa kodo rajtas uzi panikigajn konstrukciojn"
+    )]
+
+    use super::{Deponejo, Eraro, HEAD_DOSIERO, OBJEKTUJO, VS_DOSIERUJO};
+    use crate::objektoj::{ArbaEnskribo, Komito};
+    use crate::stokado::Konservilo;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     static PROVOJ: AtomicU64 = AtomicU64::new(0);
 
@@ -235,7 +285,7 @@ mod testoj {
                 "versio-deponejo-{etikedo}-{}-{nombro}",
                 std::process::id()
             ));
-            let _ = fs::remove_dir_all(&radiko);
+            drop(fs::remove_dir_all(&radiko));
             fs::create_dir_all(&radiko).expect("krei provan dosierujon");
             Self { radiko }
         }
@@ -243,7 +293,7 @@ mod testoj {
 
     impl Drop for ProvDeponejo {
         fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.radiko);
+            drop(fs::remove_dir_all(&self.radiko));
         }
     }
 
@@ -274,25 +324,29 @@ mod testoj {
         let haketo = deponejo.kapti_arbon().unwrap();
         let arbo = deponejo.legi_arbon(&haketo).unwrap();
 
-        assert_eq!(arbo.enskriboj.len(), 2);
-        assert_eq!(arbo.enskriboj[0].nomo(), "sub");
-        assert_eq!(arbo.enskriboj[1].nomo(), "testo.txt");
-        assert!(arbo.enskriboj.iter().all(|ero| ero.nomo() != VS_DOSIERUJO));
+        assert_eq!(arbo.enskriboj().len(), 2);
+        assert_eq!(arbo.enskriboj()[0].nomo(), "sub");
+        assert_eq!(arbo.enskriboj()[1].nomo(), "testo.txt");
+        assert!(
+            arbo.enskriboj()
+                .iter()
+                .all(|ero| ero.nomo() != VS_DOSIERUJO)
+        );
 
         let ArbaEnskribo::SubArbo {
             haketo: sub_haketo, ..
-        } = &arbo.enskriboj[0]
+        } = &arbo.enskriboj()[0]
         else {
             panic!("atendita subarbo");
         };
         let subarbo = deponejo.legi_arbon(sub_haketo).unwrap();
-        assert_eq!(subarbo.enskriboj.len(), 1);
+        assert_eq!(subarbo.enskriboj().len(), 1);
 
         let ArbaEnskribo::Dosiero {
             haketo: blob_haketo,
             grandeco,
             ..
-        } = &subarbo.enskriboj[0]
+        } = &subarbo.enskriboj()[0]
         else {
             panic!("atendita dosiero");
         };

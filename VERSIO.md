@@ -139,3 +139,34 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 3. **Generu kodon**: eligi kompletan, kompileblan Rust-kodblokon, inkluzive la necesajn `use`-deklarojn kaj dokumentajn komentojn (`///`).
 4. **Provizu testojn**: aldonu `#[cfg(test)]`-unuoptestojn por novaj funkcioj.
 5. **Petu konfirmon**: fine de la eligo, klare listigu «Sugestojn por la sekva paŝo» aŭ «Bonvolu ruli la jenajn komandojn por kontroli: `cargo test ...`», kaj atendu mian reagon.
+
+---
+
+## 🤖 Qoder-instrukcio: Konstitucio pri kvalitaj ruĝaj linioj (Kvalita Konstitucio)
+
+> **Valida amplekso**: De ĉi tiu momento, ĉiuj fazoj (inkluzive de la jam finitaj kodoj de Fazo 1/2) devas esti refanditaj por konformi al ĉi tiu konstitucio.
+> **La sola difino de finiteco (Definition of Done)**: la laborfluo `CI` en GitHub Actions plene verda (vidu sekcion 5). **Ajna ruĝa lumo = la tasko ne estas finita**; estas malpermesite aserti, ke ĝi estis «jam realigita».
+
+---
+
+### 0. Tri neintertrakteblaj feraj reguloj (Neintertrakteblaj Reguloj)
+
+1. **Malpermesite modifi la kontrolon mem por igi ĝin pasi.** Ne aldonu `#[allow(...)]`, ne malaltigu la nivelon de lint, ne forigu aŭ komentu malsukcesajn testojn aŭ pruvojn, ne uzu `kani::assume` por mallarĝigi la enigan spacon por kaŝi kontraŭekzemplojn.
+2. **Se `#[allow]` vere necesas**, devige skribu justigan komenton kaj aparte listigu ĝin en la respondo, atendante la aprobon de la uzanto:
+   ```rust
+   // PERMESO-JUSTIFIKO: la eligformato de blake3 ĉiam estas 32 bajtoj; la tranĉolongo ĉi tie estas garantiita de la tipo
+   #[allow(clippy::indexing_slicing)]
+   ```
+3. **Ĉe livero devige aldonu realajn eligojn de la komandoj** (la finajn resumojn de `cargo clippy` / `test` / `kani`). Sen eligo = ne finita.
+
+---
+
+## 5. CI/CD: pruvado nur en la nubo (Cloud-only verification)
+
+> **Deviga regulo**: Ekde la starigo de `.github/workflows/ci.yml`, la loka maŝino **neniam** rulu `just kani`, `cargo kani` aŭ la plenan `just ci`. Kodformo, Clippy, konstruado kaj la formala pruvado per Kani plenumiĝas nur en GitHub Actions, por eviti lokan memorelspezon kaj WSL2-malkonekton.
+
+- **Loka laboro**: redakti kodon kaj ruli nur malpezajn kontrolojn, ekzemple `cargo fmt --all -- --check`, `cargo clippy --workspace --release -- -D warnings` kaj `cargo test --workspace --all-features`.
+- **Formala pruvado**: post `git push` al `main` aŭ malfermo de pull-request, la laborfluo `CI` plenumas `just kani` (`cargo kani -p libversio -Z stubbing`) sur `ubuntu-latest`.
+- **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
+- **Difino de finiteco**: la laboroj `Lint and build` kaj `Kani verification` devas esti verdaj en GitHub Actions.
+

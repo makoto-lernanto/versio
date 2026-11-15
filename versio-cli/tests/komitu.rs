@@ -1,5 +1,15 @@
 //! Integraj testoj por la komandlinia interfaco.
 
+// PERMESO-JUSTIFIKO: nur testa kodo; panikigaj konstruaĵoj estas akcepteblaj.
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic,
+    clippy::indexing_slicing,
+    clippy::arithmetic_side_effects,
+    reason = "testa kodo rajtas uzi panikigajn konstrukciojn"
+)]
+
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -70,8 +80,8 @@ fn testo_iniciati_kaj_komitu() {
     assert_eq!(komito.gepatro, None);
 
     let arbo = deponejo.legi_arbon(&komito.arbo).unwrap();
-    assert_eq!(arbo.enskriboj.len(), 1);
-    match &arbo.enskriboj[0] {
+    assert_eq!(arbo.enskriboj().len(), 1);
+    match &arbo.enskriboj()[0] {
         ArbaEnskribo::Dosiero {
             nomo,
             haketo,
@@ -84,7 +94,9 @@ fn testo_iniciati_kaj_komitu() {
                 b"saluton\n".to_vec()
             );
         }
-        alia => panic!("atendita dosiero, sed trovis: {alia:?}"),
+        alia @ ArbaEnskribo::SubArbo { .. } => {
+            panic!("atendita dosiero, sed trovis: {alia:?}")
+        }
     }
 }
 

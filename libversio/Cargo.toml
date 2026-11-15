@@ -1,18 +1,21 @@
 [package]
 name = "libversio"
 description = "Kernbiblioteko de la versiokontrola sistemo Versio"
+publish = false
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [features]
-default = ["std"]
-std = ["dep:rayon", "dep:zstd", "blake3/std", "thiserror/std"]
+default = []
+std = ["dep:lz4_flex", "lz4_flex/frame", "lz4_flex/std", "blake3/std", "thiserror/std"]
 
 [dependencies]
 blake3.workspace = true
+lz4_flex = { workspace = true, optional = true }
 postcard.workspace = true
-rayon = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
-zstd = { workspace = true, optional = true }
+
+[lints]
+workspace = true
