@@ -25,7 +25,7 @@ arm64-e2e: arm64
     cd target/arm64-e2e && qemu-aarch64 {{justfile_directory()}}/target/aarch64-unknown-linux-musl/release/vs komitu --mesagxo "arm64"
     test -f target/arm64-e2e/.vs/HEAD
     test "$(ls target/arm64-e2e/.vs/objektoj | wc -l)" -eq 3
-# Nur permane en GitHub Actions (laborfluo «Kani»): ne rulu loke.
+# Nur en GitHub Actions: ne rulu loke (por eviti memorelspezon).
 kani:
     cargo kani -p libversio
 doc:
