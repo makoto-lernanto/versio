@@ -218,12 +218,12 @@ fn pruvo_komito_malseriigo() {
     // La kadro estas konstruata permane por ke la longoprefikso restu
     // konkreta; `testo_komito_fiksa_kodajo` kontrolas la saman aranĝon.
     //
-    // JUSTIFIKO: la malkodado okazas ene de ĉiu branĉo. Se la kadro estus
-    // konstruata antaŭ la branĉo, CBMC kunfandus du malsamajn bufrojn kaj
-    // traktus la konkretan mesaĝolongon kiel simbolan valoron, kio eksplodigus
-    // la UTF-8-validigon.
+    // JUSTIFIKO: la malkodado okazas ene de ĉiu branĉo, kaj la bufro havas
+    // antaŭe rezervitan kapaciton. Alie CBMC kunfandus malsamajn bufrojn aŭ
+    // kopius la prefikson dum kreskigo, kaj traktus la konkretan mesaĝolongon
+    // kiel simbolan valoron, kio eksplodigus la UTF-8-validigon.
     if havas_gepatron {
-        let mut bajtoj = alloc::vec::Vec::new();
+        let mut bajtoj = alloc::vec::Vec::with_capacity(77);
         bajtoj.extend_from_slice(&arbo);
         bajtoj.push(1);
         bajtoj.extend_from_slice(&gepatra);
@@ -241,7 +241,7 @@ fn pruvo_komito_malseriigo() {
             kontroli_malseriigon(&bajtoj, &komito);
         }
     } else {
-        let mut bajtoj = alloc::vec::Vec::new();
+        let mut bajtoj = alloc::vec::Vec::with_capacity(77);
         bajtoj.extend_from_slice(&arbo);
         bajtoj.push(0);
         bajtoj.extend_from_slice(&[1, signo & 0x7f]);
