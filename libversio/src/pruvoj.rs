@@ -227,11 +227,13 @@ fn pruvo_komito_malseriigo() {
         kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
         kadro[HAKETA_LONGO] = 1;
         kadro[33..65].copy_from_slice(&gepatra);
-        kadro[65] = 1;
-        kadro[66] = signo & 0x7f;
         let mut tempstampo = [0u8; 10];
         skribi_tempstampon(kreita_je, &mut tempstampo);
         kadro[67..77].copy_from_slice(&tempstampo);
+        kadro[66] = signo & 0x7f;
+        // La longoprefikso estas la lasta skribo, do Kani ne povas konfuzi
+        // ĝin kun la simbolaj haketoj aŭ tempstampo.
+        kadro[65] = 1;
         let komito = Komito {
             arbo: Haketo::el_bajtoj(arbo),
             gepatro: Some(Haketo::el_bajtoj(gepatra)),
@@ -243,11 +245,12 @@ fn pruvo_komito_malseriigo() {
         let mut kadro = [0u8; 45];
         kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
         kadro[HAKETA_LONGO] = 0;
-        kadro[33] = 1;
-        kadro[34] = signo & 0x7f;
         let mut tempstampo = [0u8; 10];
         skribi_tempstampon(kreita_je, &mut tempstampo);
         kadro[35..45].copy_from_slice(&tempstampo);
+        kadro[34] = signo & 0x7f;
+        // La longoprefikso estas la lasta skribo.
+        kadro[33] = 1;
         let komito = Komito {
             arbo: Haketo::el_bajtoj(arbo),
             gepatro: None,
@@ -277,20 +280,37 @@ fn skribi_tempstampon(valoro: u64, celo: &mut [u8; 10]) {
     celo[9] = (valoro >> 63) as u8 & 0x01;
 }
 
-/// Ĉiuj gepatro-etikedoj de fiksa sengepatra komito.
+/// Ĉiuj gepatro-etikedoj: 0 kaj 1 estas akceptataj, aliaj rifuzataj.
+///
+/// La kadroj estas tute konkretaj krom la etikedo, do la pruvo restas malpeza
+/// kaj sendependa de la mesaĝa malkodado.
 #[kani::proof]
 #[kani::unwind(16)]
 fn pruvo_komito_nevalida_etikedo() {
     let etikedo: u8 = kani::any();
-    let mut kadro = [0u8; 37];
-    kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-    kadro[HAKETA_LONGO] = etikedo;
-    kadro[33..].copy_from_slice(&[1, b'a', 0x80, 0x01]);
 
-    let rezulto = Komito::malseriigi(&kadro);
-    let valida = etikedo == 0;
-    kani::cover!(valida && rezulto.is_ok());
-    kani::cover!(etikedo == 1 && rezulto.is_err());
+    // Por etikedo 0 la kadro estas sengepatra; por 1 (kaj por ĉiu alia valoro,
+    // kiun la sintakso ankoraŭ legas) la kadro entenas plenan gepatron.
+    let rezulto = if etikedo == 0 {
+        let mut kadro = [0u8; 36];
+        kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+        kadro[HAKETA_LONGO] = 0;
+        kadro[33] = 0;
+        kadro[34..36].copy_from_slice(&[0x80, 0x01]);
+        Komito::malseriigi(&kadro)
+    } else {
+        let mut kadro = [0u8; 68];
+        kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+        kadro[HAKETA_LONGO] = etikedo;
+        kadro[33..65].copy_from_slice(&[9u8; HAKETA_LONGO]);
+        kadro[65] = 0;
+        kadro[66..68].copy_from_slice(&[0x80, 0x01]);
+        Komito::malseriigi(&kadro)
+    };
+
+    let valida = etikedo <= 1;
+    kani::cover!(etikedo == 0 && rezulto.is_ok());
+    kani::cover!(etikedo == 1 && rezulto.is_ok());
     kani::cover!(etikedo > 1 && rezulto.is_err());
     assert!(rezulto.is_ok() == valida);
 }

@@ -112,12 +112,14 @@ sendependaj CI-laboroj uzas la verajn `Komito::seriigi` kaj
 | --- | --- |
 | `pruvo_komito_seriigo` | Simbolikaj radika kaj gepatra haketoj, ambaŭ gepatro-branĉoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 35 kaj 77 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
 | `pruvo_komito_malseriigo` | Fiksa staka kadro (45 aŭ 77 bajtoj) kun konkreta longoprefikso, simbolikaj haketoj, ambaŭ gepatro-branĉoj, unu-bajta mesaĝo kaj ajna `u64`-tempstampo. Malseriigo devas redoni precize la atenditan komiton. |
-| `pruvo_komito_nevalida_etikedo` | Fiksa 37-bajta sengepatra kadro; ĉiuj 256 gepatro-etikedoj. Nur la kompleta kadro kun etikedo 0 rajtas sukcesi. |
+| `pruvo_komito_nevalida_etikedo` | Konkretaj 36- aŭ 68-bajtaj kadroj kun simbolika etikedo; etikedoj 0 kaj 1 rajtas sukcesi, ĉiu etikedo > 1 devas esti rifuzata. |
 | `pruvo_komito_trancxo` | Fiksa 37-bajta sengepatra kadro; ĉiuj prefiksoj. Nur la kompleta kadro rajtas sukcesi. |
 
 La permane konstruita kadro kaj la fiksa 10-bajta varinto evitas, ke Kani
 traktu la longoprefikson kiel arbitran simbolon kaj esploru centojn da
-UTF-8-longoj. La fiksa varinto estas valida `postcard`-kodigo por ajna `u64`
+UTF-8-longoj. La konkreta longoprefikso estas skribata laste, post la
+simbolikaj haketoj kaj la tempstampo, por ke CBMC ne kunfandu ĝin kun
+simbola tabelo. La fiksa varinto estas valida `postcard`-kodigo por ajna `u64`
 (kvankam ne la plej mallonga por malgrandaj valoroj). La kongruon de la kadro
 kun `Komito::seriigi` fiksas `testo_komito_fiksa_kodajo`; la akcepton de la
 fiksvarinta kadro kontrolas `testo_komito_akceptas_fiksan_tempstampan_varinton`.
