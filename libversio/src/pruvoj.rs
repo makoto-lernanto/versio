@@ -158,7 +158,7 @@ fn pruvo_vojo_sekura() {
 /// tie Kani kontrolas la varintojn kaj la limojn, kiuj estas la sola parto
 /// de la malkodado, kiu ne delegas al la norma biblioteko.
 #[kani::proof]
-#[kani::unwind(10)]
+#[kani::unwind(12)]
 fn pruvo_legilo_neniam_panikas() {
     let bajtoj: [u8; 16] = kani::any();
     let longo: usize = kani::any();
