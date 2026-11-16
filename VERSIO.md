@@ -172,6 +172,7 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 - **Kani-kodo ne kompiliĝas loke**: `libversio/src/pruvoj.rs` estas `#[cfg(kani)]`, do lokaj `fmt`, `Clippy` kaj testoj ne kaptas erarojn en ĝi. Ĉiu ŝanĝo al la pruvoj validas nur post verda CI-matrico.
 - **Nuba stato**: revizio `676ecf8` sukcese finis la CI-rulon [`43865689840`](https://github.com/makoto-lernanto/versio/actions/runs/43865689840) — `Lint and build` kaj ĉiuj ses `Kani (...)`-laboroj verdaj (2026-11-16).
 - **Aŭtomata liverado**: post kodŝanĝoj kaj la permesitaj lokaj kontroloj, aŭtomate kreu novan komiton kaj puŝu ĝin por ekigi CI, sen aparta konfirmo. Se CI malsukcesas, analizu la protokolojn, korektu la kaŭzon kaj denove komitu kaj puŝu; ne malfortigu kontrolojn. Tiu permeso ne inkluzivas devigan puŝon aŭ reverkadon de historio.
+- **Nur-dokumentaj ŝanĝoj**: se nur dokumentoj (ekz. `VERSIO.md`, `MIKERNO_INTEGRO.md`) ŝanĝiĝas kaj la ĉefa kodo, testoj aŭ CI-agordo restas netuŝitaj, metu `[skip ci]` en la komitan mesaĝon kaj klarigu, ke la ĉefa kodo ne ŝanĝiĝis; tiam CI ne bezonas ruli. Ĉiu ajn ŝanĝo al kodo, testoj aŭ `.github/` devige rulas CI.
 - **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
 - **Difino de finiteco**: la laboro `Lint and build` kaj ĉiuj laboroj `Kani (...)` devas esti verdaj en GitHub Actions.
 
