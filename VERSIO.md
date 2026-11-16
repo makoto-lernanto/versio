@@ -167,7 +167,7 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 
 - **Loka laboro**: redakti kodon kaj ruli nur malpezajn kontrolojn, ekzemple `cargo fmt --all -- --check`, `cargo clippy --workspace --release -- -D warnings` kaj `cargo test --workspace --all-features`.
 - **Aŭtomata CI**: ĉiu `git push` al `main` kaj ĉiu pull-request rulas `.github/workflows/ci.yml`: unue `Lint and build` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste `Kani verification`.
-- **Formala pruvado**: `Kani verification` plenumas `just kani` (`cargo kani -p libversio`) sur `ubuntu-latest`. La oficiala Kani-agado kompilas la ilon el fontkodo, do atendu 20–40 minutojn; la laboro havas 90-minutan limon.
+- **Formala pruvado**: `Kani verification` uzas la oficialan `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `just kani` (`cargo kani -p libversio`) sur `ubuntu-latest`. La laboro havas 90-minutan limon por la CBMC-pruvoj.
 - **Pruvamplekso**: kvin altvaloraj kontroloj — kanonika ordo de arbo, rifuzo de duplikataj vojoj, sekureca validigo de vojoj, neniam-panika limigita malkodado de nekonfidindaj bajtoj, kaj limigo de deklaritaj kvantoj antaŭ memora rezervado. La trivialaj enmemoraj konservo-rondiro kaj difekto-rifuzo restas kovritaj de unuoptestoj, ne de Kani.
 - **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
 - **Difino de finiteco**: la laboroj `Lint and build` kaj `Kani verification` devas esti verdaj en GitHub Actions.
