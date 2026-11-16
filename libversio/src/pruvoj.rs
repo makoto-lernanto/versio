@@ -24,10 +24,6 @@ fn fiksa_haketo() -> Haketo {
     Haketo::el_bajtoj([7u8; HAKETA_LONGO])
 }
 
-/// Fiksa 10-bajta varinto por 128 en la malkodaj pruvoj.
-const FIKSA_TEMPSTAMPO: [u8; 10] = [0x80, 0x81, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x00];
-const FIKSA_KREITA_JE: u64 = 128;
-
 /// 1. La kanonika ordo estas sendependa de la eniga ordo.
 ///
 /// Unu voko de `el_enskriboj` sufiĉas: la eniga ordo mem estas simbolo, do
@@ -205,143 +201,110 @@ fn pruvo_komito_seriigo() {
     }
 }
 
-/// La malseriigilo legas la saman kadron kun simbolikaj haketoj.
+/// La malseriigilo legas reprezentajn kadrojn faritajn de `seriigi`.
 ///
-/// La mesaĝo kaj la tempstampo estas fiksaj, do la longoprefikso kaj la
-/// varinto restas konataj al CBMC. La asertoj fiksas la tutan kadron escepte
-/// de la du haketoj; ili estas la sama konstruo, kiun la pruvo faras, sed
-/// malhelpas, ke CBMC traktu la longoprefikson kiel simbolon.
+/// La enigoj estas konkretaj, do CBMC ne devas esplori simbolajn longojn aŭ
+/// UTF-8-vojojn. Arbitraj bajtoj estas kovritaj de
+/// `pruvo_legilo_neniam_panikas`, kaj arbitraj kampoj de la seriiga pruvo.
 #[kani::proof]
-#[kani::unwind(32)]
+#[kani::unwind(40)]
 fn pruvo_komito_malseriigo() {
-    let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let gepatra: [u8; HAKETA_LONGO] = kani::any();
-    let havas_gepatron: bool = kani::any();
+    let mut komito = Komito {
+        arbo: Haketo::el_bajtoj([7u8; HAKETA_LONGO]),
+        gepatro: None,
+        mesagxo: String::new(),
+        kreita_je: 0,
+    };
+    kontroli_rondiron(&komito);
 
-    kani::cover!(havas_gepatron);
-    kani::cover!(!havas_gepatron);
+    komito.mesagxo = String::from("a");
+    komito.kreita_je = 128;
+    kontroli_rondiron(&komito);
 
-    // La kadro estas konstruata permane; `testo_komito_fiksa_kodajo` kontrolas
-    // la saman aranĝon.
-    if havas_gepatron {
-        let mut kadro = [0u8; 77];
-        kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
-        kadro[HAKETA_LONGO] = 1;
-        kadro[33..65].copy_from_slice(&gepatra);
-        kadro[67..77].copy_from_slice(&FIKSA_TEMPSTAMPO);
-        kadro[66] = b'a';
-        // La longoprefikso estas la lasta skribo.
-        kadro[65] = 1;
+    komito.arbo = Haketo::el_bajtoj([8u8; HAKETA_LONGO]);
+    komito.gepatro = Some(Haketo::el_bajtoj([9u8; HAKETA_LONGO]));
+    komito.mesagxo = String::from("é");
+    komito.kreita_je = 127;
+    kontroli_rondiron(&komito);
 
-        kani::assume(kadro[..HAKETA_LONGO] == arbo[..]);
-        kani::assume(kadro[33..65] == gepatra[..]);
-        kani::assume(kadro[HAKETA_LONGO] == 1);
-        kani::assume(kadro[65] == 1);
-        kani::assume(kadro[66] == b'a');
-        kani::assume(kadro[67..77] == FIKSA_TEMPSTAMPO[..]);
+    komito.mesagxo = String::from("€");
+    komito.kreita_je = u64::MAX;
+    kontroli_rondiron(&komito);
+}
 
-        let komito = Komito {
-            arbo: Haketo::el_bajtoj(arbo),
-            gepatro: Some(Haketo::el_bajtoj(gepatra)),
-            mesagxo: String::from("a"),
-            kreita_je: FIKSA_KREITA_JE,
-        };
-        kontroli_malseriigon(&kadro, &komito);
-    } else {
-        let mut kadro = [0u8; 45];
-        kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
-        kadro[HAKETA_LONGO] = 0;
-        kadro[35..45].copy_from_slice(&FIKSA_TEMPSTAMPO);
-        kadro[34] = b'a';
-        // La longoprefikso estas la lasta skribo.
-        kadro[33] = 1;
-
-        kani::assume(kadro[..HAKETA_LONGO] == arbo[..]);
-        kani::assume(kadro[HAKETA_LONGO] == 0);
-        kani::assume(kadro[33] == 1);
-        kani::assume(kadro[34] == b'a');
-        kani::assume(kadro[35..45] == FIKSA_TEMPSTAMPO[..]);
-
-        let komito = Komito {
-            arbo: Haketo::el_bajtoj(arbo),
-            gepatro: None,
-            mesagxo: String::from("a"),
-            kreita_je: FIKSA_KREITA_JE,
-        };
-        kontroli_malseriigon(&kadro, &komito);
+fn kontroli_rondiron(komito: &Komito) {
+    let kodita = komito.seriigi();
+    assert!(kodita.is_ok(), "seriigo devas sukcesi");
+    if let Ok(bajtoj) = kodita {
+        let relegita = Komito::malseriigi(&bajtoj);
+        assert!(relegita.is_ok(), "malseriigo devas sukcesi");
+        if let Ok(relegita) = relegita {
+            assert!(relegita == *komito);
+        }
     }
 }
 
-fn kontroli_malseriigon(bajtoj: &[u8], komito: &Komito) {
-    let rezulto = Komito::malseriigi(bajtoj);
-    assert!(rezulto.is_ok());
-    if let Ok(relegita) = rezulto {
-        assert!(relegita == *komito);
-    }
-}
-
-/// Ĉiuj gepatro-etikedoj: 0 kaj 1 estas akceptataj, aliaj rifuzataj.
+/// Gepatro-etikedoj: 0 kaj 1 akceptataj, 2 kaj 255 rifuzataj.
 ///
-/// La kadroj estas fiksaj kaj la etikedo estas la sola simbolo. La asertoj
-/// fiksas la ceterajn regajn bajtojn, por ke CBMC ne traktu la mesaĝolongon
-/// aŭ la tempstampon kiel simbolojn.
+/// La kadroj estas tute konkretaj. Ĉiuj 256 etikedoj estas kovritaj de
+/// unuoptesto; ĉi tie Kani kontrolas la kvar limojn sen simbolaj longoj.
 #[kani::proof]
 #[kani::unwind(16)]
 fn pruvo_komito_nevalida_etikedo() {
-    let etikedo: u8 = kani::any();
+    let mut sen_gepatro = [0u8; 36];
+    sen_gepatro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+    sen_gepatro[HAKETA_LONGO] = 0;
+    sen_gepatro[33] = 0;
+    sen_gepatro[34..36].copy_from_slice(&[0x80, 0x01]);
+    assert!(
+        Komito::malseriigi(&sen_gepatro).is_ok(),
+        "etikedo 0 devas sukcesi"
+    );
 
-    let rezulto = if etikedo == 0 {
-        let mut kadro = [0u8; 36];
-        kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-        kadro[HAKETA_LONGO] = 0;
-        kadro[33] = 0;
-        kadro[34..36].copy_from_slice(&[0x80, 0x01]);
+    let mut kun_gepatro = [0u8; 68];
+    kun_gepatro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+    kun_gepatro[HAKETA_LONGO] = 1;
+    kun_gepatro[33..65].copy_from_slice(&[9u8; HAKETA_LONGO]);
+    kun_gepatro[65] = 0;
+    kun_gepatro[66..68].copy_from_slice(&[0x80, 0x01]);
+    assert!(
+        Komito::malseriigi(&kun_gepatro).is_ok(),
+        "etikedo 1 devas sukcesi"
+    );
 
-        kani::assume(kadro[HAKETA_LONGO] == 0);
-        kani::assume(kadro[33] == 0);
-        kani::assume(kadro[34] == 0x80);
-        kani::assume(kadro[35] == 0x01);
-        Komito::malseriigi(&kadro)
-    } else {
-        let mut kadro = [0u8; 68];
-        kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-        kadro[HAKETA_LONGO] = etikedo;
-        kadro[33..65].copy_from_slice(&[9u8; HAKETA_LONGO]);
-        kadro[65] = 0;
-        kadro[66..68].copy_from_slice(&[0x80, 0x01]);
+    kun_gepatro[HAKETA_LONGO] = 2;
+    assert!(
+        Komito::malseriigi(&kun_gepatro).is_err(),
+        "etikedo 2 devas esti rifuzata"
+    );
 
-        kani::assume(kadro[HAKETA_LONGO] == etikedo);
-        kani::assume(kadro[65] == 0);
-        kani::assume(kadro[66] == 0x80);
-        kani::assume(kadro[67] == 0x01);
-        Komito::malseriigi(&kadro)
-    };
-
-    let valida = etikedo <= 1;
-    kani::cover!(etikedo == 0 && rezulto.is_ok());
-    kani::cover!(etikedo == 1 && rezulto.is_ok());
-    kani::cover!(etikedo > 1 && rezulto.is_err());
-    assert!(rezulto.is_ok() == valida);
+    kun_gepatro[HAKETA_LONGO] = 255;
+    assert!(
+        Komito::malseriigi(&kun_gepatro).is_err(),
+        "etikedo 255 devas esti rifuzata"
+    );
 }
 
 /// Ĉiuj propraj prefiksoj de fiksa sengepatra komito.
 ///
-/// La buklo estas konkreta, do ĉiu tranĉo havas konkretan longon kaj Kani ne
-/// devas trakti la longoprefikson kiel simbolon.
+/// Ĉiu tranĉo havas literal-longon, do Kani ne devas trakti la longoprefikson
+/// kiel simbolon.
 #[kani::proof]
-#[kani::unwind(40)]
+#[kani::unwind(16)]
 fn pruvo_komito_trancxo() {
     let mut kadro = [0u8; 37];
     kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
     kadro[HAKETA_LONGO..].copy_from_slice(&[0, 1, b'a', 0x80, 0x01]);
 
-    for longo in 0..kadro.len() {
-        let prefikso = &kadro[..longo];
-        assert!(
-            Komito::malseriigi(prefikso).is_err(),
-            "ĉiu propra prefikso devas esti rifuzata"
-        );
+    macro_rules! rifuzi {
+        ($($longo:literal),* $(,)?) => {
+            $(assert!(Komito::malseriigi(&kadro[..$longo]).is_err());)*
+        };
     }
+    rifuzi!(
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+        25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
+    );
 
     assert!(
         Komito::malseriigi(&kadro).is_ok(),

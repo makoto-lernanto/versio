@@ -106,34 +106,31 @@ de tempstampo, do alia rulo ne devas reprodukti tiujn samajn identigilojn.
 
 La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Kvar novaj
 sendependaj CI-laboroj uzas la verajn `Komito::seriigi` kaj
-`Komito::malseriigi`, sen stumpoj. La malkodaj pruvoj uzas `kani::assume`
-nur por fiksi la regajn bajtojn de la permane konstruita kadro (etikedo,
-longoprefikso, mesaĝo kaj tempstampo); la haketoj kaj la gepatro-etikedo
-restas simbolaj, do la asertoj ne kaŝas kontraŭekzemplojn.
+`Komito::malseriigi`, sen stumpoj. La malkodaj pruvoj uzas konkretajn
+reprezentajn kadrojn: se iu ajn bajto de staka tabelo estas simbola, CBMC
+traktas la tutan tabelon kiel simbolan kaj la longoprefikso malfermas centojn
+da UTF-8-vojoj. Arbitraj bajtoj restas kovritaj de
+`pruvo_legilo_neniam_panikas`, kaj arbitraj kampoj de la seriiga pruvo.
 
 | Pruvo | Preciza modelo kaj aserto |
 | --- | --- |
 | `pruvo_komito_seriigo` | Simbolikaj radika kaj gepatra haketoj, ambaŭ gepatro-branĉoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 35 kaj 77 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
-| `pruvo_komito_malseriigo` | Fiksa staka kadro (45 aŭ 77 bajtoj) kun simbolikaj haketoj, ambaŭ gepatro-branĉoj, fiksa unu-bajta mesaĝo «a» kaj fiksa 10-bajta varinto por 128. `assume` fiksas la kadrajn regajn bajtojn al tiu konstruo; malseriigo devas redoni precize la atenditan komiton. |
-| `pruvo_komito_nevalida_etikedo` | Konkretaj 36- aŭ 68-bajtaj kadroj kun simbolika etikedo; etikedoj 0 kaj 1 rajtas sukcesi, ĉiu etikedo > 1 devas esti rifuzata. |
-| `pruvo_komito_trancxo` | Fiksa 37-bajta sengepatra kadro; ĉiuj 37 propraj prefiksoj, kontrolataj per konkreta buklo. Nur la kompleta kadro rajtas sukcesi. |
+| `pruvo_komito_malseriigo` | Kvar konkretaj reprezentaj komitoj (sen/kun gepatro, mesaĝoj «», «a», «é», «€», tempstampoj 0, 127, 128 kaj `u64::MAX`) seriigataj per `seriigi` kaj relegataj per `malseriigi`; la relegita komito devas egali la originan. |
+| `pruvo_komito_nevalida_etikedo` | Tute konkretaj 36- aŭ 68-bajtaj kadroj; etikedoj 0 kaj 1 sukcesas, etikedoj 2 kaj 255 rifuziĝas. Ĉiuj 256 etikedoj estas kovritaj de unuoptesto. |
+| `pruvo_komito_trancxo` | Fiksa 37-bajta sengepatra kadro; ĉiuj 37 propraj prefiksoj, kontrolataj per literal-longaj tranĉoj. Nur la kompleta kadro rajtas sukcesi. |
 
-La permane konstruita kadro, la konkreta longoprefikso skribata laste kaj la
-`assume`-oj pri la regaj bajtoj evitas, ke Kani traktu la longoprefikson kiel
-arbitran simbolon kaj esploru centojn da UTF-8-longoj. La fiksa varinto por
-128 estas valida `postcard`-kodigo. La kongruon de la kadro kun
-`Komito::seriigi` fiksas `testo_komito_fiksa_kodajo`; la akcepton de
-fiksvarintaj tempstampoj (0, 1, 127, 128 kaj `u64::MAX`) kontrolas
-`testo_komito_akceptas_fiksan_tempstampan_varinton`.
+La konkretaj kadroj evitas simbolajn longoprefiksojn kaj la sekvan eksplodon
+de UTF-8-validigo. La fiksan 10-bajtan varinton por 128 kontrolas
+`testo_komito_akceptas_fiksan_tempstampan_varinton`; la kongruon de la kadro
+kun `Komito::seriigi` fiksas `testo_komito_fiksa_kodajo`.
 
-`kani::cover!` kontrolas atingeblajn sukcesajn kaj erarajn kazojn. La malvolvaj
-limoj estas respektive 40, 32, 16 kaj 40; la malvolvaj asertoj ne estas
-malŝaltitaj. Ĉiu nova pruvo havas la saman 600-sekundan komandlimon kaj
+La malvolvaj limoj estas respektive 40, 40, 16 kaj 16; la malvolvaj asertoj ne
+estas malŝaltitaj. Ĉiu nova pruvo havas la saman 600-sekundan komandlimon kaj
 30-minutan laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
 
 Tio estas limigita modelo, ne pruvo por ĉiu arbitra komito, ĉiu UTF-8-mesaĝo,
 ĉiu arbo aŭ por la kriptografia sekureco de BLAKE3. La malkodaj pruvoj uzas
-fiksan mesaĝon kaj tempstampon; arbitraj mesaĝoj kaj tempstampoj estas
+konkretajn reprezentajn kampojn; arbitraj mesaĝoj kaj tempstampoj estas
 kovritaj de unuoptestoj, ne de Kani. Pliaj unuoptestoj kovras ambaŭ
 gepatro-kazojn, malplenajn/Unikodajn/maksimumlongajn mesaĝojn, varintajn
 tempstampolimojn, ĉiujn verajn prefiksojn de du specimenaj komitoj,
