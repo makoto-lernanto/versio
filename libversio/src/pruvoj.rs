@@ -211,36 +211,60 @@ fn pruvo_komito_malseriigo() {
     let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
 
+    kani::cover!(havas_gepatron);
+    kani::cover!(!havas_gepatron);
+    kani::cover!(kreita_je == u64::MAX);
+
     // La kadro estas konstruata permane por ke la longoprefikso restu
     // konkreta; `testo_komito_fiksa_kodajo` kontrolas la saman aranĝon.
-    let mut bajtoj = alloc::vec::Vec::new();
-    bajtoj.extend_from_slice(&arbo);
+    //
+    // JUSTIFIKO: la malkodado okazas ene de ĉiu branĉo. Se la kadro estus
+    // konstruata antaŭ la branĉo, CBMC kunfandus du malsamajn bufrojn kaj
+    // traktus la konkretan mesaĝolongon kiel simbolan valoron, kio eksplodigus
+    // la UTF-8-validigon.
     if havas_gepatron {
+        let mut bajtoj = alloc::vec::Vec::new();
+        bajtoj.extend_from_slice(&arbo);
         bajtoj.push(1);
         bajtoj.extend_from_slice(&gepatra);
-    } else {
-        bajtoj.push(0);
-    }
-    bajtoj.extend_from_slice(&[1, signo & 0x7f]);
-    let tempstampo = postcard::to_allocvec(&kreita_je);
-    assert!(tempstampo.is_ok());
-    if let Ok(tempstampo) = tempstampo {
-        bajtoj.extend_from_slice(&tempstampo);
-        let komito = Komito {
-            arbo: Haketo::el_bajtoj(arbo),
-            gepatro: havas_gepatron.then_some(Haketo::el_bajtoj(gepatra)),
-            mesagxo: String::from(char::from(signo & 0x7f)),
-            kreita_je,
-        };
-
-        kani::cover!(havas_gepatron);
-        kani::cover!(!havas_gepatron);
-        kani::cover!(kreita_je == u64::MAX);
-        let rezulto = Komito::malseriigi(&bajtoj);
-        assert!(rezulto.is_ok());
-        if let Ok(relegita) = rezulto {
-            assert!(relegita == komito);
+        bajtoj.extend_from_slice(&[1, signo & 0x7f]);
+        let tempstampo = postcard::to_allocvec(&kreita_je);
+        assert!(tempstampo.is_ok());
+        if let Ok(tempstampo) = tempstampo {
+            bajtoj.extend_from_slice(&tempstampo);
+            let komito = Komito {
+                arbo: Haketo::el_bajtoj(arbo),
+                gepatro: Some(Haketo::el_bajtoj(gepatra)),
+                mesagxo: String::from(char::from(signo & 0x7f)),
+                kreita_je,
+            };
+            kontroli_malseriigon(&bajtoj, &komito);
         }
+    } else {
+        let mut bajtoj = alloc::vec::Vec::new();
+        bajtoj.extend_from_slice(&arbo);
+        bajtoj.push(0);
+        bajtoj.extend_from_slice(&[1, signo & 0x7f]);
+        let tempstampo = postcard::to_allocvec(&kreita_je);
+        assert!(tempstampo.is_ok());
+        if let Ok(tempstampo) = tempstampo {
+            bajtoj.extend_from_slice(&tempstampo);
+            let komito = Komito {
+                arbo: Haketo::el_bajtoj(arbo),
+                gepatro: None,
+                mesagxo: String::from(char::from(signo & 0x7f)),
+                kreita_je,
+            };
+            kontroli_malseriigon(&bajtoj, &komito);
+        }
+    }
+}
+
+fn kontroli_malseriigon(bajtoj: &[u8], komito: &Komito) {
+    let rezulto = Komito::malseriigi(bajtoj);
+    assert!(rezulto.is_ok());
+    if let Ok(relegita) = rezulto {
+        assert!(relegita == *komito);
     }
 }
 
