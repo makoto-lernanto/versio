@@ -8,7 +8,7 @@ use alloc::vec;
 
 use crate::eraroj::Eraro;
 use crate::kodigo::{Legilo, limigi_kvanton};
-use crate::objektoj::{ArbaEnskribo, Arbo, MAKSIMAJ_ENSKRIBOJ};
+use crate::objektoj::{ArbaEnskribo, Arbo, Komito, MAKSIMAJ_ENSKRIBOJ};
 use crate::stokado::{HAKETA_LONGO, Haketo};
 use crate::vojo::validi_bajtojn;
 
