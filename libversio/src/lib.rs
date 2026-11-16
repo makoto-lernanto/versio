@@ -12,6 +12,7 @@ extern crate alloc;
 #[cfg(feature = "std")]
 pub mod deponejo;
 pub mod eraroj;
+pub mod indekso;
 mod kodigo;
 pub mod objektoj;
 pub mod stokado;
@@ -23,9 +24,11 @@ mod pruvoj;
 pub use eraroj::Eraro;
 pub use objektoj::{ArbaEnskribo, Arbo, Dosiero, Komito};
 pub use stokado::{HAKETA_LONGO, Haketo, Konservilo, MemoraKonservilo, haketi, kontroli};
-pub use vojo::{MAKSIMA_KOMPONANTO, validi_bajtojn, validi_komponanton};
+pub use vojo::{
+    MAKSIMA_KOMPONANTO, MAKSIMA_VOJO, validi_bajtojn, validi_komponanton, validi_vojon,
+};
 
 #[cfg(feature = "std")]
-pub use deponejo::Deponejo;
+pub use deponejo::{Deponejo, Stato};
 #[cfg(feature = "std")]
 pub use stokado::DosieraKonservilo;

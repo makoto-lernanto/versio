@@ -306,6 +306,32 @@ mod dosiera {
         }
     }
 
+    /// Kalkulas la haketon kaj grandecon de dosiero sen konservi ĝin.
+    ///
+    /// La enhavo estas legata po 64 KB.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron, se la dosiero ne legeblas.
+    pub fn haketi_dosieron(vojo: &Path) -> Result<(Haketo, u64), Eraro> {
+        let mut dosiero = fs::File::open(vojo)?;
+        let mut haketilo = blake3::Hasher::new();
+        let mut bufujo = vec![0u8; LEGA_BLOKO];
+        let mut grandeco: u64 = 0;
+        loop {
+            let legita = dosiero.read(&mut bufujo)?;
+            if legita == 0 {
+                break;
+            }
+            let ero = bufujo.get(..legita).ok_or(Eraro::NevalidaDatumo {
+                kialo: "legita longo superas la bufujon",
+            })?;
+            haketilo.update(ero);
+            grandeco = grandeco.saturating_add(legita as u64);
+        }
+        Ok((Haketo(*haketilo.finalize().as_bytes()), grandeco))
+    }
+
     impl Konservilo for DosieraKonservilo {
         fn konservi(&self, datumoj: &[u8]) -> Result<Haketo, Eraro> {
             self.konservi_fluon(datumoj).map(|(haketo, _)| haketo)
@@ -329,7 +355,7 @@ mod dosiera {
 }
 
 #[cfg(feature = "std")]
-pub use dosiera::DosieraKonservilo;
+pub use dosiera::{DosieraKonservilo, haketi_dosieron};
 
 #[cfg(all(test, feature = "std"))]
 mod testoj {
@@ -345,6 +371,7 @@ mod testoj {
 
     use super::{
         DosieraKonservilo, Eraro, HAKETA_LONGO, Haketo, Konservilo, MemoraKonservilo, haketi,
+        haketi_dosieron,
     };
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -462,6 +489,7 @@ mod testoj {
         assert_eq!(grandeco, datumoj.len() as u64);
         assert_eq!(haketo, haketi(&datumoj));
         assert_eq!(stokejo.ricevi(&haketo).unwrap(), datumoj);
+        assert_eq!(haketi_dosieron(&vojo).unwrap(), (haketo, grandeco));
     }
 
     #[test]

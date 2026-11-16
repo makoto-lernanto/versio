@@ -11,6 +11,25 @@ use crate::eraroj::Eraro;
 /// Maksimuma longo de unu voja komponanto en bajtoj.
 pub const MAKSIMA_KOMPONANTO: usize = 255;
 
+/// Maksimuma longo de relativa vojo (komponantoj kunigitaj per `/`) en bajtoj.
+pub const MAKSIMA_VOJO: usize = 4096;
+
+/// Validigas relativan vojon el komponantoj apartigitaj per `/`.
+///
+/// # Errors
+///
+/// Redonas [`Eraro::NevalidaVojaKomponanto`], se la vojo estas pli longa ol
+/// [`MAKSIMA_VOJO`] aŭ se iu komponanto ne trapasas [`validi_komponanton`].
+pub fn validi_vojon(vojo: &str) -> Result<(), Eraro> {
+    if vojo.len() > MAKSIMA_VOJO {
+        return Err(Eraro::NevalidaVojaKomponanto);
+    }
+    for komponanto in vojo.split('/') {
+        validi_komponanton(komponanto)?;
+    }
+    Ok(())
+}
+
 /// Validigas unu vojan komponanton (dosier- aŭ dosierujnomon).
 ///
 /// # Errors
@@ -45,7 +64,19 @@ pub fn validi_bajtojn(bajtoj: &[u8]) -> Result<(), Eraro> {
 
 #[cfg(test)]
 mod testoj {
-    use super::{MAKSIMA_KOMPONANTO, validi_komponanton};
+    use super::{MAKSIMA_KOMPONANTO, MAKSIMA_VOJO, validi_komponanton, validi_vojon};
+
+    #[test]
+    fn testo_validi_vojon() {
+        for vojo in ["a", "src/lib.rs", "a/b/c"] {
+            assert!(validi_vojon(vojo).is_ok(), "{vojo}");
+        }
+        for vojo in ["", "/a", "a/", "a//b", "a/../b", "./a"] {
+            assert!(validi_vojon(vojo).is_err(), "{vojo:?}");
+        }
+        let longa = "a/".repeat(MAKSIMA_VOJO / 2) + "a";
+        assert!(validi_vojon(&longa).is_err());
+    }
 
     #[test]
     fn testo_akceptas_normalajn_nomojn() {

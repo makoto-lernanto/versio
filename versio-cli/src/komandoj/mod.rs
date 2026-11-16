@@ -2,3 +2,4 @@
 
 pub(crate) mod iniciati;
 pub(crate) mod komitu;
+pub(crate) mod stato;

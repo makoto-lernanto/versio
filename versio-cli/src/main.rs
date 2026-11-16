@@ -21,6 +21,8 @@ enum Komando {
         #[arg(short = 'm', long = "mesagxo", value_name = "MESAGXO")]
         mesagxo: String,
     },
+    /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al HEAD.
+    Stato,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -29,5 +31,6 @@ fn main() -> anyhow::Result<()> {
     match argumentoj.komando {
         Komando::Iniciati => komandoj::iniciati::plenumi(),
         Komando::Komitu { mesagxo } => komandoj::komitu::plenumi(&mesagxo),
+        Komando::Stato => komandoj::stato::plenumi(),
     }
 }
