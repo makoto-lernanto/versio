@@ -8,7 +8,7 @@ use alloc::vec;
 
 use crate::eraroj::Eraro;
 use crate::kodigo::{Legilo, limigi_kvanton};
-use crate::objektoj::{ArbaEnskribo, Arbo, MAKSIMAJ_ENSKRIBOJ};
+use crate::objektoj::{ArbaEnskribo, Arbo, Komito, MAKSIMAJ_ENSKRIBOJ};
 use crate::stokado::{HAKETA_LONGO, Haketo};
 use crate::vojo::validi_bajtojn;
 
@@ -165,6 +165,68 @@ fn pruvo_legilo_neniam_panikas() {
     let _ = legilo.u64();
     let _ = legilo.haketo();
     let _ = legilo.fino();
+}
+
+/// Komita rondiro kun fiksaj haketoj, 0–1 ASCII-bajto kaj ajna tempstampo.
+#[kani::proof]
+#[kani::unwind(80)]
+fn pruvo_komito_rondiro() {
+    let havas_gepatron: bool = kani::any();
+    let havas_mesagxon: bool = kani::any();
+    let signo: u8 = kani::any();
+    let kreita_je: u64 = kani::any();
+    let komito = Komito {
+        arbo: fiksa_haketo(),
+        gepatro: havas_gepatron.then_some(Haketo::el_bajtoj([9; HAKETA_LONGO])),
+        mesagxo: if havas_mesagxon {
+            String::from(char::from(signo & 0x7f))
+        } else {
+            String::new()
+        },
+        kreita_je,
+    };
+
+    kani::cover!(havas_gepatron && havas_mesagxon);
+    kani::cover!(!havas_gepatron && !havas_mesagxon);
+    kani::cover!(kreita_je == u64::MAX);
+    kani::cover!(kreita_je == 0);
+    let kodita = komito.seriigi();
+    assert!(kodita.is_ok());
+    if let Ok(bajtoj) = kodita {
+        let rezulto = Komito::malseriigi(&bajtoj);
+        assert!(rezulto.is_ok());
+        if let Ok(relegita) = rezulto {
+            assert!(relegita == komito);
+        }
+    }
+}
+
+/// Ĉiuj prefiksoj kaj gepatro-etikedoj de fiksa sengepatra komito.
+#[kani::proof]
+#[kani::unwind(40)]
+fn pruvo_komito_nevalida_kodigo() {
+    let komito = Komito {
+        arbo: fiksa_haketo(),
+        gepatro: None,
+        mesagxo: String::from("a"),
+        kreita_je: 128,
+    };
+    let kodita = komito.seriigi();
+    assert!(kodita.is_ok());
+    if let Ok(mut bajtoj) = kodita {
+        let etikedo: u8 = kani::any();
+        bajtoj[HAKETA_LONGO] = etikedo;
+        let longo = usize::from(kani::any::<u8>());
+        if let Some(prefikso) = bajtoj.get(..longo) {
+            let rezulto = Komito::malseriigi(prefikso);
+            let valida = longo == bajtoj.len() && etikedo == 0;
+            kani::cover!(valida && rezulto.is_ok());
+            kani::cover!(longo == 0 && rezulto.is_err());
+            kani::cover!(longo == bajtoj.len() && etikedo == 1 && rezulto.is_err());
+            kani::cover!(longo == bajtoj.len() && etikedo > 1 && rezulto.is_err());
+            assert!(rezulto.is_ok() == valida);
+        }
+    }
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.

@@ -399,6 +399,67 @@ mod testoj {
     }
 
     #[test]
+    fn testo_komito_rondiro_limoj() {
+        for gepatro in [None, Some(haketo(4))] {
+            for mesagxo in [
+                String::new(),
+                String::from("a\0é𐐀"),
+                "a".repeat(MAKSIMA_MESAGXO),
+            ] {
+                for kreita_je in [0, 127, 128, u64::MAX] {
+                    let komito = Komito {
+                        arbo: haketo(3),
+                        gepatro,
+                        mesagxo: mesagxo.clone(),
+                        kreita_je,
+                    };
+                    let bajtoj = komito.seriigi().unwrap();
+                    assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn testo_komito_rifuzas_trancxojn_kaj_postrestojn() {
+        for gepatro in [None, Some(haketo(4))] {
+            let komito = Komito {
+                arbo: haketo(3),
+                gepatro,
+                mesagxo: String::from("mesaĝo"),
+                kreita_je: u64::MAX,
+            };
+            let mut bajtoj = komito.seriigi().unwrap();
+            for longo in 0..bajtoj.len() {
+                assert!(Komito::malseriigi(&bajtoj[..longo]).is_err());
+            }
+            assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
+            bajtoj.push(0);
+            assert!(Komito::malseriigi(&bajtoj).is_err());
+        }
+    }
+
+    #[test]
+    fn testo_komito_rifuzas_nevalidajn_etikedojn() {
+        let komito = Komito {
+            arbo: haketo(3),
+            gepatro: None,
+            mesagxo: String::from("a"),
+            kreita_je: 128,
+        };
+        let mut bajtoj = komito.seriigi().unwrap();
+        for etikedo in 0..=u8::MAX {
+            bajtoj[crate::stokado::HAKETA_LONGO] = etikedo;
+            for longo in 0..=bajtoj.len() {
+                assert_eq!(
+                    Komito::malseriigi(&bajtoj[..longo]).is_ok(),
+                    etikedo == 0 && longo == bajtoj.len()
+                );
+            }
+        }
+    }
+
+    #[test]
     fn testo_dosiero_haketo() {
         let dosiero = Dosiero::nova(vec![1u8, 2, 3]);
         assert_eq!(dosiero.enhavo(), &[1, 2, 3]);
