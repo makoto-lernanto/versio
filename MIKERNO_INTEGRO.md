@@ -104,17 +104,22 @@ de tempstampo, do alia rulo ne devas reprodukti tiujn samajn identigilojn.
 
 ## Formala pruvado kaj ĝiaj limoj
 
-La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Du novaj
+La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Tri novaj
 sendependaj CI-laboroj uzas la verajn `Komito::seriigi` kaj
 `Komito::malseriigi`, sen stumpoj aŭ novaj `kani::assume`:
 
 | Pruvo | Preciza modelo kaj aserto |
 | --- | --- |
-| `pruvo_komito_rondiro` | Fiksaj, malsamaj radika kaj gepatra haketoj; ajna ĉeesto de gepatro; mesaĝo de 0–1 ASCII-bajto; ajna `u64`-tempstampo. Seriigo devas sukcesi kaj malseriigo devas redoni la identan komiton. |
-| `pruvo_komito_nevalida_kodigo` | Fiksa sengepatra komito kun mesaĝo `a` kaj tempstampo 128; ĉiuj ĝiaj prefiksoj kaj ĉiuj 256 gepatro-etikedoj. Nur la kompleta koditaĵo kun etikedo 0 rajtas sukcesi. |
+| `pruvo_komito_seriigo` | Simbolikaj radika kaj gepatra haketoj, ambaŭ gepatro-branĉoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 35 kaj 77 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
+| `pruvo_komito_malseriigo` | Permanenta kadro kun konkreta longoprefikso, simbolikaj haketoj, ambaŭ gepatro-branĉoj, unu-bajta mesaĝo kaj ajna `u64`-tempstampo. Malseriigo devas redoni precize la atenditan komiton. |
+| `pruvo_komito_nevalida_kodigo` | Fiksa 37-bajta sengepatra kadro; ĉiuj 256 gepatro-etikedoj kaj ĉiuj prefiksoj. Nur la kompleta kadro kun etikedo 0 rajtas sukcesi. |
+
+La permane konstruita kadro evitas, ke Kani traktu la longoprefikson kiel
+arbitran simbolon kaj esploru centojn da UTF-8-longoj. La kongruon de tiu kadro
+kun `Komito::seriigi` fiksas la unuoptesto `testo_komito_fiksa_kodajo`.
 
 `kani::cover!` kontrolas atingeblajn sukcesajn kaj erarajn kazojn. La malvolvaj
-limoj estas respektive 80 kaj 40; la malvolvaj asertoj ne estas malŝaltitaj.
+limoj estas respektive 40, 32 kaj 16; la malvolvaj asertoj ne estas malŝaltitaj.
 Ĉiu nova pruvo havas la saman 600-sekundan komandlimon kaj 30-minutan
 laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
 
@@ -130,11 +135,11 @@ Lokaj kontroloj de ĉi tiu ŝanĝo:
 cargo fmt --all -- --check
 (exit 0)
 cargo clippy --workspace --all-targets --all-features -- -D warnings
-Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.61s
+Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
 cargo clippy --workspace --release -- -D warnings
-Finished `release` profile [optimized] target(s) in 0.63s
+Finished `release` profile [optimized] target(s) in 0.51s
 cargo test --workspace --all-features
-test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
 test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
 ```
@@ -145,5 +150,5 @@ aldonita. La nuna CI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
 konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
 **Nuba stato: ankoraŭ nekontrolita por la novaj pruvoj.** Nur post sukcesa
-GitHub Actions-rulo de la ŝanĝita revizio (`Lint and build` kaj ĉiuj sep Kani-laboroj)
+GitHub Actions-rulo de la ŝanĝita revizio (`Lint and build` kaj ĉiuj ok Kani-laboroj)
 la formala akceptokriterio de Fazo 4 povas esti markita plenumita.

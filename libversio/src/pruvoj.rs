@@ -167,17 +167,19 @@ fn pruvo_legilo_neniam_panikas() {
     let _ = legilo.fino();
 }
 
-/// Komita rondiro kun fiksaj haketoj, 0–1 ASCII-bajto kaj ajna tempstampo.
+/// La seriigilo akceptas simbolikajn kampojn kaj respektas la kadran longon.
 #[kani::proof]
-#[kani::unwind(80)]
-fn pruvo_komito_rondiro() {
+#[kani::unwind(40)]
+fn pruvo_komito_seriigo() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let gepatra: [u8; HAKETA_LONGO] = kani::any();
     let havas_gepatron: bool = kani::any();
     let havas_mesagxon: bool = kani::any();
     let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
-        arbo: fiksa_haketo(),
-        gepatro: havas_gepatron.then_some(Haketo::el_bajtoj([9; HAKETA_LONGO])),
+        arbo: Haketo::el_bajtoj(arbo),
+        gepatro: havas_gepatron.then_some(Haketo::el_bajtoj(gepatra)),
         mesagxo: if havas_mesagxon {
             String::from(char::from(signo & 0x7f))
         } else {
@@ -193,6 +195,47 @@ fn pruvo_komito_rondiro() {
     let kodita = komito.seriigi();
     assert!(kodita.is_ok());
     if let Ok(bajtoj) = kodita {
+        assert!(bajtoj.len() >= 35);
+        assert!(bajtoj.len() <= 77);
+        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
+    }
+}
+
+/// La malseriigilo legas la saman kadron kun simbolikaj enhavoj.
+#[kani::proof]
+#[kani::unwind(32)]
+fn pruvo_komito_malseriigo() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let gepatra: [u8; HAKETA_LONGO] = kani::any();
+    let havas_gepatron: bool = kani::any();
+    let signo: u8 = kani::any();
+    let kreita_je: u64 = kani::any();
+
+    // La kadro estas konstruata permane por ke la longoprefikso restu
+    // konkreta; `testo_komito_fiksa_kodajo` kontrolas la saman aranĝon.
+    let mut bajtoj = alloc::vec::Vec::new();
+    bajtoj.extend_from_slice(&arbo);
+    if havas_gepatron {
+        bajtoj.push(1);
+        bajtoj.extend_from_slice(&gepatra);
+    } else {
+        bajtoj.push(0);
+    }
+    bajtoj.extend_from_slice(&[1, signo & 0x7f]);
+    let tempstampo = postcard::to_allocvec(&kreita_je);
+    assert!(tempstampo.is_ok());
+    if let Ok(tempstampo) = tempstampo {
+        bajtoj.extend_from_slice(&tempstampo);
+        let komito = Komito {
+            arbo: Haketo::el_bajtoj(arbo),
+            gepatro: havas_gepatron.then_some(Haketo::el_bajtoj(gepatra)),
+            mesagxo: String::from(char::from(signo & 0x7f)),
+            kreita_je,
+        };
+
+        kani::cover!(havas_gepatron);
+        kani::cover!(!havas_gepatron);
+        kani::cover!(kreita_je == u64::MAX);
         let rezulto = Komito::malseriigi(&bajtoj);
         assert!(rezulto.is_ok());
         if let Ok(relegita) = rezulto {
@@ -203,29 +246,22 @@ fn pruvo_komito_rondiro() {
 
 /// Ĉiuj prefiksoj kaj gepatro-etikedoj de fiksa sengepatra komito.
 #[kani::proof]
-#[kani::unwind(40)]
+#[kani::unwind(16)]
 fn pruvo_komito_nevalida_kodigo() {
-    let komito = Komito {
-        arbo: fiksa_haketo(),
-        gepatro: None,
-        mesagxo: String::from("a"),
-        kreita_je: 128,
-    };
-    let kodita = komito.seriigi();
-    assert!(kodita.is_ok());
-    if let Ok(mut bajtoj) = kodita {
-        let etikedo: u8 = kani::any();
-        bajtoj[HAKETA_LONGO] = etikedo;
-        let longo = usize::from(kani::any::<u8>());
-        if let Some(prefikso) = bajtoj.get(..longo) {
-            let rezulto = Komito::malseriigi(prefikso);
-            let valida = longo == bajtoj.len() && etikedo == 0;
-            kani::cover!(valida && rezulto.is_ok());
-            kani::cover!(longo == 0 && rezulto.is_err());
-            kani::cover!(longo == bajtoj.len() && etikedo == 1 && rezulto.is_err());
-            kani::cover!(longo == bajtoj.len() && etikedo > 1 && rezulto.is_err());
-            assert!(rezulto.is_ok() == valida);
-        }
+    let mut bajtoj = alloc::vec::Vec::new();
+    bajtoj.extend_from_slice(&[7u8; HAKETA_LONGO]);
+    bajtoj.extend_from_slice(&[0, 1, b'a', 0x80, 0x01]);
+    let etikedo: u8 = kani::any();
+    bajtoj[HAKETA_LONGO] = etikedo;
+    let longo = usize::from(kani::any::<u8>());
+    if let Some(prefikso) = bajtoj.get(..longo) {
+        let rezulto = Komito::malseriigi(prefikso);
+        let valida = longo == bajtoj.len() && etikedo == 0;
+        kani::cover!(valida && rezulto.is_ok());
+        kani::cover!(longo == 0 && rezulto.is_err());
+        kani::cover!(longo == bajtoj.len() && etikedo == 1 && rezulto.is_err());
+        kani::cover!(longo == bajtoj.len() && etikedo > 1 && rezulto.is_err());
+        assert!(rezulto.is_ok() == valida);
     }
 }
 

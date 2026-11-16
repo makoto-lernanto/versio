@@ -65,7 +65,8 @@ jobs:
           - pruvo_vojo_sekura
           - pruvo_legilo_neniam_panikas
           - pruvo_dekodo_limigita
-          - pruvo_komito_rondiro
+          - pruvo_komito_seriigo
+          - pruvo_komito_malseriigo
           - pruvo_komito_nevalida_kodigo
     steps:
       - name: Checkout repository

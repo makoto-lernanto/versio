@@ -280,6 +280,7 @@ mod testoj {
     use crate::stokado::{Haketo, haketi};
     use alloc::string::String;
     use alloc::vec;
+    use alloc::vec::Vec;
 
     fn haketo(nombro: u8) -> Haketo {
         Haketo::el_bajtoj([nombro; 32])
@@ -457,6 +458,20 @@ mod testoj {
                 );
             }
         }
+    }
+
+    #[test]
+    fn testo_komito_fiksa_kodajo() {
+        let komito = Komito {
+            arbo: haketo(7),
+            gepatro: None,
+            mesagxo: String::from("a"),
+            kreita_je: 128,
+        };
+        let mut atendita = Vec::new();
+        atendita.extend_from_slice(&[7u8; 32]);
+        atendita.extend_from_slice(&[0, 1, b'a', 0x80, 0x01]);
+        assert_eq!(komito.seriigi().unwrap(), atendita);
     }
 
     #[test]
