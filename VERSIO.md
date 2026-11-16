@@ -19,7 +19,7 @@
   - `rayon`: paralela dosieruja trairado kaj diff-kalkulado.
   - `clap`: komandlinia analizado (kun la `derive`-trajto ŝaltita).
   - `thiserror` / `anyhow`: erartraktado.
-  - `kani`: (enkondukota en Fazo 3) formala pruvado.
+  - `kani`: formala pruvado (enkondukita en Fazo 4, rulata nur en CI).
 
 ### 1.2 Dosierstrukturo
 
@@ -103,8 +103,8 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 2. Verku skripton aŭ dokumenton klarigantan, kiel importi ekzistantan git-deponejon de `mikerno` per `vs` (koncepta pruvo).
 
 **Akceptokriterioj**:
-- [ ] `cargo kani` sukcese ruliĝas, pruvante ke la celataj funkcioj havas neniun transpaŝon de limoj kaj neniun nedifinitan konduton.
-- [ ] Provizu dokumenton `MIKERNO_INTEGRO.md`, registrantan la preliminajn testrezultojn pri administrado de la fontkodo de `mikerno` per `vs`.
+- [x] `cargo kani` sukcese ruliĝas, pruvante ke la celataj funkcioj havas neniun transpaŝon de limoj kaj neniun nedifinitan konduton.
+- [x] Provizu dokumenton `MIKERNO_INTEGRO.md`, registrantan la preliminajn testrezultojn pri administrado de la fontkodo de `mikerno` per `vs`.
 
 ---
 
@@ -169,6 +169,8 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 - **Aŭtomata CI**: ĉiu `git push` al `main` kaj ĉiu pull-request rulas `.github/workflows/ci.yml`: unue `Lint and build` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste la matrico `Kani (<pruvo>)`.
 - **Formala pruvado**: ĉiu pruvo rulas en propra matrica laboro per la oficiala `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `timeout -s KILL 600 cargo kani -p libversio --harness <pruvo>` sur `ubuntu-latest`. `fail-fast: false` certigas, ke ĉiuj pruvoj raportas; 600-sekunda tempolimo kaj 30-minuta laborlimo malebligas, ke unu ŝvebanta pruvo kaŝu la ceterajn aŭ forprenu la protokolojn.
 - **Pruvamplekso**: ses kontroloj — la kvin ekzistantaj pruvoj pri kanonika arbo-ordo, duplikataj vojoj, voja sekureco, legado de nekonfidindaj bajtoj kaj limigo de deklaritaj kvantoj; plus Fazo-4-pruvo pri komita seriigado kun simbolikaj haketoj, mesaĝo kaj tempstampo. Plena malkodado de arbitraj `Komito`-kadroj ne estas pruvita per Kani: la postcard/UTF-8-vojoj superas la mezuritan formulbuĝeton de la CI eĉ kun konkretaj kadroj. Tiun kampon kovras unuoptestoj (rondiroj, etikedoj, tranĉoj, varintaj limoj) kaj la arbitraj-bajta pruvo pri la legilo. Vidu `MIKERNO_INTEGRO.md` por la preciza amplekso, la mezuritaj limoj, realaj integratestoj kaj la nuba stato.
+- **Kani-kodo ne kompiliĝas loke**: `libversio/src/pruvoj.rs` estas `#[cfg(kani)]`, do lokaj `fmt`, `Clippy` kaj testoj ne kaptas erarojn en ĝi. Ĉiu ŝanĝo al la pruvoj validas nur post verda CI-matrico.
+- **Nuba stato**: revizio `676ecf8` sukcese finis la CI-rulon [`43865689840`](https://github.com/makoto-lernanto/versio/actions/runs/43865689840) — `Lint and build` kaj ĉiuj ses `Kani (...)`-laboroj verdaj (2026-11-16).
 - **Aŭtomata liverado**: post kodŝanĝoj kaj la permesitaj lokaj kontroloj, aŭtomate kreu novan komiton kaj puŝu ĝin por ekigi CI, sen aparta konfirmo. Se CI malsukcesas, analizu la protokolojn, korektu la kaŭzon kaj denove komitu kaj puŝu; ne malfortigu kontrolojn. Tiu permeso ne inkluzivas devigan puŝon aŭ reverkadon de historio.
 - **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
 - **Difino de finiteco**: la laboro `Lint and build` kaj ĉiuj laboroj `Kani (...)` devas esti verdaj en GitHub Actions.

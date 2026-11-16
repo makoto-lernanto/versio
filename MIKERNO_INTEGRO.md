@@ -153,6 +153,9 @@ La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en debug-reĝimo;
 aldonita. La nuna CI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
 konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
-**Nuba stato: atendata por la revizio kun ses pruvoj.** Nur post sukcesa
-GitHub Actions-rulo de la ŝanĝita revizio (`Lint and build` kaj ĉiuj ses
-Kani-laboroj) la formala akceptokriterio de Fazo 4 povas esti markita plenumita.
+**Nuba stato: verda.** GitHub Actions-rulo
+[`43865689840`](https://github.com/makoto-lernanto/versio/actions/runs/43865689840)
+de revizio `676ecf8` sukcese finis `Lint and build` kaj ĉiujn ses
+`Kani (...)`-laborojn. La plej longa pruvo, `pruvo_arbo_kanonika`, daŭris 4
+minutojn; ĉiuj restis sub la 600-sekunda limo. Tiel la formala
+akceptokriterio de Fazo 4 estas plenumita.
