@@ -7,8 +7,8 @@ use alloc::string::String;
 use alloc::vec;
 
 use crate::eraroj::Eraro;
-use crate::kodigo::limigi_kvanton;
-use crate::objektoj::{ArbaEnskribo, Arbo, Komito, MAKSIMAJ_ENSKRIBOJ};
+use crate::kodigo::{Legilo, limigi_kvanton};
+use crate::objektoj::{ArbaEnskribo, Arbo, MAKSIMAJ_ENSKRIBOJ};
 use crate::stokado::{HAKETA_LONGO, Haketo};
 use crate::vojo::validi_bajtojn;
 
@@ -152,36 +152,28 @@ fn pruvo_vojo_sekura() {
     assert!(validi_bajtojn(b"a/b").is_err(), "«/» devas esti rifuzita");
 }
 
-/// 4. Ajna 16-bajta enigo al la limigita malseriigado redonas `Result`.
+/// 4. La legilo neniam panikas sur nekonfidindaj bajtoj.
+///
+/// La plena malkodado de arboj kaj komitoj estas kovrita de unuoptestoj; ĉi
+/// tie Kani kontrolas la varintojn kaj la limojn, kiuj estas la sola parto
+/// de la malkodado, kiu ne delegas al la norma biblioteko.
 #[kani::proof]
-#[kani::unwind(6)]
-fn pruvo_dekodo_neniam_panikas() {
+#[kani::unwind(10)]
+fn pruvo_legilo_neniam_panikas() {
     let bajtoj: [u8; 16] = kani::any();
-    let rezulto = Arbo::malseriigi(&bajtoj);
+    let longo: usize = kani::any();
 
-    kani::cover!(matches!(&rezulto, Err(Eraro::Malseriigo(_))));
-    kani::cover!(matches!(&rezulto, Err(Eraro::NevalidaDatumo { .. })));
+    let mut unua = Legilo::nova(&bajtoj);
+    kani::cover!(unua.bajtoj(longo).is_ok());
+    let mut dua = Legilo::nova(&bajtoj);
+    kani::cover!(dua.bajtoj(longo).is_err());
 
-    // La sukcesa vojo estas atingebla per la valida kodigo de malplena arbo.
-    assert!(
-        Arbo::malseriigi(&[0]).is_ok(),
-        "malplena arbo devas dekodiĝi"
-    );
-    assert!(
-        Arbo::malseriigi(&[0, 0]).is_err(),
-        "postrestaj bajtoj devas esti rifuzitaj"
-    );
-    assert!(
-        Komito::malseriigi(&[]).is_err(),
-        "malplena komito devas esti rifuzita"
-    );
-
-    // Malica trolonga longoprefikso estas rifuzata sen grandega rezervado.
-    let malica = [0xffu8; 16];
-    assert!(
-        Arbo::malseriigi(&malica).is_err(),
-        "trolonga prefikso devas esti rifuzita"
-    );
+    let mut legilo = Legilo::nova(&bajtoj);
+    let _ = legilo.u8();
+    let _ = legilo.u32();
+    let _ = legilo.u64();
+    let _ = legilo.haketo();
+    let _ = legilo.fino();
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.

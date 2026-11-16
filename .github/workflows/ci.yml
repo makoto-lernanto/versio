@@ -63,7 +63,7 @@ jobs:
           - pruvo_arbo_kanonika
           - pruvo_arbo_duplikatoj
           - pruvo_vojo_sekura
-          - pruvo_dekodo_neniam_panikas
+          - pruvo_legilo_neniam_panikas
           - pruvo_dekodo_limigita
     steps:
       - name: Checkout repository
