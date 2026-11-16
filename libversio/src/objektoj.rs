@@ -136,7 +136,9 @@ impl Arbo {
         for enskribo in &enskriboj {
             validi_komponanton(enskribo.nomo())?;
         }
-        enskriboj.sort_by(|unu, du| unu.nomo().cmp(du.nomo()));
+        // La ordo inter egalaj nomoj ne gravas, ĉar egalaj nomoj estas rifuzataj
+        // tuj poste; tial la stabila ordigo ne necesas.
+        enskriboj.sort_unstable_by(|unu, du| unu.nomo().cmp(du.nomo()));
         for paro in enskriboj.windows(2) {
             if let [unu, du] = paro
                 && unu.nomo() == du.nomo()
