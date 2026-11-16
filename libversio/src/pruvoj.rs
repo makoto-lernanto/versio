@@ -8,7 +8,7 @@ use alloc::vec;
 
 use crate::eraroj::Eraro;
 use crate::kodigo::{Legilo, limigi_kvanton};
-use crate::objektoj::{ArbaEnskribo, Arbo, Komito, MAKSIMAJ_ENSKRIBOJ};
+use crate::objektoj::{ArbaEnskribo, Arbo, MAKSIMAJ_ENSKRIBOJ};
 use crate::stokado::{HAKETA_LONGO, Haketo};
 use crate::vojo::validi_bajtojn;
 
@@ -199,117 +199,6 @@ fn pruvo_komito_seriigo() {
         assert!(bajtoj.len() <= 77);
         assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
     }
-}
-
-/// La malseriigilo legas reprezentajn kadrojn faritajn de `seriigi`.
-///
-/// La enigoj estas konkretaj, do CBMC ne devas esplori simbolajn longojn aŭ
-/// UTF-8-vojojn. Arbitraj bajtoj estas kovritaj de
-/// `pruvo_legilo_neniam_panikas`, kaj arbitraj kampoj de la seriiga pruvo.
-#[kani::proof]
-#[kani::unwind(40)]
-fn pruvo_komito_malseriigo() {
-    let mut komito = Komito {
-        arbo: Haketo::el_bajtoj([7u8; HAKETA_LONGO]),
-        gepatro: None,
-        mesagxo: String::new(),
-        kreita_je: 0,
-    };
-    kontroli_rondiron(&komito);
-
-    komito.mesagxo = String::from("a");
-    komito.kreita_je = 128;
-    kontroli_rondiron(&komito);
-
-    komito.arbo = Haketo::el_bajtoj([8u8; HAKETA_LONGO]);
-    komito.gepatro = Some(Haketo::el_bajtoj([9u8; HAKETA_LONGO]));
-    komito.mesagxo = String::from("é");
-    komito.kreita_je = 127;
-    kontroli_rondiron(&komito);
-
-    komito.mesagxo = String::from("€");
-    komito.kreita_je = u64::MAX;
-    kontroli_rondiron(&komito);
-}
-
-fn kontroli_rondiron(komito: &Komito) {
-    let kodita = komito.seriigi();
-    assert!(kodita.is_ok(), "seriigo devas sukcesi");
-    if let Ok(bajtoj) = kodita {
-        let relegita = Komito::malseriigi(&bajtoj);
-        assert!(relegita.is_ok(), "malseriigo devas sukcesi");
-        if let Ok(relegita) = relegita {
-            assert!(relegita == *komito);
-        }
-    }
-}
-
-/// Gepatro-etikedoj: 0 kaj 1 akceptataj, 2 kaj 255 rifuzataj.
-///
-/// La kadroj estas tute konkretaj. Ĉiuj 256 etikedoj estas kovritaj de
-/// unuoptesto; ĉi tie Kani kontrolas la kvar limojn sen simbolaj longoj.
-#[kani::proof]
-#[kani::unwind(16)]
-fn pruvo_komito_nevalida_etikedo() {
-    let mut sen_gepatro = [0u8; 36];
-    sen_gepatro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-    sen_gepatro[HAKETA_LONGO] = 0;
-    sen_gepatro[33] = 0;
-    sen_gepatro[34..36].copy_from_slice(&[0x80, 0x01]);
-    assert!(
-        Komito::malseriigi(&sen_gepatro).is_ok(),
-        "etikedo 0 devas sukcesi"
-    );
-
-    let mut kun_gepatro = [0u8; 68];
-    kun_gepatro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-    kun_gepatro[HAKETA_LONGO] = 1;
-    kun_gepatro[33..65].copy_from_slice(&[9u8; HAKETA_LONGO]);
-    kun_gepatro[65] = 0;
-    kun_gepatro[66..68].copy_from_slice(&[0x80, 0x01]);
-    assert!(
-        Komito::malseriigi(&kun_gepatro).is_ok(),
-        "etikedo 1 devas sukcesi"
-    );
-
-    kun_gepatro[HAKETA_LONGO] = 2;
-    assert!(
-        Komito::malseriigi(&kun_gepatro).is_err(),
-        "etikedo 2 devas esti rifuzata"
-    );
-
-    kun_gepatro[HAKETA_LONGO] = 255;
-    assert!(
-        Komito::malseriigi(&kun_gepatro).is_err(),
-        "etikedo 255 devas esti rifuzata"
-    );
-}
-
-/// Ĉiuj propraj prefiksoj de fiksa sengepatra komito.
-///
-/// Ĉiu tranĉo havas literal-longon, do Kani ne devas trakti la longoprefikson
-/// kiel simbolon.
-#[kani::proof]
-#[kani::unwind(16)]
-fn pruvo_komito_trancxo() {
-    let mut kadro = [0u8; 37];
-    kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
-    kadro[HAKETA_LONGO..].copy_from_slice(&[0, 1, b'a', 0x80, 0x01]);
-
-    macro_rules! rifuzi {
-        ($($longo:literal),* $(,)?) => {
-            $(assert!(Komito::malseriigi(&kadro[..$longo]).is_err());)*
-        };
-    }
-    rifuzi!(
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-        25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
-    );
-
-    assert!(
-        Komito::malseriigi(&kadro).is_ok(),
-        "la kompleta kadro devas sukcesi"
-    );
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.

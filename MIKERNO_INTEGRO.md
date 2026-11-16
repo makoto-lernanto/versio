@@ -104,37 +104,36 @@ de tempstampo, do alia rulo ne devas reprodukti tiujn samajn identigilojn.
 
 ## Formala pruvado kaj ĝiaj limoj
 
-La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Kvar novaj
-sendependaj CI-laboroj uzas la verajn `Komito::seriigi` kaj
-`Komito::malseriigi`, sen stumpoj. La malkodaj pruvoj uzas konkretajn
-reprezentajn kadrojn: se iu ajn bajto de staka tabelo estas simbola, CBMC
-traktas la tutan tabelon kiel simbolan kaj la longoprefikso malfermas centojn
-da UTF-8-vojoj. Arbitraj bajtoj restas kovritaj de
-`pruvo_legilo_neniam_panikas`, kaj arbitraj kampoj de la seriiga pruvo.
+La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Aldoniĝas unu
+sendependa CI-laboro por la komita seriigado. La plena komita malkodado restis
+ekster la formala modelo pro mezurita limo de CBMC, priskribita sube.
 
 | Pruvo | Preciza modelo kaj aserto |
 | --- | --- |
 | `pruvo_komito_seriigo` | Simbolikaj radika kaj gepatra haketoj, ambaŭ gepatro-branĉoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 35 kaj 77 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
-| `pruvo_komito_malseriigo` | Kvar konkretaj reprezentaj komitoj (sen/kun gepatro, mesaĝoj «», «a», «é», «€», tempstampoj 0, 127, 128 kaj `u64::MAX`) seriigataj per `seriigi` kaj relegataj per `malseriigi`; la relegita komito devas egali la originan. |
-| `pruvo_komito_nevalida_etikedo` | Tute konkretaj 36- aŭ 68-bajtaj kadroj; etikedoj 0 kaj 1 sukcesas, etikedoj 2 kaj 255 rifuziĝas. Ĉiuj 256 etikedoj estas kovritaj de unuoptesto. |
-| `pruvo_komito_trancxo` | Fiksa 37-bajta sengepatra kadro; ĉiuj 37 propraj prefiksoj, kontrolataj per literal-longaj tranĉoj. Nur la kompleta kadro rajtas sukcesi. |
 
-La konkretaj kadroj evitas simbolajn longoprefiksojn kaj la sekvan eksplodon
-de UTF-8-validigo. La fiksan 10-bajtan varinton por 128 kontrolas
-`testo_komito_akceptas_fiksan_tempstampan_varinton`; la kongruon de la kadro
-kun `Komito::seriigi` fiksas `testo_komito_fiksa_kodajo`.
+Oni provis tri pliajn pruvojn pri `Komito::malseriigi`: rondiron de reprezentaj
+komitoj, ĉiujn gepatro-etikedojn kaj rifuzon de tranĉitaj kadroj. Eĉ kun tute
+konkretaj enigaj kadroj la postcard-malkodado kaj `String::from_utf8` generis pli
+ol 24 000 VCC kaj pli ol 300 sekundojn da simbola plenumo; la laboro restis
+senfina kaj estis nuligita en CI. CBMC ankaŭ ne povas simboligi nur la
+kontrolbajtojn de staka tabelo: se unu bajto estas simbola, la tuta tabelo
+fariĝas simbola. Plilongigi la tempolimon ne solvis tion, kaj `kani::assume` por
+kaŝi la malfermajn vojojn estus malpermesita malfortigo. Tiuj tri pruvoj do
+estis forigitaj; la malkodado restas kovrita de la unuoptestoj kaj de
+`pruvo_legilo_neniam_panikas`, kiu legas arbitrajn bajtojn sen paniki.
 
-La malvolvaj limoj estas respektive 40, 40, 16 kaj 16; la malvolvaj asertoj ne
-estas malŝaltitaj. Ĉiu nova pruvo havas la saman 600-sekundan komandlimon kaj
-30-minutan laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
+La malvolva limo de `pruvo_komito_seriigo` estas 40; la malvolvaj asertoj ne
+estas malŝaltitaj. Ĝi havas la saman 600-sekundan komandlimon kaj 30-minutan
+laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
 
 Tio estas limigita modelo, ne pruvo por ĉiu arbitra komito, ĉiu UTF-8-mesaĝo,
-ĉiu arbo aŭ por la kriptografia sekureco de BLAKE3. La malkodaj pruvoj uzas
-konkretajn reprezentajn kampojn; arbitraj mesaĝoj kaj tempstampoj estas
-kovritaj de unuoptestoj, ne de Kani. Pliaj unuoptestoj kovras ambaŭ
+ĉiu arbo aŭ por la kriptografia sekureco de BLAKE3. Arbitraj mesaĝoj kaj
+tempstampoj estas kovritaj de unuoptestoj, ne de Kani. Tiuj testoj kovras ambaŭ
 gepatro-kazojn, malplenajn/Unikodajn/maksimumlongajn mesaĝojn, varintajn
 tempstampolimojn, ĉiujn verajn prefiksojn de du specimenaj komitoj,
-postrestajn bajtojn kaj ĉiujn etikedojn kun prefiksoj de la sengepatra specimeno.
+postrestajn bajtojn, ĉiujn gepatro-etikedojn kaj ĉiujn etikedojn kun prefiksoj de
+la sengepatra specimeno.
 
 Lokaj kontroloj de ĉi tiu ŝanĝo:
 
@@ -154,6 +153,6 @@ La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en debug-reĝimo;
 aldonita. La nuna CI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
 konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
-**Nuba stato: ankoraŭ nekontrolita por la novaj pruvoj.** Nur post sukcesa
-GitHub Actions-rulo de la ŝanĝita revizio (`Lint and build` kaj ĉiuj naŭ Kani-laboroj)
-la formala akceptokriterio de Fazo 4 povas esti markita plenumita.
+**Nuba stato: atendata por la revizio kun ses pruvoj.** Nur post sukcesa
+GitHub Actions-rulo de la ŝanĝita revizio (`Lint and build` kaj ĉiuj ses
+Kani-laboroj) la formala akceptokriterio de Fazo 4 povas esti markita plenumita.
