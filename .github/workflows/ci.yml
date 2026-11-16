@@ -75,9 +75,10 @@ jobs:
           targets: x86_64-unknown-none
 
       # The official action installs Kani and then runs the given command.
-      # `timeout` bounds the proof only, not the installation.
+      # `timeout` bounds the proof only, not the installation; SIGKILL avoids
+      # leaving a memory-starved CBMC process behind.
       - name: Verify ${{ matrix.harness }}
         uses: model-checking/kani-github-action@v1
         with:
           command: timeout
-          args: -k 10 600 cargo kani -p libversio --harness ${{ matrix.harness }}
+          args: -s KILL 600 cargo kani -p libversio --harness ${{ matrix.harness }}

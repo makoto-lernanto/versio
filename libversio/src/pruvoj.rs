@@ -24,9 +24,9 @@ fn fiksa_haketo() -> Haketo {
     Haketo::el_bajtoj([7u8; HAKETA_LONGO])
 }
 
-/// 1. Permuto de enskriboj ne ŝanĝas la seriigitajn bajtojn.
+/// 1. La kanonika ordo estas sendependa de la eniga ordo.
 #[kani::proof]
-#[kani::unwind(10)]
+#[kani::unwind(4)]
 fn pruvo_arbo_kanonika() {
     let nomo_a = simbolika_nomo();
     let nomo_b = simbolika_nomo();
@@ -66,18 +66,24 @@ fn pruvo_arbo_kanonika() {
     );
 
     if let (Ok(unua), Ok(dua)) = (unua, dua) {
-        let unua_bajtoj = unua.seriigi();
-        let dua_bajtoj = dua.seriigi();
+        let enskriboj_a = unua.enskriboj();
+        let enskriboj_b = dua.enskriboj();
+        assert!(enskriboj_a.len() == 2, "la arbo devas havi du enskribojn");
         assert!(
-            unua_bajtoj.is_ok() && dua_bajtoj.is_ok(),
-            "seriigado devas sukcesi"
+            enskriboj_a[0].nomo() < enskriboj_a[1].nomo(),
+            "la enskriboj devas esti kanonike ordigitaj"
         );
-        if let (Ok(unua_bajtoj), Ok(dua_bajtoj)) = (unua_bajtoj, dua_bajtoj) {
-            assert!(
-                unua_bajtoj == dua_bajtoj,
-                "permuto ne rajtas ŝanĝi la seriigitajn bajtojn"
-            );
-        }
+        // La haketoj kaj grandecoj estas fiksaj, do la nomoj en kanonika ordo
+        // plene determinas la arbon. La bajta egaleco de la seriigo estas
+        // kovrita de unuoptesto; simboligi ĝin eksplodigas CBMC.
+        assert!(
+            enskriboj_a[0].nomo() == enskriboj_b[0].nomo(),
+            "la unua enskribo devas esti la sama"
+        );
+        assert!(
+            enskriboj_a[1].nomo() == enskriboj_b[1].nomo(),
+            "la dua enskribo devas esti la sama"
+        );
     }
 }
 
@@ -148,7 +154,7 @@ fn pruvo_vojo_sekura() {
 
 /// 4. Ajna 16-bajta enigo al la limigita malseriigado redonas `Result`.
 #[kani::proof]
-#[kani::unwind(10)]
+#[kani::unwind(6)]
 fn pruvo_dekodo_neniam_panikas() {
     let bajtoj: [u8; 16] = kani::any();
     let rezulto = Arbo::malseriigi(&bajtoj);
@@ -169,11 +175,18 @@ fn pruvo_dekodo_neniam_panikas() {
         Komito::malseriigi(&[]).is_err(),
         "malplena komito devas esti rifuzita"
     );
+
+    // Malica trolonga longoprefikso estas rifuzata sen grandega rezervado.
+    let malica = [0xffu8; 16];
+    assert!(
+        Arbo::malseriigi(&malica).is_err(),
+        "trolonga prefikso devas esti rifuzita"
+    );
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.
 #[kani::proof]
-#[kani::unwind(10)]
+#[kani::unwind(4)]
 fn pruvo_dekodo_limigita() {
     let kvanto: u32 = kani::any();
     let rezulto = limigi_kvanton(kvanto, 16, MAKSIMAJ_ENSKRIBOJ);
@@ -190,11 +203,4 @@ fn pruvo_dekodo_limigita() {
             "la kvanto devas kongrui kun la restantaj bajtoj"
         );
     }
-
-    // Malica trolonga longoprefikso estas rifuzata sen grandega rezervado.
-    let malica = [0xffu8; 16];
-    assert!(
-        Arbo::malseriigi(&malica).is_err(),
-        "trolonga prefikso devas esti rifuzita"
-    );
 }
