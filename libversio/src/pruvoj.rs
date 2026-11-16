@@ -218,45 +218,43 @@ fn pruvo_komito_malseriigo() {
     // La kadro estas konstruata permane por ke la longoprefikso restu
     // konkreta; `testo_komito_fiksa_kodajo` kontrolas la saman aranĝon.
     //
-    // JUSTIFIKO: la malkodado okazas ene de ĉiu branĉo, kaj la bufro havas
-    // antaŭe rezervitan kapaciton. Alie CBMC kunfandus malsamajn bufrojn aŭ
-    // kopius la prefikson dum kreskigo, kaj traktus la konkretan mesaĝolongon
-    // kiel simbolan valoron, kio eksplodigus la UTF-8-validigon.
+    // JUSTIFIKO: la kadro estas fiksa staka tabelo, ne `Vec`. Kani traktas
+    // `Vec`-enhavon kun simbolaj kampoj kiel unu simbolan tabelon, do ankaŭ la
+    // konkreta mesaĝolongo fariĝus simbolo kaj la UTF-8-validigo eksplodus.
+    // La tempstampo estas skribata per valida, fiksa 10-bajta varinto.
     if havas_gepatron {
-        let mut bajtoj = alloc::vec::Vec::with_capacity(77);
-        bajtoj.extend_from_slice(&arbo);
-        bajtoj.push(1);
-        bajtoj.extend_from_slice(&gepatra);
-        bajtoj.extend_from_slice(&[1, signo & 0x7f]);
-        let tempstampo = postcard::to_allocvec(&kreita_je);
-        assert!(tempstampo.is_ok());
-        if let Ok(tempstampo) = tempstampo {
-            bajtoj.extend_from_slice(&tempstampo);
-            let komito = Komito {
-                arbo: Haketo::el_bajtoj(arbo),
-                gepatro: Some(Haketo::el_bajtoj(gepatra)),
-                mesagxo: String::from(char::from(signo & 0x7f)),
-                kreita_je,
-            };
-            kontroli_malseriigon(&bajtoj, &komito);
-        }
+        let mut kadro = [0u8; 77];
+        kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
+        kadro[HAKETA_LONGO] = 1;
+        kadro[33..65].copy_from_slice(&gepatra);
+        kadro[65] = 1;
+        kadro[66] = signo & 0x7f;
+        let mut tempstampo = [0u8; 10];
+        skribi_tempstampon(kreita_je, &mut tempstampo);
+        kadro[67..77].copy_from_slice(&tempstampo);
+        let komito = Komito {
+            arbo: Haketo::el_bajtoj(arbo),
+            gepatro: Some(Haketo::el_bajtoj(gepatra)),
+            mesagxo: String::from(char::from(signo & 0x7f)),
+            kreita_je,
+        };
+        kontroli_malseriigon(&kadro, &komito);
     } else {
-        let mut bajtoj = alloc::vec::Vec::with_capacity(77);
-        bajtoj.extend_from_slice(&arbo);
-        bajtoj.push(0);
-        bajtoj.extend_from_slice(&[1, signo & 0x7f]);
-        let tempstampo = postcard::to_allocvec(&kreita_je);
-        assert!(tempstampo.is_ok());
-        if let Ok(tempstampo) = tempstampo {
-            bajtoj.extend_from_slice(&tempstampo);
-            let komito = Komito {
-                arbo: Haketo::el_bajtoj(arbo),
-                gepatro: None,
-                mesagxo: String::from(char::from(signo & 0x7f)),
-                kreita_je,
-            };
-            kontroli_malseriigon(&bajtoj, &komito);
-        }
+        let mut kadro = [0u8; 45];
+        kadro[..HAKETA_LONGO].copy_from_slice(&arbo);
+        kadro[HAKETA_LONGO] = 0;
+        kadro[33] = 1;
+        kadro[34] = signo & 0x7f;
+        let mut tempstampo = [0u8; 10];
+        skribi_tempstampon(kreita_je, &mut tempstampo);
+        kadro[35..45].copy_from_slice(&tempstampo);
+        let komito = Komito {
+            arbo: Haketo::el_bajtoj(arbo),
+            gepatro: None,
+            mesagxo: String::from(char::from(signo & 0x7f)),
+            kreita_je,
+        };
+        kontroli_malseriigon(&kadro, &komito);
     }
 }
 
@@ -268,23 +266,49 @@ fn kontroli_malseriigon(bajtoj: &[u8], komito: &Komito) {
     }
 }
 
-/// Ĉiuj prefiksoj kaj gepatro-etikedoj de fiksa sengepatra komito.
+/// Skribas ajnan `u64` kiel validan fiksan 10-bajtan varinton.
+///
+/// La kutima `postcard`-kodigo estas pli mallonga por malgrandaj valoroj; la
+/// fiksa longo tenas la kadron kaj ties mesaĝolongon konkretaj por Kani.
+fn skribi_tempstampon(valoro: u64, celo: &mut [u8; 10]) {
+    for (indekso, bajto) in celo.iter_mut().enumerate().take(9) {
+        *bajto = (valoro >> (7 * indekso)) as u8 & 0x7f | 0x80;
+    }
+    celo[9] = (valoro >> 63) as u8 & 0x01;
+}
+
+/// Ĉiuj gepatro-etikedoj de fiksa sengepatra komito.
 #[kani::proof]
 #[kani::unwind(16)]
-fn pruvo_komito_nevalida_kodigo() {
-    let mut bajtoj = alloc::vec::Vec::new();
-    bajtoj.extend_from_slice(&[7u8; HAKETA_LONGO]);
-    bajtoj.extend_from_slice(&[0, 1, b'a', 0x80, 0x01]);
+fn pruvo_komito_nevalida_etikedo() {
     let etikedo: u8 = kani::any();
-    bajtoj[HAKETA_LONGO] = etikedo;
+    let mut kadro = [0u8; 37];
+    kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+    kadro[HAKETA_LONGO] = etikedo;
+    kadro[33..].copy_from_slice(&[1, b'a', 0x80, 0x01]);
+
+    let rezulto = Komito::malseriigi(&kadro);
+    let valida = etikedo == 0;
+    kani::cover!(valida && rezulto.is_ok());
+    kani::cover!(etikedo == 1 && rezulto.is_err());
+    kani::cover!(etikedo > 1 && rezulto.is_err());
+    assert!(rezulto.is_ok() == valida);
+}
+
+/// Ĉiuj prefiksoj de fiksa sengepatra komito.
+#[kani::proof]
+#[kani::unwind(16)]
+fn pruvo_komito_trancxo() {
+    let mut kadro = [0u8; 37];
+    kadro[..HAKETA_LONGO].copy_from_slice(&[7u8; HAKETA_LONGO]);
+    kadro[HAKETA_LONGO..].copy_from_slice(&[0, 1, b'a', 0x80, 0x01]);
     let longo = usize::from(kani::any::<u8>());
-    if let Some(prefikso) = bajtoj.get(..longo) {
+    if let Some(prefikso) = kadro.get(..longo) {
         let rezulto = Komito::malseriigi(prefikso);
-        let valida = longo == bajtoj.len() && etikedo == 0;
+        let valida = longo == kadro.len();
         kani::cover!(valida && rezulto.is_ok());
         kani::cover!(longo == 0 && rezulto.is_err());
-        kani::cover!(longo == bajtoj.len() && etikedo == 1 && rezulto.is_err());
-        kani::cover!(longo == bajtoj.len() && etikedo > 1 && rezulto.is_err());
+        kani::cover!(longo == HAKETA_LONGO && rezulto.is_err());
         assert!(rezulto.is_ok() == valida);
     }
 }

@@ -475,6 +475,25 @@ mod testoj {
     }
 
     #[test]
+    fn testo_komito_akceptas_fiksan_tempstampan_varinton() {
+        for kreita_je in [0, 1, 127, 128, u64::MAX] {
+            let mut bajtoj = Vec::new();
+            bajtoj.extend_from_slice(&[7u8; 32]);
+            bajtoj.extend_from_slice(&[0, 1, b'a']);
+            for indekso in 0..9 {
+                bajtoj.push((kreita_je >> (7 * indekso)) as u8 & 0x7f | 0x80);
+            }
+            bajtoj.push((kreita_je >> 63) as u8 & 0x01);
+
+            let komito = Komito::malseriigi(&bajtoj).unwrap();
+            assert_eq!(komito.kreita_je, kreita_je);
+            assert_eq!(komito.mesagxo, "a");
+            assert_eq!(komito.arbo, haketo(7));
+            assert_eq!(komito.gepatro, None);
+        }
+    }
+
+    #[test]
     fn testo_dosiero_haketo() {
         let dosiero = Dosiero::nova(vec![1u8, 2, 3]);
         assert_eq!(dosiero.enhavo(), &[1, 2, 3]);
