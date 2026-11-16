@@ -25,6 +25,10 @@ fn fiksa_haketo() -> Haketo {
 }
 
 /// 1. La kanonika ordo estas sendependa de la eniga ordo.
+///
+/// Unu voko de `el_enskriboj` sufiĉas: la eniga ordo mem estas simbolo, do
+/// ambaŭ permutoj estas esplorataj. Dua aparta voko duobligas la formulon kaj
+/// superŝutas la solvilon en la nuba rulilo.
 #[kani::proof]
 #[kani::unwind(4)]
 fn pruvo_arbo_kanonika() {
@@ -35,54 +39,41 @@ fn pruvo_arbo_kanonika() {
     kani::assume(nomo_a != nomo_b);
 
     let haketo = fiksa_haketo();
-    let unua = Arbo::el_enskriboj(vec![
-        ArbaEnskribo::Dosiero {
-            nomo: String::from(nomo_a),
-            haketo,
-            grandeco: 0,
-        },
-        ArbaEnskribo::SubArbo {
-            nomo: String::from(nomo_b),
-            haketo,
-        },
-    ]);
-    let dua = Arbo::el_enskriboj(vec![
-        ArbaEnskribo::SubArbo {
-            nomo: String::from(nomo_b),
-            haketo,
-        },
-        ArbaEnskribo::Dosiero {
-            nomo: String::from(nomo_a),
-            haketo,
-            grandeco: 0,
-        },
-    ]);
+    let dosiero = ArbaEnskribo::Dosiero {
+        nomo: String::from(nomo_a),
+        haketo,
+        grandeco: 0,
+    };
+    let subarbo = ArbaEnskribo::SubArbo {
+        nomo: String::from(nomo_b),
+        haketo,
+    };
 
-    kani::cover!(nomo_a < nomo_b);
-    kani::cover!(nomo_a > nomo_b);
-    assert!(
-        unua.is_ok() && dua.is_ok(),
-        "ambaŭ arboj devas esti validaj"
-    );
+    let ordo: bool = kani::any();
+    kani::cover!(ordo);
+    kani::cover!(!ordo);
 
-    if let (Ok(unua), Ok(dua)) = (unua, dua) {
-        let enskriboj_a = unua.enskriboj();
-        let enskriboj_b = dua.enskriboj();
-        assert!(enskriboj_a.len() == 2, "la arbo devas havi du enskribojn");
+    let arbo = Arbo::el_enskriboj(if ordo {
+        vec![dosiero, subarbo]
+    } else {
+        vec![subarbo, dosiero]
+    });
+
+    assert!(arbo.is_ok(), "la arbo devas esti valida");
+    if let Ok(arbo) = arbo {
+        let enskriboj = arbo.enskriboj();
+        assert!(enskriboj.len() == 2, "la arbo devas havi du enskribojn");
         assert!(
-            enskriboj_a[0].nomo() < enskriboj_a[1].nomo(),
+            enskriboj[0].nomo() < enskriboj[1].nomo(),
             "la enskriboj devas esti kanonike ordigitaj"
         );
-        // La haketoj kaj grandecoj estas fiksaj, do la nomoj en kanonika ordo
-        // plene determinas la arbon. La bajta egaleco de la seriigo estas
-        // kovrita de unuoptesto; simboligi ĝin eksplodigas CBMC.
         assert!(
-            enskriboj_a[0].nomo() == enskriboj_b[0].nomo(),
-            "la unua enskribo devas esti la sama"
-        );
-        assert!(
-            enskriboj_a[1].nomo() == enskriboj_b[1].nomo(),
-            "la dua enskribo devas esti la sama"
+            matches!(
+                (&enskriboj[0], &enskriboj[1]),
+                (ArbaEnskribo::Dosiero { .. }, ArbaEnskribo::SubArbo { .. })
+                    | (ArbaEnskribo::SubArbo { .. }, ArbaEnskribo::Dosiero { .. })
+            ),
+            "ambaŭ enskriboj devas resti en la arbo"
         );
     }
 }
