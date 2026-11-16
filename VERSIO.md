@@ -145,7 +145,7 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 ## 🤖 Qoder-instrukcio: Konstitucio pri kvalitaj ruĝaj linioj (Kvalita Konstitucio)
 
 > **Valida amplekso**: De ĉi tiu momento, ĉiuj fazoj (inkluzive de la jam finitaj kodoj de Fazo 1/2) devas esti refanditaj por konformi al ĉi tiu konstitucio.
-> **La sola difino de finiteco (Definition of Done)**: la laborfluo `CI` en GitHub Actions plene verda (ambaŭ `Lint and build` kaj `Kani verification`, vidu sekcion 5). **Ajna ruĝa lumo = la tasko ne estas finita**; estas malpermesite aserti, ke ĝi estis «jam realigita».
+> **La sola difino de finiteco (Definition of Done)**: la laborfluo `CI` en GitHub Actions plene verda (ambaŭ `Lint and build` kaj ĉiuj laboroj `Kani (...)`—vidu la sekcion 5). **Ajna ruĝa lumo = la tasko ne estas finita**; estas malpermesite aserti, ke ĝi estis «jam realigita».
 
 ---
 
@@ -166,9 +166,9 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 > **Deviga regulo**: La loka maŝino **neniam** rulu `just kani`, `cargo kani` aŭ la plenan `just ci`. Kodformo, Clippy, konstruado kaj la formala pruvado per Kani plenumiĝas nur en GitHub Actions, por eviti lokan memorelspezon kaj WSL2-malkonekton.
 
 - **Loka laboro**: redakti kodon kaj ruli nur malpezajn kontrolojn, ekzemple `cargo fmt --all -- --check`, `cargo clippy --workspace --release -- -D warnings` kaj `cargo test --workspace --all-features`.
-- **Aŭtomata CI**: ĉiu `git push` al `main` kaj ĉiu pull-request rulas `.github/workflows/ci.yml`: unue `Lint and build` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste `Kani verification`.
-- **Formala pruvado**: `Kani verification` uzas la oficialan `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `just kani` (`cargo kani -p libversio`) sur `ubuntu-latest`. La laboro havas 90-minutan limon por la CBMC-pruvoj.
+- **Aŭtomata CI**: ĉiu `git push` al `main` kaj ĉiu pull-request rulas `.github/workflows/ci.yml`: unue `Lint and build` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste la matrico `Kani (<pruvo>)`.
+- **Formala pruvado**: ĉiu pruvo rulas en propra matrica laboro per la oficiala `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `timeout -k 10 600 cargo kani -p libversio --harness <pruvo>` sur `ubuntu-latest`. `fail-fast: false` certigas, ke ĉiuj pruvoj raportas; 600-sekunda tempolimo kaj 30-minuta laborlimo malebligas, ke unu ŝvebanta pruvo kaŝu la ceterajn aŭ forprenu la protokolojn.
 - **Pruvamplekso**: kvin altvaloraj kontroloj — kanonika ordo de arbo, rifuzo de duplikataj vojoj, sekureca validigo de vojoj, neniam-panika limigita malkodado de nekonfidindaj bajtoj, kaj limigo de deklaritaj kvantoj antaŭ memora rezervado. La trivialaj enmemoraj konservo-rondiro kaj difekto-rifuzo restas kovritaj de unuoptestoj, ne de Kani.
 - **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
-- **Difino de finiteco**: la laboroj `Lint and build` kaj `Kani verification` devas esti verdaj en GitHub Actions.
+- **Difino de finiteco**: la laboro `Lint and build` kaj ĉiuj laboroj `Kani (...)` devas esti verdaj en GitHub Actions.
 

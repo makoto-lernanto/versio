@@ -47,12 +47,24 @@ jobs:
         run: cargo build -p no_std_provo --target x86_64-unknown-none
 
   # Formal verification, offloaded to the cloud to avoid local OOM kills.
+  # Each harness runs in its own job so one slow proof cannot hide the others,
+  # and so the log of a timed-out proof is still uploaded.
   kani-verify:
-    name: Kani verification
+    name: Kani (${{ matrix.harness }})
     runs-on: ubuntu-latest
     needs: lint-and-build
-    # Leave room for the official action's setup and the CBMC proofs.
-    timeout-minutes: 90
+    # Installation, Kani codegen, and a 10-minute proof budget.
+    timeout-minutes: 30
+    strategy:
+      # Report every harness, even after one of them times out.
+      fail-fast: false
+      matrix:
+        harness:
+          - pruvo_arbo_kanonika
+          - pruvo_arbo_duplikatoj
+          - pruvo_vojo_sekura
+          - pruvo_dekodo_neniam_panikas
+          - pruvo_dekodo_limigita
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -62,13 +74,10 @@ jobs:
         with:
           targets: x86_64-unknown-none
 
-      - name: Install just
-        uses: taiki-e/install-action@just
-
-      # The official action installs Kani and then runs the canonical proof
-      # command: cargo kani -p libversio
-      - name: Run Kani proofs via just
+      # The official action installs Kani and then runs the given command.
+      # `timeout` bounds the proof only, not the installation.
+      - name: Verify ${{ matrix.harness }}
         uses: model-checking/kani-github-action@v1
         with:
-          command: just
-          args: kani
+          command: timeout
+          args: -k 10 600 cargo kani -p libversio --harness ${{ matrix.harness }}
