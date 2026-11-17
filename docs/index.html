@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="eo" data-versio="0.1.0">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-t="meta.titolo">Versio — versiokontrola sistemo en Rust</title>
+  <meta name="description" data-t-meta="meta.priskribo"
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, ses formalaj pruvoj kaj reala importo de MiKerno.">
+  <meta name="theme-color" content="#0A0D1C">
+  <meta property="og:title" content="Versio — versiokontrola sistemo en Rust"
+    data-t-meta="meta.titolo">
+  <meta property="og:description"
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, ses formalaj pruvoj kaj reala importo de MiKerno."
+    data-t-meta="meta.priskribo">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://makoto-lernanto.github.io/versio/">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2357E389'/%3E%3Cstop offset='1' stop-color='%235B7CFA'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='45' font-family='Segoe UI,sans-serif' font-size='38' font-weight='800' text-anchor='middle' fill='%230A0D1C'%3EV%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="retejo.css">
+  <script src="tradukoj/angla.js" defer></script>
+  <script src="retejo.js" defer></script>
+</head>
+<body>
+  <a class="salto" href="#cxefa" data-t="salto">Salti al la enhavo</a>
+
+  <header class="kapo">
+    <a class="marko" href="#hejmo" aria-label="Versio — hejmo" data-t-aria="marko.aria">
+      <span class="marka-ikono" aria-hidden="true">V</span>
+      <span class="marka-teksto">
+        <strong>Versio</strong>
+        <span data-t="marko.sub">versiokontrola sistemo</span>
+      </span>
+      <span class="versio" data-versio-montri>0.1.0</span>
+    </a>
+
+    <nav class="navigado" aria-label="Ĉefaj sekcioj" data-t-aria="nav.aria">
+      <a href="#superrigardo" data-t="nav.superrigardo">Superrigardo</a>
+      <a href="#fluo" data-t="nav.fluo">Fluo</a>
+      <a href="#arkitekturo" data-t="nav.arkitekturo">Arkitekturo</a>
+      <a href="#pruvoj" data-t="nav.pruvoj">Pruvoj</a>
+      <a href="#mikerno" data-t="nav.mikerno">MiKerno</a>
+      <a href="#komenci" data-t="nav.komenci">Komenci</a>
+    </nav>
+
+    <div class="agordoj">
+      <div class="akcentoj" role="group" aria-label="Akcento" data-t-aria="akcento.regiloj">
+        <button class="akcento-elektilo" type="button" data-akcento="oro" style="--koloro:#FFB454"
+          aria-label="Akcento: oro" title="oro" aria-pressed="false"></button>
+        <button class="akcento-elektilo" type="button" data-akcento="koralo" style="--koloro:#FF5C8A"
+          aria-label="Akcento: koralo" title="koralo" aria-pressed="false"></button>
+        <button class="akcento-elektilo" type="button" data-akcento="cxielo" style="--koloro:#4CC9FF"
+          aria-label="Akcento: ĉielo" title="ĉielo" aria-pressed="false"></button>
+        <button class="akcento-elektilo" type="button" data-akcento="verdo" style="--koloro:#57E389"
+          aria-label="Akcento: verdo" title="verdo" aria-pressed="true"></button>
+        <button class="akcento-elektilo" type="button" data-akcento="viola" style="--koloro:#A78BFA"
+          aria-label="Akcento: viola" title="viola" aria-pressed="false"></button>
+        <button class="akcento-elektilo" type="button" data-akcento="bluo" style="--koloro:#5B7CFA"
+          aria-label="Akcento: bluo" title="bluo" aria-pressed="false"></button>
+      </div>
+
+      <label class="sxaltilo" title="Ŝalti inter la malluma kaj hela temoj"
+        data-t-title="temo.sxalti">
+        <span id="temoEtikedo">Malluma</span>
+        <input type="checkbox" id="temoSxaltilo" checked aria-label="Malluma temo">
+      </label>
+
+      <div class="lingvo" role="group" aria-label="Lingvo / Language">
+        <button type="button" data-lingvo="eo" aria-pressed="true">EO</button>
+        <button type="button" data-lingvo="en" aria-pressed="false">EN</button>
+      </div>
+
+      <a class="buto norma fonto-ligilo" href="https://github.com/makoto-lernanto/versio">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor">
+          <path
+            d="M8 .8a7.2 7.2 0 0 0-2.3 14c.4.1.5-.2.5-.4v-1.4c-2 .4-2.4-.9-2.4-.9-.3-.8-.8-1-.8-1-.7-.5.1-.5.1-.5.7.1 1.1.7 1.1.7.7 1.1 1.7.8 2.1.6.1-.5.3-.8.5-1-1.6-.2-3.3-.8-3.3-3.5 0-.8.3-1.4.7-1.9-.1-.2-.3-.9.1-1.8 0 0 .6-.2 1.9.7a6.6 6.6 0 0 1 3.5 0c1.3-.9 1.9-.7 1.9-.7.4.9.2 1.6.1 1.8.4.5.7 1.1.7 1.9 0 2.7-1.7 3.3-3.3 3.5.3.3.6.8.6 1.6v2c0 .2.1.5.5.4A7.2 7.2 0 0 0 8 .8Z">
+          </path>
+        </svg>
+        <span data-t="nav.fonto">Fonto</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="cxefa">
+    <section class="heroo" id="hejmo">
+      <div class="heroo-teksto" data-aperu>
+        <p class="supera-etikedo" data-t="hero.supera">Versio 0.1.0 · Rust 2024 · no_std-kerno</p>
+        <h1><span>Versio</span></h1>
+        <p class="heroo-moto" data-t="hero.moto">«La stato, tuj videbla.»</p>
+        <p class="heroo-priskribo" data-t-html="hero.teksto">
+          Versio registras la laborspacon sen kaŝitaj tavoloj: <code>vs ini</code>
+          starigas la deponejon, <code>vs stato</code> montras la ŝanĝojn, kaj
+          <code>vs komitu --noto</code> kaptas la tutan arbon en unu klara komito.
+        </p>
+        <div class="principoj">
+          <span class="principo vigla" data-t="hero.principo1">no_std-kerno</span>
+          <span class="principo">BLAKE3</span>
+          <span class="principo">postcard</span>
+          <span class="principo" data-t="hero.principo4">6 Kani-pruvoj</span>
+          <span class="principo">MiKerno</span>
+        </div>
+        <div class="heroo-butonoj">
+          <a class="buto akcenta granda" href="#komenci" data-t="hero.butono.komenci">Komenci</a>
+          <a class="buto norma granda" href="https://github.com/makoto-lernanto/versio/blob/main/VERSIO.md"
+            data-t="hero.butono.dokumento">Legi la planon</a>
+          <a class="buto subtila granda" href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md"
+            data-t="hero.butono.mikerno">Vidi la integron</a>
+        </div>
+        <p class="heroo-noto">
+          <code>vs ini</code> · <code>vs stato</code> · <code>vs komitu --noto</code>
+          <span data-t="hero.noto">— la CLI mem restas Esperanta.</span>
+        </p>
+      </div>
+
+      <div class="fenestra-scene" data-scene>
+        <div class="terminalo heroa-fenestro revelo" data-fenestro="heroo">
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">RUST</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="hero.terminalo.titolo">Sesio</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">BLAKE3</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="heroaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /home/makoto/provo</span><span class="linio"><span class="akcento">$</span> printf 'saluton\n' &gt; README.md</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Novaj:</span><span class="linio">  README.md</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua versio"</span><span class="linio sukceso">Komito 420b7a102a62eeec870e490c9b4b09805a2798f57f1995cdfaf69cf7f832b596</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Neniu ŝanĝo</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="hero.terminala.noto">La eligoj montras la realan Esperantan CLI-tekston.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="heroaEligo"
+              data-t="hero.kopii">Kopii la sesion</button>
+            <span class="sildeto" data-t="hero.terminala.sildeto">6 PRUVOJ</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="heroo" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="fenestro.restarigi.teksto">La reprezenta sesio ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="statistiko" data-aperu data-t-aria="stat.aria">
+      <div class="statistikero">
+        <strong>4</strong>
+        <span data-t="stat.1">fazoj finitaj</span>
+      </div>
+      <div class="statistikero">
+        <strong>6</strong>
+        <span data-t="stat.2">Kani-pruvoj</span>
+      </div>
+      <div class="statistikero">
+        <strong>10 000</strong>
+        <span data-t="stat.3">dosieroj en stata testo</span>
+      </div>
+      <div class="statistikero">
+        <strong>&lt; 100 ms</strong>
+        <span data-t="stat.4">celo por la stata komando</span>
+      </div>
+    </div>
+
+    <section class="sceno" id="superrigardo" aria-labelledby="superrigardo-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">01</span>
+        <div>
+          <h2 id="superrigardo-titolo" data-t="super.titolo">Superrigardo</h2>
+          <p data-t="super.teksto">
+            La unuaj kvar fazoj starigis realan, testeblan kaj pruvitan fundamenton:
+            de la enhavadresita stokado ĝis la komandlinia fluo kaj la MiKerno-importo.
+          </p>
+        </div>
+      </div>
+
+      <div class="kartaro">
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M3 6h10M9 2l4 4-4 4"></path>
+              <path d="M17 14H7M11 10l-4 4 4 4"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto1.titolo">Unu klara fluo</h3>
+          <p data-t-html="karto1.teksto">
+            Ne ekzistas aparta <code>add</code>: <code>vs komitu</code> kaptas la tutan
+            labordosierujon. <code>vs stato</code> restas la sola lega komando.
+          </p>
+          <span class="sildeto">ini · stato · komitu</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <ellipse cx="10" cy="4.5" rx="6" ry="2.5"></ellipse>
+              <path d="M4 4.5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"></path>
+              <path d="M4 9.5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto2.titolo">Entenata stokado</h3>
+          <p data-t-html="karto2.teksto">
+            Ĉiu objekto loĝas en <code>.vs/objektoj</code>, nomita per sia BLAKE3-haketo
+            kaj kunpremita per LZ4. Neniu ekstera servilo aŭ datumbazo.
+          </p>
+          <span class="sildeto">.vs/objektoj</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="5" y="5" width="10" height="10" rx="1.5"></rect>
+              <path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto3.titolo">no_std-kerno</h3>
+          <p data-t-html="karto3.teksto">
+            <code>libversio</code> uzas nur <code>core</code> kaj <code>alloc</code>;
+            la samaj datummodeloj funkcias en la <code>no_std</code>-sentineleto por
+            <code>x86_64-unknown-none</code>.
+          </p>
+          <span class="sildeto">core + alloc</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M11 2 4 12h5l-1 6 8-11h-5l1-5Z"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto4.titolo">Stato sen prokrasto</h3>
+          <p data-t-html="karto4.teksto">
+            Metadatumoj kaj haketoj estas kaŝmemoritaj en <code>.vs/indekso</code>.
+            La akceptokriterio estas 10 000 dosieroj kun unu ŝanĝo sub 100 ms.
+          </p>
+          <span class="sildeto">10 000 · &lt; 100 ms</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M10 2.5 17 5v5c0 4-3 6.8-7 8-4-1.2-7-4-7-8V5l7-2.5Z"></path>
+              <path d="m7 10 2 2 4-4"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto5.titolo">Formalaj pruvoj</h3>
+          <p data-t="karto5.teksto">
+            Ses Kani-pruvoj kovras kanonikan ordon, duplikatojn, vojan sekurecon,
+            arbitrajn bajtojn, dekodajn limojn kaj komitan seriigadon.
+          </p>
+          <span class="sildeto">Kani · CI</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="2.5" y="3" width="6" height="6" rx="1.2"></rect>
+              <rect x="11.5" y="11" width="6" height="6" rx="1.2"></rect>
+              <path d="M8.5 6h2.8a2.2 2.2 0 0 1 2.2 2.2V11"></path>
+            </svg>
+          </span>
+          <h3 data-t="karto6.titolo">MiKerno, reale</h3>
+          <p data-t-html="karto6.teksto">
+            Momentfoto de MiKerno estis importita per <code>vs</code> mem:
+            99 dosieroj, du komitoj kaj netuŝita originala Git-deponejo.
+          </p>
+          <span class="sildeto" data-t="karto6.sildeto">99 dosieroj</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="sceno" id="fluo" aria-labelledby="fluo-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">02</span>
+        <div>
+          <h2 id="fluo-titolo" data-t="fluo.titolo">La laborfluo</h2>
+          <p data-t="fluo.teksto">
+            Kvar paŝoj, neniuj kaŝitaj stadioj. Ĉiu komando havas unu respondecon
+            kaj klaran eligon.
+          </p>
+        </div>
+      </div>
+
+      <div class="tavoloj" data-aperu>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">01</span>
+          <div>
+            <h3 data-t="fluo.p1.titolo">Iniciati</h3>
+            <p data-t-html="fluo.p1.teksto">
+              <code>vs ini</code> kreas <code>.vs/</code>, la dosieron <code>HEAD</code>
+              kaj la objektujon.
+            </p>
+          </div>
+          <span class="sildeto">vs ini</span>
+        </div>
+        <div class="sago" aria-hidden="true">↓</div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">02</span>
+          <div>
+            <h3 data-t="fluo.p2.titolo">Kapti la staton</h3>
+            <p data-t-html="fluo.p2.teksto">
+              <code>vs stato</code> komparas la laborspacon kun la arbo de
+              <code>HEAD</code> kaj raportas nur modifitajn, novajn kaj forigitajn dosierojn.
+            </p>
+          </div>
+          <span class="sildeto">vs stato</span>
+        </div>
+        <div class="sago" aria-hidden="true">↓</div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">03</span>
+          <div>
+            <h3 data-t="fluo.p3.titolo">Komiti</h3>
+            <p data-t-html="fluo.p3.teksto">
+              <code>vs komitu --noto</code> konservas la tutan arbon, kreas komiton
+              kun gepatro kaj ĝisdatigas <code>HEAD</code>.
+            </p>
+          </div>
+          <span class="sildeto">vs komitu</span>
+        </div>
+        <div class="sago" aria-hidden="true">↓</div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">04</span>
+          <div>
+            <h3 data-t="fluo.p4.titolo">Kontroli</h3>
+            <p data-t-html="fluo.p4.teksto">
+              Loke: formo, Clippy kaj testoj. En CI: <code>no_std</code>-sentineleto
+              kaj la ses Kani-pruvoj.
+            </p>
+          </div>
+          <span class="sildeto">CI</span>
+        </div>
+      </div>
+
+      <div class="terminala-scene" data-scene style="margin-top: 18px">
+        <div class="terminalo revelo" data-fenestro="fluo" data-aperu>
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">STD</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="fluo.fenestro.titolo">Eligo de vs stato</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">REALA</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="fluoEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Modifitaj:</span><span class="linio">  README.md</span><span class="linio">Novaj:</span><span class="linio">  integra-provo.txt</span><span class="linio">Forigitaj:</span><span class="linio">  docs/VORTARO.md</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Kontroli modifon aldonon kaj forigon"</span><span class="linio sukceso">Komito 105513f1a409fa962cab78867cf0006a12ecfe6abe863709b4fb6080050557c7</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Neniu ŝanĝo</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="fluo.fenestro.noto">Sekcioj aperas nur kiam ili havas enhavon.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="fluoEligo"
+              data-t="fluo.kopii">Kopii la sesion</button>
+            <span class="sildeto">REALIGO</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="fluo" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="fluo.restarigi.teksto">La stata eligo ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sceno" id="arkitekturo" aria-labelledby="arkitekturo-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">03</span>
+        <div>
+          <h2 id="arkitekturo-titolo" data-t="ark.titolo">Arkitekturo</h2>
+          <p data-t="ark.teksto">
+            Kvin tavoloj kun mallarĝa API. La kerno ne scias pri la terminalo;
+            la CLI ne scias pri la haketformato.
+          </p>
+        </div>
+      </div>
+
+      <div class="tavoloj" data-aperu>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">01</span>
+          <div>
+            <h3>vs</h3>
+            <p data-t-html="ark.t1.teksto">
+              Komandlinia enirpunkto: <code>ini</code>, <code>stato</code>,
+              <code>komitu</code>, <code>helpo</code>; ĉiu eligo estas Esperanta.
+            </p>
+          </div>
+          <span class="sildeto">bin</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">02</span>
+          <div>
+            <h3>versio-cli</h3>
+            <p data-t="ark.t2.teksto">
+              Tradukas argumentojn al kernaj operacioj kaj zorgas pri erarmesaĝoj
+              kaj eligformo.
+            </p>
+          </div>
+          <span class="sildeto">std</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">03</span>
+          <div>
+            <h3>libversio</h3>
+            <p data-t="ark.t3.teksto">
+              Datummodeloj, voja validigo, kodigo, deponeja stato kaj indekso.
+            </p>
+          </div>
+          <span class="sildeto">core + alloc</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">04</span>
+          <div>
+            <h3 data-t="ark.t4.titolo">Stokado</h3>
+            <p data-t-html="ark.t4.teksto">
+              <code>Konservilo</code> kun BLAKE3-kontrolo; la dosiersistema realigo
+              skribas <code>.lz4</code>-objektojn atomare.
+            </p>
+          </div>
+          <span class="sildeto">BLAKE3 · LZ4</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">05</span>
+          <div>
+            <h3>.vs/</h3>
+            <p data-t-html="ark.t5.teksto">
+              <code>HEAD</code>, <code>indekso</code> kaj <code>objektoj/</code> —
+              la tuta stato de la deponejo en unu dosierujo.
+            </p>
+          </div>
+          <span class="sildeto">CAS</span>
+        </div>
+      </div>
+
+      <p class="ark-noto" data-t-html="ark.noto">
+        La <code>no_std</code>-sentineleto konstruas <code>libversio</code> por
+        <code>x86_64-unknown-none</code>; la dosiersistema tavolo restas malantaŭ
+        la trajto <code>std</code>. La arbo ne enhavas simbolajn ligilojn aŭ
+        plenumeblajn permesbitojn.
+      </p>
+    </section>
+
+    <section class="sceno" id="pruvoj" aria-labelledby="pruvoj-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">04</span>
+        <div>
+          <h2 id="pruvoj-titolo" data-t="pruv.titolo">Formala pruvado</h2>
+          <p data-t="pruv.teksto">
+            Ses Kani-pruvoj rulas nur en GitHub Actions. La amplekso estas limigita
+            kaj dokumentita — neniu pruvo asertas pli ol ĝi kontrolas.
+          </p>
+        </div>
+      </div>
+
+      <div class="kartaro">
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M4 5h12M4 10h12M4 15h12"></path>
+              <circle cx="7" cy="5" r="1.4"></circle>
+              <circle cx="13" cy="10" r="1.4"></circle>
+              <circle cx="8" cy="15" r="1.4"></circle>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k1.titolo">Kanonika ordo</h3>
+          <p data-t-html="pruv.k1.teksto">
+            <code>pruvo_arbo_kanonika</code>: arboj restas ordigitaj kaj sen
+            duplikatoj post konstruado.
+          </p>
+          <span class="sildeto">arbo</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="3" y="3" width="6" height="6" rx="1"></rect>
+              <rect x="11" y="11" width="6" height="6" rx="1"></rect>
+              <path d="M6 9v5h5M14 11V6H9"></path>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k2.titolo">Duplikatoj</h3>
+          <p data-t-html="pruv.k2.teksto">
+            <code>pruvo_arbo_duplikatoj</code>: malsamaj vojoj ne kolizias kaj
+            duplikataj enskriboj estas rifuzataj.
+          </p>
+          <span class="sildeto">arbo</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M3 10h5l2-5 2 10 2-5h3"></path>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k3.titolo">Voja sekureco</h3>
+          <p data-t-html="pruv.k3.teksto">
+            <code>pruvo_vojo_sekura</code>: vojoj ne eskapas la radikon kaj respektas
+            la maksimuman longon.
+          </p>
+          <span class="sildeto">vojo</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <path d="M10 2.5 17 5v5c0 4-3 6.8-7 8-4-1.2-7-4-7-8V5l7-2.5Z"></path>
+              <path d="m7 10 2 2 4-4"></path>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k4.titolo">Neniam panikas</h3>
+          <p data-t-html="pruv.k4.teksto">
+            <code>pruvo_legilo_neniam_panikas</code>: arbitraj bajtoj ne kaŭzas
+            panikon en la legilo.
+          </p>
+          <span class="sildeto">legilo</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <rect x="4" y="3" width="12" height="14" rx="2"></rect>
+              <path d="M7 7h6M7 10h6M7 13h3"></path>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k5.titolo">Limigita dekodo</h3>
+          <p data-t-html="pruv.k5.teksto">
+            <code>pruvo_dekodo_limigita</code>: deklaritaj kvantoj ne superas la
+            fiksitajn limojn.
+          </p>
+          <span class="sildeto">limoj</span>
+        </article>
+
+        <article class="karto" data-aperu>
+          <span class="karta-ikono" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="6" cy="5" r="2.5"></circle>
+              <circle cx="14" cy="15" r="2.5"></circle>
+              <path d="M6 7.5v5A2.5 2.5 0 0 0 8.5 15H11"></path>
+            </svg>
+          </span>
+          <h3 data-t="pruv.k6.titolo">Komita seriigo</h3>
+          <p data-t-html="pruv.k6.teksto">
+            <code>pruvo_komito_seriigo</code>: simbolikaj haketoj, mesaĝo kaj
+            tempstampo produktas 35–77-bajtan kadron kun la radika haketo unue.
+          </p>
+          <span class="sildeto">komito</span>
+        </article>
+      </div>
+
+      <div class="elssxuta-noto" data-aperu>
+        <h3 data-t="pruv.limo.titolo">Kio restas ekster Kani</h3>
+        <p data-t-html="pruv.limo.teksto">
+          Plena malkodado de arbitraj <code>Komito</code>-kadroj ne estis pruvita:
+          postcard kaj UTF-8 generis pli ol 24 000 VCC kaj pli ol 300 sekundojn da
+          simbola plenumo. Tiun kampon kovras unuoptestoj kaj la arbitraj-bajta
+          pruvo pri la legilo.
+        </p>
+      </div>
+      <p class="scena-ligiloj" data-aperu>
+        <span data-t-html="pruv.nuba">La Fazo-4-CI-rulo estis verda: <code>Lint and build</code> kaj ĉiuj ses <code>Kani (...)</code>-laboroj.</span>
+        <a href="https://github.com/makoto-lernanto/versio/actions/runs/43865689840">GitHub Actions · 43865689840</a>
+      </p>
+    </section>
+
+    <section class="sceno" id="mikerno" aria-labelledby="mikerno-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">05</span>
+        <div>
+          <h2 id="mikerno-titolo" data-t="mik.titolo">MiKerno-integro</h2>
+          <p data-t="mik.teksto">
+            La koncepta provo importis unu Git-momentfoton de MiKerno en novan
+            Versio-deponejon. Ĝi ne migris historion, branĉojn aŭ etikedojn —
+            ĝi kontrolis, ĉu la bazaj komandoj funkcias sur reala fontarbo.
+          </p>
+        </div>
+      </div>
+
+      <div class="tavoloj" data-aperu>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">01</span>
+          <div>
+            <h3 data-t="mik.p1.titolo">Eksporti</h3>
+            <p data-t-html="mik.p1.teksto">
+              <code>git archive</code> eksportas la elektitan komiton, ne la
+              labordosierujon; <code>.git</code> kaj nekomititaj ŝanĝoj restas ekstere.
+            </p>
+          </div>
+          <span class="sildeto">git archive</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">02</span>
+          <div>
+            <h3 data-t="mik.p2.titolo">Iniciati kaj komiti</h3>
+            <p data-t-html="mik.p2.teksto">
+              <code>vs ini</code>, <code>vs stato</code> kaj <code>vs komitu --noto</code>
+              kaptis la tutan arbon sen aparta <code>add</code>-komando.
+            </p>
+          </div>
+          <span class="sildeto">vs</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">03</span>
+          <div>
+            <h3 data-t="mik.p3.titolo">Kontroli</h3>
+            <p data-t-html="mik.p3.teksto">
+              Ĉiu el la 99 dosieroj estis bajt-post-bajte komparita; la originalaj
+              <code>git status</code> kaj <code>git diff</code> restis identaj.
+            </p>
+          </div>
+          <span class="sildeto">SHA-256</span>
+        </div>
+      </div>
+
+      <div class="elssxutoj" style="margin-top: 18px" data-aperu>
+        <article class="elssxuto">
+          <div class="elssxuta-kapo">
+            <h3 data-t="mik.rezulto.titolo">Rezulto</h3>
+            <span class="sildeto tenila">PASS</span>
+          </div>
+          <p data-t="mik.rezulto.teksto">
+            99 ordinaraj dosieroj · 5 106 098 bajtoj · du Versio-komitoj ·
+            SOURCE_UNCHANGED=true · RESULT=PASS.
+          </p>
+          <dl>
+            <div><dt data-t="mik.dl.git">Git-komito</dt><dd><code>154e5062</code></dd></div>
+            <div><dt data-t="mik.dl.sha">Tar-SHA-256</dt><dd><code>d74a5aa7…</code></dd></div>
+            <div><dt data-t="mik.dl.komito1">Unua komito</dt><dd><code>420b7a10…</code></dd></div>
+            <div><dt data-t="mik.dl.komito2">Dua komito</dt><dd><code>105513f1…</code></dd></div>
+          </dl>
+        </article>
+
+        <article class="elssxuto">
+          <div class="elssxuta-kapo">
+            <h3 data-t="mik.kontrolo.titolo">Sen ŝanĝo en la fonto</h3>
+            <span class="sildeto">GIT</span>
+          </div>
+          <p data-t-html="mik.kontrolo.teksto">
+            La originalaj <code>git status</code>, <code>git diff --binary</code> kaj
+            <code>git diff --cached --binary</code> estis identaj antaŭ kaj post la provo.
+          </p>
+          <dl>
+            <div><dt data-t="mik.dl.dosieroj">Dosieroj</dt><dd>99</dd></div>
+            <div><dt data-t="mik.dl.bajtoj">Bajtoj</dt><dd>5 106 098</dd></div>
+            <div><dt data-t="mik.dl.rezulto">Rezulto</dt><dd><code>PASS</code></dd></div>
+            <div><dt data-t="mik.dl.fonto">Origina fonto</dt><dd><code>UNCHANGED</code></dd></div>
+          </dl>
+          <div class="elssxuta-butonoj">
+            <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md"
+              data-t="mik.ligilo">Legi MIKERNO_INTEGRO.md</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="terminala-scene" data-scene style="margin-top: 18px">
+        <div class="terminalo revelo" data-fenestro="mikerno" data-aperu>
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">MIKERNO</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="mik.fenestro.titolo">Eligo post la unua importo</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">PURA</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="mikernaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs komitu --noto "Importi MiKerno 154e506"</span><span class="linio sukceso">Komito 420b7a102a62eeec870e490c9b4b09805a2798f57f1995cdfaf69cf7f832b596</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Neniu ŝanĝo</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="mik.fenestro.noto">La dua komito havis alian haketon; la originala Git-deponejo restis netuŝita.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="mikernaEligo"
+              data-t="mik.kopii">Kopii la sesion</button>
+            <span class="sildeto">99 DOSIEROJ</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="mikerno" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="mik.restarigi.teksto">La importa eligo ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sceno" id="komenci" aria-labelledby="komenci-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">06</span>
+        <div>
+          <h2 id="komenci-titolo" data-t="komenci.titolo">Komenci</h2>
+          <p data-t-html="komenci.teksto">
+            Konstruu la eldonan binaron kaj provu la tutan fluon en provizora
+            dosierujo. <code>vs</code> ne bezonas servilon aŭ retan konton.
+          </p>
+        </div>
+      </div>
+
+      <div class="elssxutoj" data-aperu>
+        <article class="elssxuto">
+          <div class="elssxuta-kapo">
+            <h3 data-t="komenci.karto1.titolo">Elŝuti la fonton</h3>
+            <span class="sildeto">GIT</span>
+          </div>
+          <p data-t="komenci.karto1.teksto">
+            La deponejo enhavas la laborlokon, la CLI-on, la testojn kaj la pruvojn.
+          </p>
+          <dl>
+            <div><dt data-t="komenci.dl.lingvo">Lingvo</dt><dd>Rust 2024</dd></div>
+            <div><dt data-t="komenci.dl.kerno">Kerno</dt><dd>no_std + alloc</dd></div>
+            <div><dt data-t="komenci.dl.binara">Binara</dt><dd>vs</dd></div>
+          </dl>
+          <div class="elssxuta-butonoj">
+            <a class="buto akcenta" href="https://github.com/makoto-lernanto/versio"
+              data-t="komenci.karto1.butono">Malfermi GitHub</a>
+          </div>
+        </article>
+
+        <article class="elssxuto">
+          <div class="elssxuta-kapo">
+            <h3 data-t="komenci.karto2.titolo">Legi la dokumentojn</h3>
+            <span class="sildeto">MD</span>
+          </div>
+          <p data-t="komenci.karto2.teksto">
+            VERSIO.md klarigas la fazojn kaj la kvalitan konstitucion;
+            MIKERNO_INTEGRO.md registras la importon kaj ĝiajn limojn.
+          </p>
+          <dl>
+            <div><dt data-t="komenci.dl.plano">Plano</dt><dd>VERSIO.md</dd></div>
+            <div><dt data-t="komenci.dl.integro">Integro</dt><dd>MIKERNO_INTEGRO.md</dd></div>
+            <div><dt data-t="komenci.dl.pruvoj">Pruvoj</dt><dd>6 · Kani</dd></div>
+          </dl>
+          <div class="elssxuta-butonoj">
+            <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/VERSIO.md">VERSIO.md</a>
+            <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md">MIKERNO_INTEGRO.md</a>
+          </div>
+        </article>
+      </div>
+
+      <div class="terminala-scene" data-scene style="margin-top: 18px">
+        <div class="terminalo revelo" data-fenestro="komenci" data-aperu>
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">CARGO</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="komenci.fenestro.titolo">Konstrui kaj provi</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">PRETA</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="komencaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> git clone https://github.com/makoto-lernanto/versio</span><span class="linio"><span class="akcento">$</span> cd versio</span><span class="linio"><span class="akcento">$</span> cargo build --release</span><span class="linio"><span class="akcento">$</span> export PATH="$PWD/target/release:$PATH"</span><span class="linio"><span class="akcento">$</span> mkdir /tmp/provo &amp;&amp; cd /tmp/provo</span><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/provo</span><span class="linio"><span class="akcento">$</span> printf 'saluton\n' &gt; README.md</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Novaj:</span><span class="linio">  README.md</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua versio"</span><span class="linio sukceso">Komito 420b7a102a62eeec870e490c9b4b09805a2798f57f1995cdfaf69cf7f832b596</span><span class="linio"><span class="akcento">$</span> vs stato</span><span class="linio">Neniu ŝanĝo</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="komenci.fenestro.noto">Neniu reta konto, neniu fona servilo.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="komencaEligo"
+              data-t="komenci.kopii">Kopii la komandojn</button>
+            <span class="sildeto">CARGO</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="komenci" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="komenci.restarigi.teksto">La komencaj komandoj ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
+
+      <div class="elssxuta-noto" data-aperu>
+        <p data-t-html="komenci.noto">
+          Ne rulu <code>vs ini</code> rekte en la origina Git-deponejo: Versio
+          preterlasas nur <code>.vs</code>, ne <code>.git</code>, kaj ne interpretas
+          <code>.gitignore</code>. Ĝi konservas ordinarajn dosierojn kaj arbojn,
+          ne plenumeblajn permesbitojn aŭ simbolajn ligilojn.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="piedo">
+    <p class="pieda-noto" data-t="piedo.teksto">
+      Versio — versiokontrola sistemo verkita en Rust. La retejo estas Esperanta
+      kun angla mapada tavolo.
+    </p>
+    <div class="piedaj-ligiloj">
+      <a href="https://github.com/makoto-lernanto/versio">GitHub</a>
+      <a href="https://github.com/makoto-lernanto/versio/blob/main/VERSIO.md">VERSIO.md</a>
+      <a href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md">MIKERNO_INTEGRO.md</a>
+    </div>
+    <p class="pieda-noto" data-t="piedo.noto">
+      Fazo 4 finita · CI verda · dokumentaro sen eksteraj skriptoj
+    </p>
+  </footer>
+
+  <div class="fulmomesagxoj" id="fulmomesagxoj" aria-live="polite"></div>
+</body>
+</html>
