@@ -69,7 +69,7 @@ fn testo_iniciati_kaj_komitu() {
     assert!(vs.join("objektoj").is_dir());
 
     std::fs::write(prov.vojo.join("testo.txt"), b"saluton\n").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--mesagxo", "Unua komito"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Unua komito"]));
 
     let head = std::fs::read_to_string(vs.join("HEAD")).unwrap();
     let haketo: Haketo = head.trim().parse().expect("HEAD enhavu haketon");
@@ -107,7 +107,7 @@ fn testo_dua_komito_havas_gepatron() {
 
     certigi_sukceson(&ruli(&prov.vojo, &["iniciati"]));
     std::fs::write(prov.vojo.join("testo.txt"), b"unua").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--mesagxo", "Unua"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Unua"]));
     let unua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
         .unwrap()
         .trim()
@@ -115,7 +115,7 @@ fn testo_dua_komito_havas_gepatron() {
         .unwrap();
 
     std::fs::write(prov.vojo.join("testo.txt"), b"dua").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--mesagxo", "Dua"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Dua"]));
     let dua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
         .unwrap()
         .trim()
@@ -130,7 +130,78 @@ fn testo_dua_komito_havas_gepatron() {
 #[test]
 fn testo_komitu_sen_deponejo_malsukcesas() {
     let prov = ProvDosierujo::nova("sen-deponejo");
-    let eligo = ruli(&prov.vojo, &["komitu", "--mesagxo", "Sen deponejo"]);
+    let eligo = ruli(&prov.vojo, &["komitu", "--priskribo", "Sen deponejo"]);
 
     assert!(!eligo.status.success());
+}
+
+#[test]
+fn testo_helpo_estas_tute_esperanta() {
+    let prov = ProvDosierujo::nova("helpo");
+    let eligo = ruli(&prov.vojo, &["--helpo"]);
+    certigi_sukceson(&eligo);
+    let teksto = String::from_utf8_lossy(&eligo.stdout);
+
+    for deviga in [
+        "Uzado: vs <komando>",
+        "Komandoj:",
+        "Opcioj:",
+        "Montras ĉi tiun helppanon",
+        "Montras la version",
+        "helpo",
+    ] {
+        assert!(
+            teksto.contains(deviga),
+            "mankas «{deviga}» en la helpa eligo:\n{teksto}"
+        );
+    }
+    for malpermesita in [
+        "Usage:",
+        "Commands:",
+        "Options:",
+        "Print help",
+        "Print version",
+        "<COMMAND>",
+    ] {
+        assert!(
+            !teksto.contains(malpermesita),
+            "angla restaĵo «{malpermesita}» en la helpa eligo:\n{teksto}"
+        );
+    }
+}
+
+#[test]
+fn testo_helpo_de_subkomando_estas_esperanta() {
+    let prov = ProvDosierujo::nova("helpo-komitu");
+    let eligo = ruli(&prov.vojo, &["komitu", "--helpo"]);
+    certigi_sukceson(&eligo);
+    let teksto = String::from_utf8_lossy(&eligo.stdout);
+
+    assert!(
+        teksto.contains("Uzado: vs komitu --priskribo <PRISKRIBO>"),
+        "mankas la priskriba uzado en:\n{teksto}"
+    );
+    assert!(
+        teksto.contains("--priskribo <PRISKRIBO>"),
+        "mankas la priskriba opcio en:\n{teksto}"
+    );
+    for malpermesita in ["Usage:", "Options:", "Print help"] {
+        assert!(
+            !teksto.contains(malpermesita),
+            "angla restaĵo «{malpermesita}» en:\n{teksto}"
+        );
+    }
+}
+
+#[test]
+fn testo_subkomando_helpo_montras_la_generalan_helpon() {
+    let prov = ProvDosierujo::nova("helpo-subkomando");
+    let eligo = ruli(&prov.vojo, &["helpo"]);
+    certigi_sukceson(&eligo);
+    let teksto = String::from_utf8_lossy(&eligo.stdout);
+
+    assert!(
+        teksto.contains("Komandoj:") && teksto.contains("Uzado: vs <komando>"),
+        "la subkomando helpo ne montris la ĝeneralan helppanon:\n{teksto}"
+    );
 }

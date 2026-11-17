@@ -69,7 +69,7 @@ fn testo_stato_eligo() {
         "Novaj:\n  forigota.txt\n  modifota.txt\n"
     );
 
-    sukcesa_eligo(&prov.vojo, &["komitu", "--mesagxo", "Unua"]);
+    sukcesa_eligo(&prov.vojo, &["komitu", "--priskribo", "Unua"]);
     assert_eq!(sukcesa_eligo(&prov.vojo, &["stato"]), "Neniu ŝanĝo\n");
 
     std::fs::write(prov.vojo.join("modifota.txt"), b"dua").unwrap();
@@ -117,7 +117,7 @@ fn testo_stato_10000_dosieroj_sub_100_ms() {
                 .unwrap();
         }
     }
-    sukcesa_eligo(&prov.vojo, &["komitu", "--mesagxo", "Granda"]);
+    sukcesa_eligo(&prov.vojo, &["komitu", "--priskribo", "Granda"]);
     // La unua `stato` plenigas la indekson.
     assert_eq!(sukcesa_eligo(&prov.vojo, &["stato"]), "Neniu ŝanĝo\n");
 

@@ -34,7 +34,7 @@ git -C "$MIKERNO" archive --format=tar "$REV" | tar -xf - -C "$CELO"
     cd "$CELO"
     "$VS" iniciati
     "$VS" stato
-    "$VS" komitu --mesagxo "Importi MiKerno $REV"
+    "$VS" komitu --priskribo "Importi MiKerno $REV"
     "$VS" stato
 )
 printf 'Git-komito: %s\nVersio-deponejo: %s\n' "$REV" "$CELO"
@@ -54,7 +54,7 @@ nur la provizoran kopion; la forigita dosiero restas en la origina Git-komito.
     printf 'Nova dosiero por la integra provo.\n' > integra-provo.txt
     rm -- docs/VORTARO.md
     "$VS" stato
-    "$VS" komitu --mesagxo "Kontroli modifon aldonon kaj forigon"
+    "$VS" komitu --priskribo "Kontroli modifon aldonon kaj forigon"
     "$VS" stato
 )
 ```
@@ -144,7 +144,7 @@ cargo clippy --workspace --release -- -D warnings
 Finished `release` profile [optimized] target(s) in 4.62s
 cargo test --workspace --all-features
 test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s
 ```
 

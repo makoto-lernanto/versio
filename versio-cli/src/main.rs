@@ -1,28 +1,65 @@
 //! La komandlinia enirpunkto de `vs`.
 
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
 
 mod komandoj;
 
+/// La helpa ŝablono anstataŭigas la anglajn titolojn de `clap`.
+const HELPA_SXABLONO: &str = "{about-with-newline}\nUzado: {usage}\n\n{all-args}{after-help}";
+
 #[derive(Debug, Parser)]
-#[command(name = "vs", version, about = "Versiokontrola sistemo")]
+#[command(
+    name = "vs",
+    version,
+    about = "Versiokontrola sistemo",
+    help_template = HELPA_SXABLONO,
+    disable_help_flag = true,
+    disable_version_flag = true,
+    disable_help_subcommand = true,
+    subcommand_help_heading = "Komandoj",
+    subcommand_value_name = "komando",
+    next_help_heading = "Opcioj"
+)]
 struct Argumentoj {
     #[command(subcommand)]
     komando: Komando,
+    /// Montras ĉi tiun helppanon.
+    #[arg(
+        short = 'h',
+        long = "helpo",
+        alias = "help",
+        action = clap::ArgAction::Help,
+        global = true
+    )]
+    _helpo: Option<bool>,
+    /// Montras la version.
+    #[arg(
+        short = 'V',
+        long = "versio",
+        alias = "version",
+        action = clap::ArgAction::Version
+    )]
+    _versio: Option<bool>,
 }
 
 #[derive(Debug, Subcommand)]
 enum Komando {
     /// Iniciatas novan deponejon en la nuna dosierujo.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Iniciati,
     /// Registras la nunan staton de la laborspaco kiel novan komiton.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Komitu {
-        /// Mesaĝo de la komito.
-        #[arg(short = 'm', long = "mesagxo", value_name = "MESAGXO")]
-        mesagxo: String,
+        /// Priskribo de la komito.
+        #[arg(short = 'm', long = "priskribo", value_name = "PRISKRIBO")]
+        priskribo: String,
     },
     /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al HEAD.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Stato,
+    /// Montras la ĝeneralan helppanon.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Helpo,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -30,7 +67,12 @@ fn main() -> anyhow::Result<()> {
 
     match argumentoj.komando {
         Komando::Iniciati => komandoj::iniciati::plenumi(),
-        Komando::Komitu { mesagxo } => komandoj::komitu::plenumi(&mesagxo),
+        Komando::Komitu { priskribo } => komandoj::komitu::plenumi(&priskribo),
         Komando::Stato => komandoj::stato::plenumi(),
+        Komando::Helpo => {
+            Argumentoj::command().print_help()?;
+            println!();
+            Ok(())
+        }
     }
 }
