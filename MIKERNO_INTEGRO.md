@@ -13,7 +13,7 @@ kiel `export-ignore` kaj `export-subst` povas influi la eksporton; submoduloj
 ne estas rekursive eksportataj. La testita momentfoto ne enhavis simbolajn
 ligilojn aŭ submodulojn.
 
-Ne rulu `vs iniciati` rekte en la origina Git-deponejo: nun Versio preterlasas
+Ne rulu `vs ini` rekte en la origina Git-deponejo: nun Versio preterlasas
 nur `.vs`, ne `.git`, kaj ne interpretas `.gitignore`. Ĝi konservas ordinarajn
 dosierojn kaj arbojn, ne plenumeblajn permesbitojn aŭ simbolajn ligilojn.
 
@@ -32,9 +32,9 @@ CELO=$(mktemp -d -t versio-mikerno-XXXXXX)
 git -C "$MIKERNO" archive --format=tar "$REV" | tar -xf - -C "$CELO"
 (
     cd "$CELO"
-    "$VS" iniciati
+    "$VS" ini
     "$VS" stato
-    "$VS" komitu --priskribo "Importi MiKerno $REV"
+    "$VS" komitu --noto "Importi MiKerno $REV"
     "$VS" stato
 )
 printf 'Git-komito: %s\nVersio-deponejo: %s\n' "$REV" "$CELO"
@@ -54,7 +54,7 @@ nur la provizoran kopion; la forigita dosiero restas en la origina Git-komito.
     printf 'Nova dosiero por la integra provo.\n' > integra-provo.txt
     rm -- docs/VORTARO.md
     "$VS" stato
-    "$VS" komitu --priskribo "Kontroli modifon aldonon kaj forigon"
+    "$VS" komitu --noto "Kontroli modifon aldonon kaj forigon"
     "$VS" stato
 )
 ```

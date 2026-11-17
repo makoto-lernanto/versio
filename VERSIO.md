@@ -40,7 +40,7 @@ versio/
 │       ├── main.rs            # Enirpunkto
 │       └── komandoj/
 │           ├── mod.rs
-│           ├── iniciati.rs    # vs iniciati (init)
+│           ├── iniciati.rs    # vs ini (init)
 │           ├── stato.rs       # vs stato (status)
 │           └── komitu.rs      # vs komitu (commit)
 └── .github/workflows/         # CI/CD (cargo check, test, clippy)
@@ -50,7 +50,7 @@ versio/
 
 - **Kodaj identigiloj**: uzu **Esperanton**. Ekzemple: `Deponejo` (Repository), `Kunfandi` (Merge), `Haketo` (Hash).
 - **Komentoj kaj dokumentado**: prefere en Esperanto; por kritikaj, komplikaj logikoj aldonu klarigojn en la ĉina aŭ angla.
-- **CLI-komandoj**: Esperantaj verboinfinitivoj aŭ substantivoj (ekz. `iniciati`, `stato`, `historio`).
+- **CLI-komandoj**: Esperantaj nomoj sen anglaj terminoj; la komenca komando estas la mallongigo `ini`, la ceteraj estas plenaj vortoj (ekz. `stato`, `historio`).
 
 ---
 
@@ -76,12 +76,12 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 **Taskoj**:
 1. Difini en `libversio::objektoj` la `#[repr(C)]`- aŭ serialigajn strukturojn de `Dosiero` (Blob), `Arbo` (Tree) kaj `Komito` (Commit) (rekomendate uzi `postcard` aŭ `bincode`; konfirmu la `no_std`-subtenon).
 2. Realigi `iniciati()` en `libversio::deponejo`, kiu kreu la dosierujan strukturon `.vs`.
-3. Integrigi `clap` en `versio-cli` kaj realigi `vs iniciati` kaj `vs komitu --priskribo "..."`.
+3. Integrigi `clap` en `versio-cli` kaj realigi `vs ini` kaj `vs komitu --noto "..."`.
 4. Logiko de `komitu`: rekursie skani la nunan dosierujon (paralele per `rayon`), preterlasi `.vs`, kalkuli la haketojn de ĉiuj dosieroj, konstrui `Arbo`-n, krei `Komito`-n montrantan al tiu `Arbo`, kaj ĝisdatigi la referencon `HEAD`.
 
 **Akceptokriterioj**:
-- [ ] Post rulo de `vs iniciati`, la nuna dosierujo enhavas `.vs/` kun la dosiero `HEAD`.
-- [ ] Kreu testan dosieron `testo.txt` kaj rulu `vs komitu --priskribo "Unua komito"`.
+- [ ] Post rulo de `vs ini`, la nuna dosierujo enhavas `.vs/` kun la dosiero `HEAD`.
+- [ ] Kreu testan dosieron `testo.txt` kaj rulu `vs komitu --noto "Unua komito"`.
 - [ ] Kontrolu, ke sub `.vs/objektoj/` ekzistas kunpremita dosiero kun la responda haketo, kaj ke `HEAD` montras al la haketo de la plej nova `Komito`.
 
 ### 🟠 Fazo 3: Trajtoj de atako el pli alta dimensio — Stato kaj momentfotoj (La Superpovo: Stato)

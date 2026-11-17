@@ -6,9 +6,9 @@ use anyhow::Context;
 use libversio::deponejo::Deponejo;
 use libversio::objektoj::Komito;
 
-/// Plenumas la komandon kun la donita priskribo.
-pub(crate) fn plenumi(priskribo: &str) -> anyhow::Result<()> {
-    let mesagxo = priskribo.trim();
+/// Plenumas la komandon kun la donita noto.
+pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
+    let mesagxo = noto.trim();
     anyhow::ensure!(
         !mesagxo.is_empty(),
         "la komita mesaĝo ne rajtas esti malplena"

@@ -46,13 +46,13 @@ struct Argumentoj {
 enum Komando {
     /// Iniciatas novan deponejon en la nuna dosierujo.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
-    Iniciati,
+    Ini,
     /// Registras la nunan staton de la laborspaco kiel novan komiton.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Komitu {
-        /// Priskribo de la komito.
-        #[arg(short = 'm', long = "priskribo", value_name = "PRISKRIBO")]
-        priskribo: String,
+        /// Noto de la komito.
+        #[arg(short = 'm', long = "noto", value_name = "NOTO")]
+        noto: String,
     },
     /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al HEAD.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
@@ -66,8 +66,8 @@ fn main() -> anyhow::Result<()> {
     let argumentoj = Argumentoj::parse();
 
     match argumentoj.komando {
-        Komando::Iniciati => komandoj::iniciati::plenumi(),
-        Komando::Komitu { priskribo } => komandoj::komitu::plenumi(&priskribo),
+        Komando::Ini => komandoj::iniciati::plenumi(),
+        Komando::Komitu { noto } => komandoj::komitu::plenumi(&noto),
         Komando::Stato => komandoj::stato::plenumi(),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;

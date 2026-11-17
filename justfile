@@ -20,9 +20,9 @@ arm64-test:
 arm64-e2e: arm64
     rm -rf target/arm64-e2e
     mkdir -p target/arm64-e2e
-    cd target/arm64-e2e && qemu-aarch64 {{justfile_directory()}}/target/aarch64-unknown-linux-musl/release/vs iniciati
+    cd target/arm64-e2e && qemu-aarch64 {{justfile_directory()}}/target/aarch64-unknown-linux-musl/release/vs ini
     printf 'saluton arm64\n' > target/arm64-e2e/testo.txt
-    cd target/arm64-e2e && qemu-aarch64 {{justfile_directory()}}/target/aarch64-unknown-linux-musl/release/vs komitu --priskribo "arm64"
+    cd target/arm64-e2e && qemu-aarch64 {{justfile_directory()}}/target/aarch64-unknown-linux-musl/release/vs komitu --noto "arm64"
     test -f target/arm64-e2e/.vs/HEAD
     test "$(ls target/arm64-e2e/.vs/objektoj | wc -l)" -eq 3
 # Nur en GitHub Actions: ne rulu loke (por eviti memorelspezon).

@@ -61,7 +61,7 @@ fn sukcesa_eligo(dosierujo: &Path, argumentoj: &[&str]) -> String {
 #[test]
 fn testo_stato_eligo() {
     let prov = ProvDosierujo::nova("eligo");
-    sukcesa_eligo(&prov.vojo, &["iniciati"]);
+    sukcesa_eligo(&prov.vojo, &["ini"]);
     std::fs::write(prov.vojo.join("modifota.txt"), b"unua").unwrap();
     std::fs::write(prov.vojo.join("forigota.txt"), b"for").unwrap();
     assert_eq!(
@@ -69,7 +69,7 @@ fn testo_stato_eligo() {
         "Novaj:\n  forigota.txt\n  modifota.txt\n"
     );
 
-    sukcesa_eligo(&prov.vojo, &["komitu", "--priskribo", "Unua"]);
+    sukcesa_eligo(&prov.vojo, &["komitu", "--noto", "Unua"]);
     assert_eq!(sukcesa_eligo(&prov.vojo, &["stato"]), "Neniu ŝanĝo\n");
 
     std::fs::write(prov.vojo.join("modifota.txt"), b"dua").unwrap();
@@ -99,7 +99,7 @@ fn testo_stato_sen_deponejo_malsukcesas() {
 )]
 fn testo_stato_10000_dosieroj_sub_100_ms() {
     let prov = ProvDosierujo::nova("rapideco");
-    sukcesa_eligo(&prov.vojo, &["iniciati"]);
+    sukcesa_eligo(&prov.vojo, &["ini"]);
 
     // Realisma deponejo: la dosieroj estis skribitaj antaŭ longe.
     let malnova = SystemTime::now() - Duration::from_secs(3600);
@@ -117,7 +117,7 @@ fn testo_stato_10000_dosieroj_sub_100_ms() {
                 .unwrap();
         }
     }
-    sukcesa_eligo(&prov.vojo, &["komitu", "--priskribo", "Granda"]);
+    sukcesa_eligo(&prov.vojo, &["komitu", "--noto", "Granda"]);
     // La unua `stato` plenigas la indekson.
     assert_eq!(sukcesa_eligo(&prov.vojo, &["stato"]), "Neniu ŝanĝo\n");
 

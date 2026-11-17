@@ -64,12 +64,12 @@ fn testo_iniciati_kaj_komitu() {
     let prov = ProvDosierujo::nova("unua");
     let vs = prov.vojo.join(".vs");
 
-    certigi_sukceson(&ruli(&prov.vojo, &["iniciati"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     assert!(vs.join("HEAD").is_file());
     assert!(vs.join("objektoj").is_dir());
 
     std::fs::write(prov.vojo.join("testo.txt"), b"saluton\n").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Unua komito"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua komito"]));
 
     let head = std::fs::read_to_string(vs.join("HEAD")).unwrap();
     let haketo: Haketo = head.trim().parse().expect("HEAD enhavu haketon");
@@ -105,9 +105,9 @@ fn testo_dua_komito_havas_gepatron() {
     let prov = ProvDosierujo::nova("dua");
     let vs = prov.vojo.join(".vs");
 
-    certigi_sukceson(&ruli(&prov.vojo, &["iniciati"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("testo.txt"), b"unua").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Unua"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua"]));
     let unua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
         .unwrap()
         .trim()
@@ -115,7 +115,7 @@ fn testo_dua_komito_havas_gepatron() {
         .unwrap();
 
     std::fs::write(prov.vojo.join("testo.txt"), b"dua").unwrap();
-    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--priskribo", "Dua"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Dua"]));
     let dua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
         .unwrap()
         .trim()
@@ -130,7 +130,7 @@ fn testo_dua_komito_havas_gepatron() {
 #[test]
 fn testo_komitu_sen_deponejo_malsukcesas() {
     let prov = ProvDosierujo::nova("sen-deponejo");
-    let eligo = ruli(&prov.vojo, &["komitu", "--priskribo", "Sen deponejo"]);
+    let eligo = ruli(&prov.vojo, &["komitu", "--noto", "Sen deponejo"]);
 
     assert!(!eligo.status.success());
 }
@@ -178,12 +178,12 @@ fn testo_helpo_de_subkomando_estas_esperanta() {
     let teksto = String::from_utf8_lossy(&eligo.stdout);
 
     assert!(
-        teksto.contains("Uzado: vs komitu --priskribo <PRISKRIBO>"),
-        "mankas la priskriba uzado en:\n{teksto}"
+        teksto.contains("Uzado: vs komitu --noto <NOTO>"),
+        "mankas la uzo de --noto en:\n{teksto}"
     );
     assert!(
-        teksto.contains("--priskribo <PRISKRIBO>"),
-        "mankas la priskriba opcio en:\n{teksto}"
+        teksto.contains("--noto <NOTO>"),
+        "mankas la opcio --noto en:\n{teksto}"
     );
     for malpermesita in ["Usage:", "Options:", "Print help"] {
         assert!(
