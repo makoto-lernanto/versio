@@ -1,4 +1,4 @@
-//! `vs iniciati`: kreas la deponejan strukturon en la nuna dosierujo.
+//! `vs ini`: kreas la deponejan strukturon en la nuna dosierujo.
 
 use anyhow::Context;
 use libversio::deponejo::{Deponejo, VS_DOSIERUJO};
