@@ -173,7 +173,9 @@ fn pruvo_legilo_neniam_panikas() {
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let gepatra: [u8; HAKETA_LONGO] = kani::any();
+    let dua: [u8; HAKETA_LONGO] = kani::any();
     let havas_gepatron: bool = kani::any();
+    let havas_duan: bool = kani::any();
     let havas_mesagxon: bool = kani::any();
     let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
@@ -186,17 +188,19 @@ fn pruvo_komito_seriigo() {
             String::new()
         },
         kreita_je,
+        dua_gepatro: (havas_gepatron && havas_duan).then_some(Haketo::el_bajtoj(dua)),
     };
 
-    kani::cover!(havas_gepatron && havas_mesagxon);
+    kani::cover!(havas_gepatron && havas_duan);
+    kani::cover!(havas_gepatron && !havas_duan);
     kani::cover!(!havas_gepatron && !havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
     let kodita = komito.seriigi();
     assert!(kodita.is_ok());
     if let Ok(bajtoj) = kodita {
-        assert!(bajtoj.len() >= 35);
-        assert!(bajtoj.len() <= 77);
+        assert!(bajtoj.len() >= 36);
+        assert!(bajtoj.len() <= 110);
         assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
     }
 }

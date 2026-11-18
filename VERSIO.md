@@ -31,9 +31,14 @@ versio/
 │   └── src/
 │       ├── lib.rs             # Eksportas la publikan API-on
 │       ├── stokado.rs         # Enhavadresita stokado (CAS: konservi, ricevi)
-│       ├── deponejo.rs        # Deponeja metadatumaro kaj DAG-administrado
+│       ├── deponejo.rs        # Deponeja metadatumaro, DAG-administrado kaj kunfandado
 │       ├── objektoj.rs        # Datumstrukturoj: Dosiero (Blob), Arbo (Tree), Komito (Commit)
+│       ├── indekso.rs         # Metadatumkaŝmemoro por `stato` kaj `komitu`
+│       ├── kodigo.rs          # Limigita kaj determinisma legado de postcard
+│       ├── vojo.rs            # Validigo de sekuraj vojaj komponantoj
+│       ├── pruvoj.rs          # Kani-pruvoj (nur kun `cfg(kani)`)
 │       └── eraroj.rs          # Unueca erartipo (no_std-kongrueca)
+├── no_std_provo/              # Sendependa no_std-sentineleto por CI
 ├── versio-cli/                # Komandlinia plenumeblo
 │   ├── Cargo.toml
 │   └── src/
@@ -46,6 +51,7 @@ versio/
 │           ├── eltiri.rs      # vs eltiri (checkout)
 │           ├── brancxo.rs     # vs brancxo (branch create)
 │           ├── brancxoj.rs    # vs brancxoj (branch list)
+│           ├── kunfandi.rs    # vs kunfandi (merge)
 │           ├── haketo.rs      # komuna haket-solvado
 │           └── komitu.rs      # vs komitu (commit)
 └── .github/workflows/         # CI/CD (cargo check, test, clippy)
@@ -55,7 +61,7 @@ versio/
 
 - **Kodaj identigiloj**: uzu **Esperanton**. Ekzemple: `Deponejo` (Repository), `Kunfandi` (Merge), `Haketo` (Hash).
 - **Komentoj kaj dokumentado**: prefere en Esperanto; por kritikaj, komplikaj logikoj aldonu klarigojn en la ĉina aŭ angla.
-- **CLI-komandoj**: Esperantaj nomoj sen anglaj terminoj; la komenca komando estas la mallongigo `ini`, la ceteraj estas plenaj vortoj (ekz. `stato`, `historio`).
+- **CLI-komandoj**: Esperantaj nomoj sen anglaj terminoj; la komenca komando estas la mallongigo `ini`, la ceteraj estas plenaj vortoj (ekz. `stato`, `historio`, `kunfandi`). Komandnomoj kaj argumentaj nomoj uzas nur ASKION (sen `ĉ ĝ ĥ ĵ ŝ ŭ`), por eviti terminalajn kodigajn problemojn.
 
 ---
 
@@ -173,7 +179,7 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 - **Loka laboro**: redakti kodon kaj ruli nur malpezajn kontrolojn, ekzemple `cargo fmt --all -- --check`, `cargo clippy --workspace --release -- -D warnings` kaj `cargo test --workspace --all-features`.
 - **Aŭtomata CI**: ĉiu `git push` al `main` kaj ĉiu pull-request rulas `.github/workflows/ci.yml`: unue `Lint and build` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste la matrico `Kani (<pruvo>)`.
 - **Formala pruvado**: ĉiu pruvo rulas en propra matrica laboro per la oficiala `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `timeout -s KILL 600 cargo kani -p libversio --harness <pruvo>` sur `ubuntu-latest`. `fail-fast: false` certigas, ke ĉiuj pruvoj raportas; 600-sekunda tempolimo kaj 30-minuta laborlimo malebligas, ke unu ŝvebanta pruvo kaŝu la ceterajn aŭ forprenu la protokolojn.
-- **Pruvamplekso**: ses kontroloj — la kvin ekzistantaj pruvoj pri kanonika arbo-ordo, duplikataj vojoj, voja sekureco, legado de nekonfidindaj bajtoj kaj limigo de deklaritaj kvantoj; plus Fazo-4-pruvo pri komita seriigado kun simbolikaj haketoj, mesaĝo kaj tempstampo. Plena malkodado de arbitraj `Komito`-kadroj ne estas pruvita per Kani: la postcard/UTF-8-vojoj superas la mezuritan formulbuĝeton de la CI eĉ kun konkretaj kadroj. Tiun kampon kovras unuoptestoj (rondiroj, etikedoj, tranĉoj, varintaj limoj) kaj la arbitraj-bajta pruvo pri la legilo. Vidu `MIKERNO_INTEGRO.md` por la preciza amplekso, la mezuritaj limoj, realaj integratestoj kaj la nuba stato.
+- **Pruvamplekso**: ses kontroloj — la kvin ekzistantaj pruvoj pri kanonika arbo-ordo, duplikataj vojoj, voja sekureco, legado de nekonfidindaj bajtoj kaj limigo de deklaritaj kvantoj; plus Fazo-4-pruvo pri komita seriigado kun simbolikaj haketoj, mesaĝo, tempstampo kaj laŭvola dua gepatro (kadro de 36–110 bajtoj). Plena malkodado de arbitraj `Komito`-kadroj ne estas pruvita per Kani: la postcard/UTF-8-vojoj superas la mezuritan formulbuĝeton de la CI eĉ kun konkretaj kadroj. Tiun kampon kovras unuoptestoj (rondiroj, etikedoj, tranĉoj, varintaj limoj) kaj la arbitraj-bajta pruvo pri la legilo. Vidu `MIKERNO_INTEGRO.md` por la preciza amplekso, la mezuritaj limoj, realaj integratestoj kaj la nuba stato.
 - **Kani-kodo ne kompiliĝas loke**: `libversio/src/pruvoj.rs` estas `#[cfg(kani)]`, do lokaj `fmt`, `Clippy` kaj testoj ne kaptas erarojn en ĝi. Ĉiu ŝanĝo al la pruvoj validas nur post verda CI-matrico.
 - **Nuba stato**: revizio `676ecf8` sukcese finis la CI-rulon [`43865689840`](https://github.com/makoto-lernanto/versio/actions/runs/43865689840) — `Lint and build` kaj ĉiuj ses `Kani (...)`-laboroj verdaj (2026-11-16).
 - **Aŭtomata liverado**: post kodŝanĝoj kaj la permesitaj lokaj kontroloj, aŭtomate kreu novan komiton kaj puŝu ĝin por ekigi CI, sen aparta konfirmo. Se CI malsukcesas, analizu la protokolojn, korektu la kaŭzon kaj denove komitu kaj puŝu; ne malfortigu kontrolojn. Tiu permeso ne inkluzivas devigan puŝon aŭ reverkadon de historio.

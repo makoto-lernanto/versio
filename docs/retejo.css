@@ -1579,6 +1579,14 @@ main {
   color: #57E389;
 }
 
+.linio.komento {
+  color: var(--teksto3);
+}
+
+.linio.eraro {
+  color: var(--danĝero);
+}
+
 .linio.akcento {
   color: var(--akcento);
 }

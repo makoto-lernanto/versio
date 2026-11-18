@@ -1,5 +1,6 @@
 //! `vs historio`: montras la komito-ĉenon ekde `HEAD`.
 
+use std::collections::HashSet;
 use std::io::{BufWriter, Write};
 
 use anyhow::Context;
@@ -17,18 +18,23 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
     let deponejo =
         Deponejo::malfermi(radiko).context("la nuna dosierujo ne estas Versio-deponejo")?;
 
-    let mut nuna = deponejo.legi_head().context("malsukcesis legi HEAD")?;
+    let nuna = deponejo.legi_head().context("malsukcesis legi HEAD")?;
     let mut eligo = BufWriter::new(std::io::stdout().lock());
-    if nuna.is_none() {
+    let Some(nuna) = nuna else {
         writeln!(eligo, "Neniu komito ankoraŭ")?;
         eligo.flush()?;
         return Ok(());
-    }
+    };
 
     let mut restantaj = nombro.unwrap_or(usize::MAX);
-    while let Some(haketo) = nuna {
+    let mut stako = vec![nuna];
+    let mut vizititaj = HashSet::new();
+    while let Some(haketo) = stako.pop() {
         if restantaj == 0 {
             break;
+        }
+        if !vizititaj.insert(haketo) {
+            continue;
         }
         restantaj = restantaj.saturating_sub(1);
 
@@ -42,7 +48,12 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
             formati_tempon(komito.kreita_je),
             unulinia(&komito.mesagxo)
         )?;
-        nuna = komito.gepatro;
+        // La stako estas LIFO: la dua gepatro estas puŝita unue, do la unua
+        // gepatro kaj ĝia ĉeno estas montritaj antaŭ la kunfandita branĉo.
+        if let Some(dua) = komito.dua_gepatro {
+            stako.push(dua);
+        }
+        stako.extend(komito.gepatro);
     }
     eligo.flush()?;
     Ok(())

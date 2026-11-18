@@ -87,6 +87,13 @@ enum Komando {
     /// Listigas la branĉojn kaj markas la nunan.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Brancxoj,
+    /// Kunfandas branĉon en la nunan branĉon.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Kunfandi {
+        /// Nomo de la branĉo, kiun kunfandi.
+        #[arg(value_name = "BRANCHO")]
+        brancxo: String,
+    },
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Helpo,
@@ -103,6 +110,7 @@ fn main() -> anyhow::Result<()> {
         Komando::Eltiri { haketo, perforta } => komandoj::eltiri::plenumi(&haketo, perforta),
         Komando::Brancxo { nomo, bazo } => komandoj::brancxo::plenumi(&nomo, bazo.as_deref()),
         Komando::Brancxoj => komandoj::brancxoj::plenumi(),
+        Komando::Kunfandi { brancxo } => komandoj::kunfandi::plenumi(&brancxo),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();

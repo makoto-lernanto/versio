@@ -210,17 +210,19 @@ fn malseriigi_enskribon(legilo: &mut Legilo<'_>) -> Result<ArbaEnskribo, Eraro> 
     }
 }
 
-/// Komito: momentfoto de la arbo, ligita al sia patro.
+/// Komito: momentfoto de la arbo, ligita al siaj gepatroj.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Komito {
     /// La haketo de la radika arbo de la momentfoto.
     pub arbo: Haketo,
-    /// La haketo de la patra komito, se ekzistas.
+    /// La haketo de la unua patra komito, se ekzistas.
     pub gepatro: Option<Haketo>,
     /// La mesaĝo de la komito.
     pub mesagxo: String,
     /// Uniksa tempstampo de la kreo, en sekundoj.
     pub kreita_je: u64,
+    /// La dua patro de kunfanda komito; `None` por ordinaraj komitoj.
+    pub dua_gepatro: Option<Haketo>,
 }
 
 impl Komito {
@@ -253,12 +255,27 @@ impl Komito {
         };
         let mesagxo = legilo.limigita_string(MAKSIMA_MESAGXO)?;
         let kreita_je = legilo.u64()?;
+        let dua_gepatro = match legilo.u8()? {
+            0 => None,
+            1 => Some(legilo.haketo()?),
+            _ => {
+                return Err(Eraro::NevalidaDatumo {
+                    kialo: "nevalida dua-gepatro-etikedo",
+                });
+            }
+        };
+        if dua_gepatro.is_some() && gepatro.is_none() {
+            return Err(Eraro::NevalidaDatumo {
+                kialo: "dua gepatro sen unua",
+            });
+        }
         legilo.fino()?;
         Ok(Self {
             arbo,
             gepatro,
             mesagxo,
             kreita_je,
+            dua_gepatro,
         })
     }
 }
@@ -371,17 +388,39 @@ mod testoj {
             gepatro: Some(haketo(4)),
             mesagxo: "Unua komito".into(),
             kreita_je: 1_700_000_000,
+            dua_gepatro: None,
         };
 
         let bajtoj = komito.seriigi().unwrap();
         assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
 
+        let kunfanda = Komito {
+            dua_gepatro: Some(haketo(5)),
+            ..komito.clone()
+        };
+        let bajtoj = kunfanda.seriigi().unwrap();
+        assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), kunfanda);
+
         let sen_patro = Komito {
             gepatro: None,
+            dua_gepatro: None,
             ..komito
         };
         let bajtoj = sen_patro.seriigi().unwrap();
         assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), sen_patro);
+    }
+
+    #[test]
+    fn testo_komito_forpelas_duan_gepatron_sen_unua() {
+        let mut bajtoj = Vec::new();
+        bajtoj.extend_from_slice(&[7u8; 32]);
+        bajtoj.extend_from_slice(&[0, 1, b'a', 0x80, 0x01]);
+        bajtoj.push(1);
+        bajtoj.extend_from_slice(&[8u8; 32]);
+        assert!(matches!(
+            Komito::malseriigi(&bajtoj),
+            Err(Eraro::NevalidaDatumo { .. })
+        ));
     }
 
     #[test]
@@ -391,6 +430,7 @@ mod testoj {
             gepatro: None,
             mesagxo: "a".repeat(MAKSIMA_MESAGXO + 1),
             kreita_je: 1,
+            dua_gepatro: None,
         };
         let bajtoj = komito.seriigi().unwrap();
         assert!(matches!(
@@ -402,20 +442,23 @@ mod testoj {
     #[test]
     fn testo_komito_rondiro_limoj() {
         for gepatro in [None, Some(haketo(4))] {
-            for mesagxo in [
-                String::new(),
-                String::from("a\0é𐐀"),
-                "a".repeat(MAKSIMA_MESAGXO),
-            ] {
-                for kreita_je in [0, 127, 128, u64::MAX] {
-                    let komito = Komito {
-                        arbo: haketo(3),
-                        gepatro,
-                        mesagxo: mesagxo.clone(),
-                        kreita_je,
-                    };
-                    let bajtoj = komito.seriigi().unwrap();
-                    assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
+            for dua_gepatro in [None, gepatro.map(|_| haketo(5))] {
+                for mesagxo in [
+                    String::new(),
+                    String::from("a\0é𐐀"),
+                    "a".repeat(MAKSIMA_MESAGXO),
+                ] {
+                    for kreita_je in [0, 127, 128, u64::MAX] {
+                        let komito = Komito {
+                            arbo: haketo(3),
+                            gepatro,
+                            mesagxo: mesagxo.clone(),
+                            kreita_je,
+                            dua_gepatro,
+                        };
+                        let bajtoj = komito.seriigi().unwrap();
+                        assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
+                    }
                 }
             }
         }
@@ -424,19 +467,22 @@ mod testoj {
     #[test]
     fn testo_komito_rifuzas_trancxojn_kaj_postrestojn() {
         for gepatro in [None, Some(haketo(4))] {
-            let komito = Komito {
-                arbo: haketo(3),
-                gepatro,
-                mesagxo: String::from("mesaĝo"),
-                kreita_je: u64::MAX,
-            };
-            let mut bajtoj = komito.seriigi().unwrap();
-            for longo in 0..bajtoj.len() {
-                assert!(Komito::malseriigi(&bajtoj[..longo]).is_err());
+            for dua_gepatro in [None, gepatro.map(|_| haketo(5))] {
+                let komito = Komito {
+                    arbo: haketo(3),
+                    gepatro,
+                    mesagxo: String::from("mesaĝo"),
+                    kreita_je: u64::MAX,
+                    dua_gepatro,
+                };
+                let mut bajtoj = komito.seriigi().unwrap();
+                for longo in 0..bajtoj.len() {
+                    assert!(Komito::malseriigi(&bajtoj[..longo]).is_err());
+                }
+                assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
+                bajtoj.push(0);
+                assert!(Komito::malseriigi(&bajtoj).is_err());
             }
-            assert_eq!(Komito::malseriigi(&bajtoj).unwrap(), komito);
-            bajtoj.push(0);
-            assert!(Komito::malseriigi(&bajtoj).is_err());
         }
     }
 
@@ -447,6 +493,7 @@ mod testoj {
             gepatro: None,
             mesagxo: String::from("a"),
             kreita_je: 128,
+            dua_gepatro: None,
         };
         let mut bajtoj = komito.seriigi().unwrap();
         for etikedo in 0..=u8::MAX {
@@ -461,16 +508,54 @@ mod testoj {
     }
 
     #[test]
+    fn testo_komito_rifuzas_nevalidan_duan_etikedon() {
+        let komito = Komito {
+            arbo: haketo(3),
+            gepatro: Some(haketo(4)),
+            mesagxo: String::from("a"),
+            kreita_je: 128,
+            dua_gepatro: None,
+        };
+        let mut bajtoj = komito.seriigi().unwrap();
+        let lasta = bajtoj.len() - 1;
+        bajtoj[lasta] = 2;
+        assert!(matches!(
+            Komito::malseriigi(&bajtoj),
+            Err(Eraro::NevalidaDatumo { .. })
+        ));
+    }
+
+    #[test]
     fn testo_komito_fiksa_kodajo() {
         let komito = Komito {
             arbo: haketo(7),
             gepatro: None,
             mesagxo: String::from("a"),
             kreita_je: 128,
+            dua_gepatro: None,
         };
         let mut atendita = Vec::new();
         atendita.extend_from_slice(&[7u8; 32]);
-        atendita.extend_from_slice(&[0, 1, b'a', 0x80, 0x01]);
+        atendita.extend_from_slice(&[0, 1, b'a', 0x80, 0x01, 0]);
+        assert_eq!(komito.seriigi().unwrap(), atendita);
+    }
+
+    #[test]
+    fn testo_komito_fiksa_kunfanda_kodajo() {
+        let komito = Komito {
+            arbo: haketo(7),
+            gepatro: Some(haketo(8)),
+            mesagxo: String::new(),
+            kreita_je: 0,
+            dua_gepatro: Some(haketo(9)),
+        };
+        let mut atendita = Vec::new();
+        atendita.extend_from_slice(&[7u8; 32]);
+        atendita.extend_from_slice(&[1]);
+        atendita.extend_from_slice(&[8u8; 32]);
+        atendita.extend_from_slice(&[0, 0]); // malplena mesaĝo, tempstampo 0
+        atendita.push(1);
+        atendita.extend_from_slice(&[9u8; 32]);
         assert_eq!(komito.seriigi().unwrap(), atendita);
     }
 
@@ -484,6 +569,7 @@ mod testoj {
                 bajtoj.push((kreita_je >> (7 * indekso)) as u8 & 0x7f | 0x80);
             }
             bajtoj.push((kreita_je >> 63) as u8 & 0x01);
+            bajtoj.push(0);
 
             let komito = Komito::malseriigi(&bajtoj).unwrap();
             assert_eq!(komito.kreita_je, kreita_je);

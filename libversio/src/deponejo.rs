@@ -2,7 +2,7 @@
 
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -89,6 +89,17 @@ enum Speco {
     Dosierujo,
     Dosiero,
     Alia,
+}
+
+/// La rezulto de kunfando.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Kunfando {
+    /// La celo jam estas en la historio de la nuna komito; nenio ŝanĝiĝis.
+    Nenio,
+    /// La nuna komito estas antaŭulo de la celo; la branĉo simple avancis.
+    Antauen(Haketo),
+    /// Estis kreita nova kunfanda komito kun du gepatroj.
+    Kunfandita(Haketo),
 }
 
 /// Versio-deponejo en la loka dosiersistemo.
@@ -357,7 +368,11 @@ impl Deponejo {
     /// Redonas stokejan, malseriigan aŭ dosiersisteman eraron.
     pub fn eltiri(&self, komito: &Haketo) -> Result<(), Eraro> {
         let arbo = self.legi_komiton(komito)?.arbo;
-        let celo: HashMap<String, Haketo> = self.platigi_arbon(&arbo, "")?.into_iter().collect();
+        let celo: HashMap<String, Haketo> = self
+            .platigi_arbon(&arbo, "")?
+            .into_iter()
+            .map(|(vojo, haketo, _)| (vojo, haketo))
+            .collect();
 
         let limo = SystemTime::now()
             .checked_sub(FRESXA_MARGENO)
@@ -408,6 +423,169 @@ impl Deponejo {
         }
     }
 
+    /// Kunfandas la celan komiton en la nunan.
+    ///
+    /// Se la celo jam estas en la historio de la nuna komito, nenio ŝanĝiĝas.
+    /// Se la nuna komito estas antaŭulo de la celo, la operacio antaŭeniras
+    /// sen nova komito. Alie ĝi trovas komunan antaŭulon kaj tri-vojon
+    /// kunfandas la platajn arbojn. Post sukceso la laborspaco spegulas la
+    /// rezulton; la referencoj kaj `HEAD` restas al la alvokanto.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::KunfandaKonflikto`], se ambaŭ flankoj malsame ŝanĝis
+    /// la saman vojon, [`Eraro::NesamajHistorioj`], se mankas komuna antaŭulo,
+    /// aŭ stokejan, malseriigan aŭ dosiersisteman eraron.
+    pub fn kunfandi(
+        &self,
+        nuna: &Haketo,
+        celo: &Haketo,
+        mesagxo: &str,
+        kreita_je: u64,
+    ) -> Result<Kunfando, Eraro> {
+        if nuna == celo || self.estas_antauxulo(celo, nuna)? {
+            return Ok(Kunfando::Nenio);
+        }
+        if self.estas_antauxulo(nuna, celo)? {
+            self.eltiri(celo)?;
+            return Ok(Kunfando::Antauen(*celo));
+        }
+
+        let bazo = self
+            .komuna_gepatro(nuna, celo)?
+            .ok_or(Eraro::NesamajHistorioj)?;
+        let arbo = self.kunfandi_arbojn(&bazo, nuna, celo)?;
+        let komito = Komito {
+            arbo,
+            gepatro: Some(*nuna),
+            mesagxo: mesagxo.to_owned(),
+            kreita_je,
+            dua_gepatro: Some(*celo),
+        };
+        let haketo = self.konservi_komiton(&komito)?;
+        self.eltiri(&haketo)?;
+        Ok(Kunfando::Kunfandita(haketo))
+    }
+
+    /// Ĉu `antauxulo` estas atingebla ekde `posteulo` sekvante gepatrojn.
+    fn estas_antauxulo(&self, antauxulo: &Haketo, posteulo: &Haketo) -> Result<bool, Eraro> {
+        let mut stako = vec![*posteulo];
+        let mut vizititaj = HashSet::new();
+        while let Some(haketo) = stako.pop() {
+            if &haketo == antauxulo {
+                return Ok(true);
+            }
+            if !vizititaj.insert(haketo) {
+                continue;
+            }
+            let komito = self.legi_komiton(&haketo)?;
+            stako.extend(komito.gepatro);
+            stako.extend(komito.dua_gepatro);
+        }
+        Ok(false)
+    }
+
+    /// Trovas komunan antaŭulon de la du komitoj, se ĝi ekzistas.
+    fn komuna_gepatro(&self, unua: &Haketo, dua: &Haketo) -> Result<Option<Haketo>, Eraro> {
+        let mut antauxuloj = HashSet::new();
+        let mut stako = vec![*unua];
+        while let Some(haketo) = stako.pop() {
+            if !antauxuloj.insert(haketo) {
+                continue;
+            }
+            let komito = self.legi_komiton(&haketo)?;
+            stako.extend(komito.gepatro);
+            stako.extend(komito.dua_gepatro);
+        }
+
+        let mut vizititaj = HashSet::new();
+        let mut stako = vec![*dua];
+        while let Some(haketo) = stako.pop() {
+            if antauxuloj.contains(&haketo) {
+                return Ok(Some(haketo));
+            }
+            if !vizititaj.insert(haketo) {
+                continue;
+            }
+            let komito = self.legi_komiton(&haketo)?;
+            stako.extend(komito.gepatro);
+            stako.extend(komito.dua_gepatro);
+        }
+        Ok(None)
+    }
+
+    /// Tri-voja kunfando de la plataj arboj; redonas la novan radikan arbon.
+    fn kunfandi_arbojn(
+        &self,
+        bazo: &Haketo,
+        nuna: &Haketo,
+        celo: &Haketo,
+    ) -> Result<Haketo, Eraro> {
+        let bazo = self.plata_arbaro(&self.legi_komiton(bazo)?.arbo)?;
+        let nuna = self.plata_arbaro(&self.legi_komiton(nuna)?.arbo)?;
+        let celo = self.plata_arbaro(&self.legi_komiton(celo)?.arbo)?;
+
+        let mut vojoj = BTreeSet::new();
+        vojoj.extend(bazo.keys());
+        vojoj.extend(nuna.keys());
+        vojoj.extend(celo.keys());
+
+        let mut rezulto = BTreeMap::new();
+        let mut konfliktoj = Vec::new();
+        for vojo in vojoj {
+            let n = nuna.get(vojo);
+            let t = celo.get(vojo);
+            let b = bazo.get(vojo);
+            let elektita = if sama_enhavo(n, t) {
+                n.or(t).copied()
+            } else if sama_enhavo(n, b) {
+                t.copied()
+            } else if sama_enhavo(t, b) {
+                n.copied()
+            } else {
+                konfliktoj.push(vojo.clone());
+                continue;
+            };
+            if let Some(enskribo) = elektita {
+                rezulto.insert(vojo.clone(), enskribo);
+            }
+        }
+
+        let mut antauxa: Option<&String> = None;
+        for vojo in rezulto.keys() {
+            if let Some(antauxa) = antauxa
+                && vojo.starts_with(antauxa.as_str())
+                && vojo.as_bytes().get(antauxa.len()) == Some(&b'/')
+            {
+                konfliktoj.push(antauxa.clone());
+                konfliktoj.push(vojo.clone());
+            }
+            antauxa = Some(vojo);
+        }
+
+        if !konfliktoj.is_empty() {
+            konfliktoj.sort_unstable();
+            konfliktoj.dedup();
+            return Err(Eraro::KunfandaKonflikto { vojoj: konfliktoj });
+        }
+
+        let nodo = nodo_el_dosieroj(
+            rezulto
+                .iter()
+                .map(|(vojo, (haketo, grandeco))| (vojo.as_str(), *haketo, *grandeco)),
+        );
+        self.konservi_nodon(&nodo)
+    }
+
+    /// Legas arbon kiel mapon de vojoj al dosieraj haketoj kaj grandecoj.
+    fn plata_arbaro(&self, haketo: &Haketo) -> Result<HashMap<String, (Haketo, u64)>, Eraro> {
+        Ok(self
+            .platigi_arbon(haketo, "")?
+            .into_iter()
+            .map(|(vojo, haketo, grandeco)| (vojo, (haketo, grandeco)))
+            .collect())
+    }
+
     /// Kaptas la nunan laborspacon kaj redonas la haketon de la radika arbo.
     ///
     /// La skanado, la haketado kaj la arba konstruo okazas paralele. Dosieroj,
@@ -433,7 +611,11 @@ impl Deponejo {
             .collect::<Result<Vec<_>, Eraro>>()?;
         self.gxisdatigi_indekson(&malnova, &haketitaj)?;
 
-        self.konservi_nodon(&nodo_el_dosieroj(&haketitaj))
+        self.konservi_nodon(&nodo_el_dosieroj(
+            haketitaj
+                .iter()
+                .map(|dosiero| (dosiero.vojo.as_str(), dosiero.haketo, dosiero.grandeco)),
+        ))
     }
 
     /// Reuzas la indeksan haketon, se ĝi kongruas kaj la objekto ekzistas;
@@ -528,7 +710,11 @@ impl Deponejo {
                 match self.legi_head()? {
                     Some(komito) => {
                         let arbo = self.legi_komiton(&komito)?.arbo;
-                        Ok(self.platigi_arbon(&arbo, "")?.into_iter().collect())
+                        Ok(self
+                            .platigi_arbon(&arbo, "")?
+                            .into_iter()
+                            .map(|(vojo, haketo, _)| (vojo, haketo))
+                            .collect())
                     }
                     None => Ok(HashMap::new()),
                 }
@@ -595,14 +781,16 @@ impl Deponejo {
         &self,
         haketo: &Haketo,
         prefikso: &str,
-    ) -> Result<Vec<(String, Haketo)>, Eraro> {
+    ) -> Result<Vec<(String, Haketo, u64)>, Eraro> {
         let arbo = self.legi_arbon(haketo)?;
         let mut dosieroj = Vec::new();
         let mut subarboj = Vec::new();
         for enskribo in arbo.enskriboj() {
             let vojo = kunigi(prefikso, enskribo.nomo())?;
             match enskribo {
-                ArbaEnskribo::Dosiero { haketo, .. } => dosieroj.push((vojo, *haketo)),
+                ArbaEnskribo::Dosiero {
+                    haketo, grandeco, ..
+                } => dosieroj.push((vojo, *haketo, *grandeco)),
                 ArbaEnskribo::SubArbo { haketo, .. } => subarboj.push((vojo, *haketo)),
             }
         }
@@ -641,18 +829,26 @@ fn kunigi(prefikso: &str, nomo: &str) -> Result<String, Eraro> {
     Ok(vojo)
 }
 
+/// Ĉu du arbaroj havas la saman dosieran enhavon ĉe la sama vojo.
+fn sama_enhavo(unua: Option<&(Haketo, u64)>, dua: Option<&(Haketo, u64)>) -> bool {
+    match (unua, dua) {
+        (None, None) => true,
+        (Some(unua), Some(dua)) => unua.0 == dua.0,
+        _ => false,
+    }
+}
+
 /// Konstruas la dosierujan hierarkion el plata listo de relativaj vojoj.
-fn nodo_el_dosieroj(dosieroj: &[HaketitaDosiero]) -> Nodo {
+fn nodo_el_dosieroj<'a>(dosieroj: impl IntoIterator<Item = (&'a str, Haketo, u64)>) -> Nodo {
     let mut radiko = Nodo::default();
-    for dosiero in dosieroj {
+    for (vojo, haketo, grandeco) in dosieroj {
         let mut nodo = &mut radiko;
-        let mut partoj = dosiero.vojo.split('/').peekable();
+        let mut partoj = vojo.split('/').peekable();
         while let Some(parto) = partoj.next() {
             if partoj.peek().is_some() {
                 nodo = nodo.subarboj.entry(parto.to_owned()).or_default();
             } else {
-                nodo.dosieroj
-                    .push((parto.to_owned(), dosiero.haketo, dosiero.grandeco));
+                nodo.dosieroj.push((parto.to_owned(), haketo, grandeco));
             }
         }
     }
@@ -841,7 +1037,9 @@ mod testoj {
         reason = "testa kodo rajtas uzi panikigajn konstrukciojn"
     )]
 
-    use super::{Deponejo, Eraro, HEAD_DOSIERO, INDEKSO_DOSIERO, OBJEKTUJO, Stato, VS_DOSIERUJO};
+    use super::{
+        Deponejo, Eraro, HEAD_DOSIERO, INDEKSO_DOSIERO, Kunfando, OBJEKTUJO, Stato, VS_DOSIERUJO,
+    };
     use crate::objektoj::{ArbaEnskribo, Komito};
     use crate::stokado::{Haketo, Konservilo};
     use std::fs;
@@ -946,6 +1144,7 @@ mod testoj {
             gepatro: deponejo.legi_head().unwrap(),
             mesagxo: "Unua".into(),
             kreita_je: 1,
+            dua_gepatro: None,
         };
         let h1 = deponejo.konservi_komiton(&komito1).unwrap();
         deponejo.skribi_head(&h1).unwrap();
@@ -958,6 +1157,7 @@ mod testoj {
             gepatro: deponejo.legi_head().unwrap(),
             mesagxo: "Dua".into(),
             kreita_je: 2,
+            dua_gepatro: None,
         };
         let h2 = deponejo.konservi_komiton(&komito2).unwrap();
         deponejo.skribi_head(&h2).unwrap();
@@ -968,6 +1168,174 @@ mod testoj {
 
         let denove = Deponejo::malfermi(prov.radiko.clone()).unwrap();
         assert_eq!(denove.legi_head().unwrap(), Some(h2));
+    }
+
+    #[test]
+    fn testo_kunfandi_antauxenigas() {
+        let prov = ProvDeponejo::nova("kunfandi-antauxen");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        komiti(&deponejo);
+        let unua = deponejo.legi_head().unwrap().unwrap();
+
+        fs::write(prov.radiko.join("a.txt"), b"dua").unwrap();
+        komiti(&deponejo);
+        let dua = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&unua).unwrap();
+        deponejo.skribi_head(&unua).unwrap();
+
+        assert_eq!(
+            deponejo.kunfandi(&unua, &dua, "Kunfandis", 3).unwrap(),
+            Kunfando::Antauen(dua)
+        );
+        assert_eq!(fs::read(prov.radiko.join("a.txt")).unwrap(), b"dua");
+        deponejo.skribi_head(&dua).unwrap();
+        assert!(deponejo.stato().unwrap().estas_pura());
+        assert_eq!(
+            deponejo.kunfandi(&dua, &dua, "Kunfandis", 4).unwrap(),
+            Kunfando::Nenio
+        );
+    }
+
+    #[test]
+    fn testo_kunfandi_tri_voja() {
+        let prov = ProvDeponejo::nova("kunfandi-tri");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("komuna.txt"), b"bazo").unwrap();
+        fs::write(prov.radiko.join("sangxota.txt"), b"bazo").unwrap();
+        komiti(&deponejo);
+        let bazo = deponejo.legi_head().unwrap().unwrap();
+
+        fs::write(prov.radiko.join("nur-majstro.txt"), b"m").unwrap();
+        komiti(&deponejo);
+        let majstro = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&bazo).unwrap();
+        deponejo.skribi_head(&bazo).unwrap();
+        fs::write(prov.radiko.join("sangxota.txt"), b"fonto").unwrap();
+        fs::write(prov.radiko.join("nur-fonto.txt"), b"f").unwrap();
+        komiti(&deponejo);
+        let fonto = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&majstro).unwrap();
+        deponejo.skribi_head(&majstro).unwrap();
+        let rezulto = deponejo.kunfandi(&majstro, &fonto, "Kunfandis", 3).unwrap();
+        let kunfando = match rezulto {
+            Kunfando::Kunfandita(haketo) => haketo,
+            alia => panic!("atendita kunfanda komito, sed ricevis: {alia:?}"),
+        };
+
+        let komito = deponejo.legi_komiton(&kunfando).unwrap();
+        assert_eq!(komito.gepatro, Some(majstro));
+        assert_eq!(komito.dua_gepatro, Some(fonto));
+        assert_eq!(komito.mesagxo, "Kunfandis");
+        assert_eq!(
+            fs::read(prov.radiko.join("sangxota.txt")).unwrap(),
+            b"fonto"
+        );
+        assert_eq!(fs::read(prov.radiko.join("komuna.txt")).unwrap(), b"bazo");
+        assert!(prov.radiko.join("nur-majstro.txt").is_file());
+        assert!(prov.radiko.join("nur-fonto.txt").is_file());
+
+        deponejo.skribi_head(&kunfando).unwrap();
+        assert!(deponejo.stato().unwrap().estas_pura());
+        assert_eq!(
+            deponejo.kunfandi(&kunfando, &fonto, "Denove", 4).unwrap(),
+            Kunfando::Nenio
+        );
+    }
+
+    #[test]
+    fn testo_kunfandi_raportas_konflikton() {
+        let prov = ProvDeponejo::nova("kunfandi-konflikto");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"bazo").unwrap();
+        komiti(&deponejo);
+        let bazo = deponejo.legi_head().unwrap().unwrap();
+
+        fs::write(prov.radiko.join("a.txt"), b"majstro").unwrap();
+        komiti(&deponejo);
+        let majstro = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&bazo).unwrap();
+        deponejo.skribi_head(&bazo).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"fonto").unwrap();
+        komiti(&deponejo);
+        let fonto = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&majstro).unwrap();
+        deponejo.skribi_head(&majstro).unwrap();
+        let rezulto = deponejo.kunfandi(&majstro, &fonto, "Kunfandis", 3);
+        assert!(matches!(
+            &rezulto,
+            Err(Eraro::KunfandaKonflikto { vojoj }) if vojoj == &["a.txt"]
+        ));
+        assert_eq!(
+            fs::read(prov.radiko.join("a.txt")).unwrap(),
+            b"majstro",
+            "fiaskinta kunfando ne rajtas tuŝi la laborspacon"
+        );
+    }
+
+    #[test]
+    fn testo_kunfandi_raportas_dosierujan_kolizion() {
+        let prov = ProvDeponejo::nova("kunfandi-kolizio");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("komuna.txt"), b"bazo").unwrap();
+        komiti(&deponejo);
+        let bazo = deponejo.legi_head().unwrap().unwrap();
+
+        fs::write(prov.radiko.join("a"), b"dosiero").unwrap();
+        komiti(&deponejo);
+        let majstro = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&bazo).unwrap();
+        deponejo.skribi_head(&bazo).unwrap();
+        fs::create_dir_all(prov.radiko.join("a").join("b")).unwrap();
+        fs::write(prov.radiko.join("a").join("b").join("c.txt"), b"c").unwrap();
+        komiti(&deponejo);
+        let fonto = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&majstro).unwrap();
+        deponejo.skribi_head(&majstro).unwrap();
+        let rezulto = deponejo.kunfandi(&majstro, &fonto, "Kunfandis", 3);
+        assert!(matches!(
+            &rezulto,
+            Err(Eraro::KunfandaKonflikto { vojoj }) if vojoj == &["a", "a/b/c.txt"]
+        ));
+    }
+
+    #[test]
+    fn testo_kunfandi_rifuzas_nesamajn_historiojn() {
+        let prov = ProvDeponejo::nova("kunfandi-samaj");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"a").unwrap();
+        let arbo = deponejo.kapti_arbon().unwrap();
+        let unua = deponejo
+            .konservi_komiton(&Komito {
+                arbo,
+                gepatro: None,
+                mesagxo: "Unua".into(),
+                kreita_je: 1,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        let dua = deponejo
+            .konservi_komiton(&Komito {
+                arbo,
+                gepatro: None,
+                mesagxo: "Dua".into(),
+                kreita_je: 2,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        deponejo.skribi_head(&unua).unwrap();
+
+        assert!(matches!(
+            deponejo.kunfandi(&unua, &dua, "Kunfandis", 3),
+            Err(Eraro::NesamajHistorioj)
+        ));
     }
 
     #[test]
@@ -985,6 +1353,7 @@ mod testoj {
             gepatro: deponejo.legi_head().unwrap(),
             mesagxo: "testo".into(),
             kreita_je: 1,
+            dua_gepatro: None,
         };
         let haketo = deponejo.konservi_komiton(&komito).unwrap();
         deponejo.skribi_head(&haketo).unwrap();
@@ -1176,7 +1545,7 @@ mod testoj {
             .platigi_arbon(&arbo, "")
             .unwrap()
             .into_iter()
-            .map(|(vojo, _)| vojo)
+            .map(|(vojo, _, _)| vojo)
             .collect();
         vojoj.sort_unstable();
         assert_eq!(vojoj, ["a/1.txt", "a/b/2.txt", "a/b/c/3.txt"]);

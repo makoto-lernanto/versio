@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-t="meta.titolo">Versio — versiokontrola sistemo en Rust</title>
   <meta name="description" data-t-meta="meta.priskribo"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio kaj branĉoj, ses formalaj pruvoj kaj reala importo de MiKerno.">
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ses formalaj pruvoj kaj reala importo de MiKerno.">
   <meta name="theme-color" content="#0A0D1C">
   <meta property="og:title" content="Versio — versiokontrola sistemo en Rust"
     data-t-meta="meta.titolo">
   <meta property="og:description"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio kaj branĉoj, ses formalaj pruvoj kaj reala importo de MiKerno."
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ses formalaj pruvoj kaj reala importo de MiKerno."
     data-t-meta="meta.priskribo">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://makoto-lernanto.github.io/versio/">
@@ -91,7 +91,8 @@
           Versio registras la laborspacon sen kaŝitaj tavoloj: <code>vs ini</code>
           starigas la deponejon, <code>vs stato</code> montras la ŝanĝojn,
           <code>vs komitu --noto</code> kaptas la tutan arbon, kaj
-          <code>vs historio</code> kun <code>vs eltiri</code> navigas la historion.
+          <code>vs historio</code> kun <code>vs eltiri</code> navigas la historion,
+          kaj <code>vs kunfandi</code> kunportas branĉon.
         </p>
         <div class="principoj">
           <span class="principo vigla" data-t="hero.principo1">no_std-kerno</span>
@@ -108,7 +109,7 @@
             data-t="hero.butono.mikerno">Vidi la integron</a>
         </div>
         <p class="heroo-noto">
-          <code>vs ini</code> · <code>vs stato</code> · <code>vs historio</code> · <code>vs komitu --noto</code>
+          <code>vs ini</code> · <code>vs stato</code> · <code>vs historio</code> · <code>vs kunfandi</code> · <code>vs komitu --noto</code>
           <span data-t="hero.noto">— la CLI mem restas Esperanta.</span>
         </p>
       </div>
@@ -430,7 +431,8 @@
           <p data-t-html="hist.teksto">
             La historio estas nurlegebla kaj la branĉoj estas malpezaj referencoj
             en <code>.vs/refs/heads</code>. <code>vs eltiri</code> restarigas la
-            laborspacon al branĉo aŭ al mallonga haketo, sen kaŝitaj stadioj.
+            laborspacon al branĉo aŭ al mallonga haketo, kaj <code>vs kunfandi</code>
+            kunigas branĉon per tri-voja kunfandado, sen kaŝitaj stadioj.
           </p>
         </div>
       </div>
@@ -483,6 +485,19 @@
             </p>
           </div>
           <span class="sildeto">komitu</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">05</span>
+          <div>
+            <h3 data-t="hist.p5.titolo">Kunfandi branĉojn</h3>
+            <p data-t-html="hist.p5.teksto">
+              <code>vs kunfandi &lt;branĉo&gt;</code> antaŭenigas la nunan
+              branĉon aŭ kreas komiton kun du gepatroj. La tri-voja kunfandado
+              bazas sur la komuna antaŭulo; veraj konfliktoj haltigas la
+              operacion sen tuŝi la laborspacon.
+            </p>
+          </div>
+          <span class="sildeto">vs kunfandi</span>
         </div>
       </div>
 
@@ -543,6 +558,64 @@
           <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
         </div>
       </div>
+
+      <div class="terminala-scene" data-scene style="margin-top: 18px">
+        <div class="terminalo revelo" data-fenestro="kunfando" data-aperu>
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">DAG</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="hist.kunfando.fenestro.titolo">Kunfandi: tri-voja, antaŭenigo, konflikto</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">REALA</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="kunfandaEligo" lang="eo"><span class="linio komento"># tri-voja kunfando: majstro kaj fonto diverĝis</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio sukceso">Kunfanda komito b9658d88ec435ca86c27a566f20c668e6345321296774720455b2b7360af430a</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">b9658d88ec43  2026-11-18 08:08:11 UTC  Kunfandis branĉon fonto</span><span class="linio">ad89370a766b  2026-11-18 08:08:10 UTC  Majstra ŝanĝo</span><span class="linio">8187da910ae5  2026-11-18 08:08:10 UTC  Unua komito</span><span class="linio">a26fc94080fd  2026-11-18 08:08:11 UTC  Fonta ŝanĝo</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">  fonto  a26fc94080fd</span><span class="linio">* majstro  b9658d88ec43</span><span class="linio komento"></span><span class="linio komento"># antaŭenigo: la nuna komito estas antaŭulo de la celo</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio sukceso">Antaŭen al 73e7718205ec3c61e18a7ce17c67f775672442072cbaeb8d0420b24a32b988a8 (fonto)</span><span class="linio komento"></span><span class="linio komento"># konflikto: ambaŭ flankoj ŝanĝis la saman dosieron</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio eraro">Error: malsukcesis kunfandi</span><span class="linio eraro"></span><span class="linio eraro">Caused by:</span><span class="linio eraro">    kunfanda konflikto en: a.txt</span><span class="linio"><span class="akcento">$</span> cat a.txt</span><span class="linio">majstra</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="hist.kunfando.fenestro.noto">La eligoj venas el realaj deponejoj; la konflikta kunfando lasas la laborspacon netuŝita.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="kunfandaEligo"
+              data-t="hist.kunfando.kopii">Kopii la sesion</button>
+            <span class="sildeto">REALA</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="kunfando" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="hist.kunfando.restarigi.teksto">La kunfanda eligo ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
     </section>
 
     <section class="sceno" id="arkitekturo" aria-labelledby="arkitekturo-titolo">
@@ -565,7 +638,7 @@
             <p data-t-html="ark.t1.teksto">
               Komandlinia enirpunkto: <code>ini</code>, <code>stato</code>,
               <code>historio</code>, <code>komitu</code>, <code>eltiri</code>,
-              <code>brancxo</code>, <code>brancxoj</code>, <code>helpo</code>;
+              <code>brancxo</code>, <code>brancxoj</code>, <code>kunfandi</code>, <code>helpo</code>;
               ĉiu eligo estas Esperanta.
             </p>
           </div>
@@ -726,8 +799,9 @@
           </span>
           <h3 data-t="pruv.k6.titolo">Komita seriigo</h3>
           <p data-t-html="pruv.k6.teksto">
-            <code>pruvo_komito_seriigo</code>: simbolikaj haketoj, mesaĝo kaj
-            tempstampo produktas 35–77-bajtan kadron kun la radika haketo unue.
+            <code>pruvo_komito_seriigo</code>: simbolikaj haketoj, mesaĝo,
+            tempstampo kaj laŭvola dua gepatro produktas 36–110-bajtan kadron
+            kun la radika haketo unue.
           </p>
           <span class="sildeto">komito</span>
         </article>

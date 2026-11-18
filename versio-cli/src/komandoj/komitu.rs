@@ -32,6 +32,7 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
         gepatro,
         mesagxo: mesagxo.to_owned(),
         kreita_je,
+        dua_gepatro: None,
     };
     let haketo = deponejo
         .konservi_komiton(&komito)

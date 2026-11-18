@@ -1,6 +1,7 @@
 //! Unueca erartipo de `libversio`.
 
 use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::stokado::Haketo;
 
@@ -68,6 +69,17 @@ pub enum Eraro {
         /// La vojo de la koncerna ero.
         vojo: String,
     },
+
+    /// Aŭtomata kunfandado ne povas interkonsenti pri la donitaj vojoj.
+    #[error("kunfanda konflikto en: {}", .vojoj.join(", "))]
+    KunfandaKonflikto {
+        /// La vojoj, kiuj estis malsame ŝanĝitaj en ambaŭ flankoj.
+        vojoj: Vec<String>,
+    },
+
+    /// La du komitoj ne havas komunan antaŭulon.
+    #[error("la historioj ne havas komunan antaŭulon")]
+    NesamajHistorioj,
 
     /// Seriiga eraro de `postcard`.
     #[error("seriiga eraro: {0}")]

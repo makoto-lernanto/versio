@@ -7,4 +7,5 @@ pub(crate) mod haketo;
 pub(crate) mod historio;
 pub(crate) mod iniciati;
 pub(crate) mod komitu;
+pub(crate) mod kunfandi;
 pub(crate) mod stato;
