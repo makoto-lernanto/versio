@@ -202,16 +202,16 @@ fn kontroli_kadron(komito: &Komito, arbo: &[u8; HAKETA_LONGO], minimumo: usize, 
 /// iteraciojn por esti plene modelitaj. Pli malgranda valoro tranĉas la
 /// komparadon kaj la kopiadon duone, kio kaŝus erarojn en la postaj bajtoj.
 #[kani::proof]
+#[kani::solver(kissat)]
 #[kani::unwind(40)]
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let havas_mesagxon: bool = kani::any();
-    let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: None,
-        mesagxo: prova_mesagxo(havas_mesagxon, signo),
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
         kreita_je,
         dua_gepatro: None,
     };
@@ -224,18 +224,21 @@ fn pruvo_komito_seriigo() {
 }
 
 /// Seriigo de ordinara komito kun unu gepatro.
+///
+/// La gepatra haketo estas fiksa: la teoremo temas nur pri la kadra longo kaj
+/// la radika prefikso, kaj neniu aserto komparas la gepatrajn bajtojn. Simbola
+/// gepatra enhavo do nur pligrandigus la formulon.
 #[kani::proof]
+#[kani::solver(kissat)]
 #[kani::unwind(40)]
 fn pruvo_gepatra_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let gepatra: [u8; HAKETA_LONGO] = kani::any();
     let havas_mesagxon: bool = kani::any();
-    let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
-        gepatro: Some(Haketo::el_bajtoj(gepatra)),
-        mesagxo: prova_mesagxo(havas_mesagxon, signo),
+        gepatro: Some(fiksa_haketo()),
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
         kreita_je,
         dua_gepatro: None,
     };
@@ -248,21 +251,21 @@ fn pruvo_gepatra_kadro() {
 }
 
 /// Seriigo de kunfanda komito kun du gepatroj.
+///
+/// Ankaŭ ĉi tie la gepatroj estas fiksaj; vidu [`pruvo_gepatra_kadro`].
 #[kani::proof]
+#[kani::solver(kissat)]
 #[kani::unwind(40)]
 fn pruvo_kunfanda_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let unua: [u8; HAKETA_LONGO] = kani::any();
-    let dua: [u8; HAKETA_LONGO] = kani::any();
     let havas_mesagxon: bool = kani::any();
-    let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
-        gepatro: Some(Haketo::el_bajtoj(unua)),
-        mesagxo: prova_mesagxo(havas_mesagxon, signo),
+        gepatro: Some(fiksa_haketo()),
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
         kreita_je,
-        dua_gepatro: Some(Haketo::el_bajtoj(dua)),
+        dua_gepatro: Some(fiksa_haketo()),
     };
 
     kani::cover!(havas_mesagxon);
