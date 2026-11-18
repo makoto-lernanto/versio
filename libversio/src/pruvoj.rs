@@ -195,7 +195,7 @@ fn kontroli_kadron(komito: &Komito, arbo: &[u8; HAKETA_LONGO], minimumo: usize, 
 ///
 /// Ĉiu kadra formo havas propran pruvon kun fiksaj gepatroj: se la gepatroj
 /// estus simbolaj buleanoj, la solvilo esplorus ĉiujn formojn en unu formulo.
-/// Kune la tri pruvoj kovras la saman enigan spacon kiel unu sola voko.
+/// Kune la kvar pruvoj kovras la saman enigan spacon kiel unu sola voko.
 ///
 /// La malkunigo de 40 estas necesa: la haketo estas 32 bajtoj, do la
 /// `memcpy`- kaj `memcmp`-bukloj de la norma biblioteko bezonas pli ol 32
