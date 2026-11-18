@@ -238,6 +238,12 @@ mod dosiera {
             &self.dosierujo
         }
 
+        /// Ĉu la objekto kun la donita haketo jam ekzistas en la stokejo.
+        #[must_use]
+        pub fn havas(&self, haketo: &Haketo) -> bool {
+            self.vojo(haketo).is_file()
+        }
+
         fn vojo(&self, haketo: &Haketo) -> PathBuf {
             self.dosierujo.join(format!("{haketo}.lz4"))
         }
@@ -334,6 +340,12 @@ mod dosiera {
 
     impl Konservilo for DosieraKonservilo {
         fn konservi(&self, datumoj: &[u8]) -> Result<Haketo, Eraro> {
+            // La haketo estas kalkulata antaŭ la kunpremado: se la objekto jam
+            // ekzistas, neniu provizora dosiero estas skribata nek sinkronigata.
+            let haketo = super::haketi(datumoj);
+            if self.havas(&haketo) {
+                return Ok(haketo);
+            }
             self.konservi_fluon(datumoj).map(|(haketo, _)| haketo)
         }
 

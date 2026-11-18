@@ -2,7 +2,7 @@
 //!
 //! Por ĉiu dosiero la indekso memoras ĝian modifotempon, grandecon kaj
 //! `BLAKE3`-haketon. Se la modifotempo kaj la grandeco ne ŝanĝiĝis, `stato`
-//! reuzas la memoritan haketon anstataŭ relegi la dosieron.
+//! kaj `kapti_arbon` reuzas la memoritan haketon anstataŭ relegi la dosieron.
 //!
 //! Formato: versia bajto, `postcard`-seriigitaj enskriboj ordigitaj laŭ vojo,
 //! kaj fine la `BLAKE3`-haketo de ĉio antaŭa. La indekso estas nur

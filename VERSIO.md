@@ -77,7 +77,7 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 1. Difini en `libversio::objektoj` la `#[repr(C)]`- aŭ serialigajn strukturojn de `Dosiero` (Blob), `Arbo` (Tree) kaj `Komito` (Commit) (rekomendate uzi `postcard` aŭ `bincode`; konfirmu la `no_std`-subtenon).
 2. Realigi `iniciati()` en `libversio::deponejo`, kiu kreu la dosierujan strukturon `.vs`.
 3. Integrigi `clap` en `versio-cli` kaj realigi `vs ini` kaj `vs komitu --noto "..."`.
-4. Logiko de `komitu`: rekursie skani la nunan dosierujon (paralele per `rayon`), preterlasi `.vs`, kalkuli la haketojn de ĉiuj dosieroj, konstrui `Arbo`-n, krei `Komito`-n montrantan al tiu `Arbo`, kaj ĝisdatigi la referencon `HEAD`.
+4. Logiko de `komitu`: paralele skani la nunan dosierujon per `rayon`, preterlasi `.vs`, kalkuli aŭ reuzi (per la indekso) la haketojn de la dosieroj, konstrui `Arbo`-n, krei `Komito`-n montrantan al tiu `Arbo`, kaj ĝisdatigi la referencon `HEAD`.
 
 **Akceptokriterioj**:
 - [ ] Post rulo de `vs ini`, la nuna dosierujo enhavas `.vs/` kun la dosiero `HEAD`.

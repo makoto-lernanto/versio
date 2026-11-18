@@ -65,9 +65,17 @@ struct LaborDosiero {
     mtempo: Option<u64>,
 }
 
+/// Dosieruja nodo por konstrui la arbaron el plata listo de dosieroj.
+#[derive(Default)]
+struct Nodo {
+    dosieroj: Vec<(String, Haketo, u64)>,
+    subarboj: HashMap<String, Nodo>,
+}
+
 struct HaketitaDosiero {
     vojo: String,
     haketo: Haketo,
+    grandeco: u64,
     /// `(mtempo, grandeco)`, se la dosiero estas sufiĉe malnova por la kaŝmemoro.
     kasxebla: Option<(u64, u64)>,
 }
@@ -77,12 +85,6 @@ enum Speco {
     Dosierujo,
     Dosiero,
     Alia,
-}
-
-struct Ero {
-    nomo: String,
-    vojo: PathBuf,
-    speco: Speco,
 }
 
 /// Versio-deponejo en la loka dosiersistemo.
@@ -218,63 +220,91 @@ impl Deponejo {
 
     /// Kaptas la nunan laborspacon kaj redonas la haketon de la radika arbo.
     ///
+    /// La skanado, la haketado kaj la arba konstruo okazas paralele. Dosieroj,
+    /// kies mtime kaj grandeco kongruas kun la indekso kaj kies objekto jam
+    /// ekzistas en la stokejo, estas reuzataj sen relegado; nur ŝanĝitaj aŭ
+    /// novaj dosieroj estas relegataj kaj kunpremataj. Post la kaptado la
+    /// indekso estas ĝisdatigita, same kiel ĉe [`Deponejo::stato`].
+    ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron aŭ eraron pri nesubtenita dosiertipo.
+    /// Redonas dosiersisteman eraron, [`Eraro::NevalidaDosiernomo`],
+    /// [`Eraro::NevalidaVojaKomponanto`] aŭ [`Eraro::NesubtenitaDosiertipo`]
+    /// por la laborspaco, aŭ stokejan eraron.
     pub fn kapti_arbon(&self) -> Result<Haketo, Eraro> {
-        let arbo = self.konstrui_arbon(&self.radiko)?;
-        self.konservi_arbon(&arbo)
+        let limo = SystemTime::now()
+            .checked_sub(FRESXA_MARGENO)
+            .and_then(nanosekundoj);
+
+        let malnova = self.legi_indekson()?;
+        let haketitaj = skani(&self.radiko, "")?
+            .into_par_iter()
+            .map(|dosiero| self.konservi_laboran(dosiero, &malnova, limo))
+            .collect::<Result<Vec<_>, Eraro>>()?;
+        self.gxisdatigi_indekson(&malnova, &haketitaj)?;
+
+        self.konservi_nodon(&nodo_el_dosieroj(&haketitaj))
     }
 
-    fn konstrui_arbon(&self, dosierujo: &Path) -> Result<Arbo, Eraro> {
-        let mut eroj = Vec::new();
-        for eniro in fs::read_dir(dosierujo)? {
-            let eniro = eniro?;
-            let nomo = eniro
-                .file_name()
-                .into_string()
-                .map_err(|_| Eraro::NevalidaDosiernomo)?;
-            if nomo == VS_DOSIERUJO {
-                continue;
-            }
+    /// Reuzas la indeksan haketon, se ĝi kongruas kaj la objekto ekzistas;
+    /// alie relegas la dosieron kaj konservas ĝin en la stokejo.
+    fn konservi_laboran(
+        &self,
+        dosiero: LaborDosiero,
+        indekso: &Indekso,
+        limo: Option<u64>,
+    ) -> Result<HaketitaDosiero, Eraro> {
+        let mtempo = dosiero
+            .mtempo
+            .filter(|mtempo| limo.is_some_and(|limo| *mtempo < limo));
 
-            let speco = speco_de(eniro.file_type()?);
-            eroj.push(Ero {
-                nomo,
-                vojo: eniro.path(),
-                speco,
+        if let Some(mtempo) = mtempo
+            && let Some(haketo) = indekso.kasxita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
+            && self.stokejo.havas(&haketo)
+        {
+            return Ok(HaketitaDosiero {
+                vojo: dosiero.vojo,
+                haketo,
+                grandeco: dosiero.grandeco,
+                kasxebla: Some((mtempo, dosiero.grandeco)),
             });
         }
 
-        let mut enskriboj = Vec::new();
-        for ero in &eroj {
-            enskriboj.push(self.enskribi(ero)?);
-        }
-        Arbo::el_enskriboj(enskriboj)
+        let (haketo, grandeco) = self.stokejo.konservi_dosieron(&dosiero.absoluta)?;
+        let kasxebla = mtempo
+            .filter(|_| grandeco == dosiero.grandeco)
+            .map(|mtempo| (mtempo, grandeco));
+        Ok(HaketitaDosiero {
+            vojo: dosiero.vojo,
+            haketo,
+            grandeco,
+            kasxebla,
+        })
     }
 
-    fn enskribi(&self, ero: &Ero) -> Result<ArbaEnskribo, Eraro> {
-        match ero.speco {
-            Speco::Dosierujo => {
-                let subarbo = self.konstrui_arbon(&ero.vojo)?;
-                let haketo = self.konservi_arbon(&subarbo)?;
-                Ok(ArbaEnskribo::SubArbo {
-                    nomo: ero.nomo.clone(),
-                    haketo,
-                })
-            }
-            Speco::Dosiero => {
-                let (haketo, grandeco) = self.stokejo.konservi_dosieron(&ero.vojo)?;
-                Ok(ArbaEnskribo::Dosiero {
-                    nomo: ero.nomo.clone(),
-                    haketo,
-                    grandeco,
-                })
-            }
-            Speco::Alia => Err(Eraro::NesubtenitaDosiertipo {
-                vojo: ero.vojo.display().to_string(),
-            }),
+    /// Konservas la arbon de unu dosieruja nodo kaj ĝiajn subarbojn paralele.
+    fn konservi_nodon(&self, nodo: &Nodo) -> Result<Haketo, Eraro> {
+        let mut enskriboj =
+            Vec::with_capacity(nodo.dosieroj.len().saturating_add(nodo.subarboj.len()));
+        for (nomo, haketo, grandeco) in &nodo.dosieroj {
+            enskriboj.push(ArbaEnskribo::Dosiero {
+                nomo: nomo.clone(),
+                haketo: *haketo,
+                grandeco: *grandeco,
+            });
         }
+        let subaj = nodo
+            .subarboj
+            .par_iter()
+            .map(|(nomo, sub)| {
+                Ok(ArbaEnskribo::SubArbo {
+                    nomo: nomo.clone(),
+                    haketo: self.konservi_nodon(sub)?,
+                })
+            })
+            .collect::<Result<Vec<_>, Eraro>>()?;
+        enskriboj.extend(subaj);
+        self.konservi_arbon(&Arbo::el_enskriboj(enskriboj)?)
     }
 
     /// Komparas la laborspacon kun la arbo de `HEAD`.
@@ -411,6 +441,24 @@ fn kunigi(prefikso: &str, nomo: &str) -> Result<String, Eraro> {
     Ok(vojo)
 }
 
+/// Konstruas la dosierujan hierarkion el plata listo de relativaj vojoj.
+fn nodo_el_dosieroj(dosieroj: &[HaketitaDosiero]) -> Nodo {
+    let mut radiko = Nodo::default();
+    for dosiero in dosieroj {
+        let mut nodo = &mut radiko;
+        let mut partoj = dosiero.vojo.split('/').peekable();
+        while let Some(parto) = partoj.next() {
+            if partoj.peek().is_some() {
+                nodo = nodo.subarboj.entry(parto.to_owned()).or_default();
+            } else {
+                nodo.dosieroj
+                    .push((parto.to_owned(), dosiero.haketo, dosiero.grandeco));
+            }
+        }
+    }
+    radiko
+}
+
 fn nanosekundoj(tempo: SystemTime) -> Option<u64> {
     let dauxro = tempo.duration_since(UNIX_EPOCH).ok()?;
     u64::try_from(dauxro.as_nanos()).ok()
@@ -478,6 +526,7 @@ fn haketi_laboran(
         return Ok(HaketitaDosiero {
             vojo: dosiero.vojo,
             haketo,
+            grandeco: dosiero.grandeco,
             kasxebla: Some((mtempo, dosiero.grandeco)),
         });
     }
@@ -491,6 +540,7 @@ fn haketi_laboran(
     Ok(HaketitaDosiero {
         vojo: dosiero.vojo,
         haketo,
+        grandeco,
         kasxebla,
     })
 }
@@ -832,5 +882,88 @@ mod testoj {
         fs::write(&indeksa_vojo, b"rubo").unwrap();
         assert!(deponejo.stato().unwrap().estas_pura());
         assert_eq!(deponejo.legi_indekson().unwrap().enskriboj().len(), 1);
+    }
+
+    #[test]
+    fn testo_komito_reuzas_indekson() {
+        let prov = ProvDeponejo::nova("komito-kasxmemoro");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        let dosiero = prov.radiko.join("a.txt");
+        fs::write(&dosiero, b"unua").unwrap();
+        let tempo = malnovigi(&dosiero);
+        komiti(&deponejo);
+
+        let unua = deponejo.legi_head().unwrap().unwrap();
+        let arbo1 = deponejo.legi_komiton(&unua).unwrap().arbo;
+
+        // Sama grandeco kaj restarigita mtime: la komito reuzas la indeksan
+        // haketon anstataŭ relegi la dosieron, do la arbo restas la sama.
+        fs::write(&dosiero, b"alia").unwrap();
+        fs::File::options()
+            .write(true)
+            .open(&dosiero)
+            .unwrap()
+            .set_modified(tempo)
+            .unwrap();
+        komiti(&deponejo);
+
+        let dua = deponejo.legi_head().unwrap().unwrap();
+        assert_eq!(deponejo.legi_komiton(&dua).unwrap().arbo, arbo1);
+    }
+
+    #[test]
+    fn testo_komito_restarigas_mankantan_objekton() {
+        let prov = ProvDeponejo::nova("komito-restarigo");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        let dosiero = prov.radiko.join("a.txt");
+        fs::write(&dosiero, b"enhavo").unwrap();
+        malnovigi(&dosiero);
+        komiti(&deponejo);
+
+        let head = deponejo.legi_head().unwrap().unwrap();
+        let arbo = deponejo
+            .legi_arbon(&deponejo.legi_komiton(&head).unwrap().arbo)
+            .unwrap();
+        let ArbaEnskribo::Dosiero { haketo, .. } = &arbo.enskriboj()[0] else {
+            panic!("atendita dosiero");
+        };
+        let objekto = deponejo.stokejo().dosierujo().join(format!("{haketo}.lz4"));
+        fs::remove_file(&objekto).unwrap();
+
+        // La indekso ankoraŭ memoras la haketon, sed la objekto mankas:
+        // la komito devas relegi kaj restarigi ĝin.
+        komiti(&deponejo);
+        assert!(
+            objekto.is_file(),
+            "la mankanta objekto devas esti restarigita"
+        );
+        assert_eq!(deponejo.stokejo().ricevi(haketo).unwrap(), b"enhavo");
+    }
+
+    #[test]
+    fn testo_komito_konstruas_nestitan_arbon() {
+        let prov = ProvDeponejo::nova("komito-nesto");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::create_dir_all(prov.radiko.join("a").join("b").join("c")).unwrap();
+        fs::write(prov.radiko.join("a").join("1.txt"), b"unua").unwrap();
+        fs::write(prov.radiko.join("a").join("b").join("2.txt"), b"dua").unwrap();
+        fs::write(
+            prov.radiko.join("a").join("b").join("c").join("3.txt"),
+            b"tria",
+        )
+        .unwrap();
+        komiti(&deponejo);
+
+        let head = deponejo.legi_head().unwrap().unwrap();
+        let arbo = deponejo.legi_komiton(&head).unwrap().arbo;
+        let mut vojoj: Vec<String> = deponejo
+            .platigi_arbon(&arbo, "")
+            .unwrap()
+            .into_iter()
+            .map(|(vojo, _)| vojo)
+            .collect();
+        vojoj.sort_unstable();
+        assert_eq!(vojoj, ["a/1.txt", "a/b/2.txt", "a/b/c/3.txt"]);
+        assert!(deponejo.stato().unwrap().estas_pura());
     }
 }
