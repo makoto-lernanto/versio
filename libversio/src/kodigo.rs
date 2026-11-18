@@ -1,14 +1,63 @@
 //! Limigita kaj determinisma legado de la `postcard`-formato.
 //!
-//! La skribado uzas `postcard`-n rekte tra `serde`. La legado ĉi tie
-//! malĉifras unuopan skalaron per `postcard` (sen memoro-rezervado) kaj
-//! kontrolas ĉiun longoprefikson antaŭ ol rezervi memoraĵon. Tiel malica
-//! enigo ne povas kaŭzi grandegan rezervadon.
+//! [`Skribilo`] spegulas la legadon kaj skribas la komitan kadron sen
+//! `serde`, tiel ke la formato estas eksplicita kaj pruvebla per Kani. La
+//! legado malĉifras unuopan skalaron per `postcard` (sen memoro-rezervado) kaj
+//! kontrolas ĉiun longoprefikson antaŭ ol rezervi memoraĵon. Tiel malica enigo
+//! ne povas kaŭzi grandegan rezervadon.
 
 use alloc::string::String;
+use alloc::vec::Vec;
 
 use crate::eraroj::Eraro;
 use crate::stokado::{HAKETA_LONGO, Haketo};
+
+/// Skribilo por la kadro, kiun [`Legilo`] malĉifras.
+pub(crate) struct Skribilo {
+    bajtoj: Vec<u8>,
+}
+
+impl Skribilo {
+    /// Kreas malplenan skribilon.
+    pub(crate) const fn nova() -> Self {
+        Self { bajtoj: Vec::new() }
+    }
+
+    /// Aldonas unu `u8`-valoron.
+    pub(crate) fn u8(&mut self, valoro: u8) {
+        self.bajtoj.push(valoro);
+    }
+
+    /// Aldonas `u32`-valoron kiel varintan nombron.
+    pub(crate) fn u32(&mut self, valoro: u32) {
+        self.u64(u64::from(valoro));
+    }
+
+    /// Aldonas `u64`-valoron kiel varintan nombron.
+    pub(crate) fn u64(&mut self, mut valoro: u64) {
+        while valoro >= 0x80 {
+            let malalta = valoro.to_le_bytes()[0] & 0x7f;
+            self.bajtoj.push(malalta | 0x80);
+            valoro >>= 7;
+        }
+        self.bajtoj.push(valoro.to_le_bytes()[0]);
+    }
+
+    /// Aldonas haketon kiel fiksajn [`HAKETA_LONGO`] bajtojn.
+    pub(crate) fn haketo(&mut self, haketo: &Haketo) {
+        self.bajtoj.extend_from_slice(haketo.kiel_bajtoj());
+    }
+
+    /// Aldonas krudajn bajtojn.
+    pub(crate) fn bajtoj(&mut self, bajtoj: &[u8]) {
+        self.bajtoj.extend_from_slice(bajtoj);
+    }
+
+    /// Redonas la konstruitajn bajtojn.
+    pub(crate) fn fino(self) -> Vec<u8> {
+        self.bajtoj
+    }
+}
 
 /// Minimuma kvanto da bajtoj por unu arba enskribo: speco (1), nomolongo (1),
 /// nomo (≥1) kaj haketo (32).

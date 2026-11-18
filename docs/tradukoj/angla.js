@@ -127,7 +127,7 @@ window.TRADUKOJ_ANGLA = {
   "pruv.k6.titolo": "Commit serialization",
   "pruv.k6.teksto": "<code>pruvo_komito_seriigo</code>: symbolic hashes, message, timestamp and an optional second parent produce a 36–110 byte frame with the root hash first.",
   "pruv.limo.titolo": "What stays outside Kani",
-  "pruv.limo.teksto": "Full decoding of arbitrary <code>Komito</code> frames was not proven: postcard and UTF-8 produced more than 24,000 VCCs and over 300 seconds of symbolic execution. Unit tests and the arbitrary-byte reader proof cover that area.",
+  "pruv.limo.teksto": "Full decoding of arbitrary <code>Komito</code> frames was not proven: the UTF-8 and tree decoding paths produced more than 24,000 VCCs and over 300 seconds of symbolic execution. Unit tests and the arbitrary-byte reader proof cover that area.",
   "pruv.nuba": "The CI run for the branch feature was green: <code>Lint and build</code> and all six <code>Kani (...)</code> jobs.",
   "mik.titolo": "MiKerno integration",
   "mik.teksto": "The proof of concept imported one MiKerno Git snapshot into a new Versio repository. It did not migrate history, branches or tags — it checked whether the basic commands work on a real source tree.",

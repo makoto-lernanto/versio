@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 use serde::Serialize;
 
 use crate::eraroj::Eraro;
-use crate::kodigo::{Legilo, limigi_kvanton};
+use crate::kodigo::{Legilo, Skribilo, limigi_kvanton};
 use crate::stokado::{Haketo, Konservilo, haketi};
 use crate::vojo::{MAKSIMA_KOMPONANTO, validi_komponanton};
 
@@ -211,7 +211,7 @@ fn malseriigi_enskribon(legilo: &mut Legilo<'_>) -> Result<ArbaEnskribo, Eraro> 
 }
 
 /// Komito: momentfoto de la arbo, ligita al siaj gepatroj.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Komito {
     /// La haketo de la radika arbo de la momentfoto.
     pub arbo: Haketo,
@@ -226,13 +226,24 @@ pub struct Komito {
 }
 
 impl Komito {
-    /// Seriigas la komiton per `postcard`.
+    /// Seriigas la komiton laŭ la sama kadro, kiun [`Komito::malseriigi`] legas.
     ///
     /// # Errors
     ///
-    /// Redonas [`Eraro::Seriigo`], se la seriigado malsukcesas.
+    /// Redonas [`Eraro::TrolongaEnigo`], se la mesaĝo ne kongruas kun `u32`.
     pub fn seriigi(&self) -> Result<Vec<u8>, Eraro> {
-        postcard::to_allocvec(self).map_err(Eraro::Seriigo)
+        let mut skribilo = Skribilo::nova();
+        skribilo.haketo(&self.arbo);
+        skribi_gepatron(&mut skribilo, self.gepatro.as_ref());
+        let longo = u32::try_from(self.mesagxo.len()).map_err(|_| Eraro::TrolongaEnigo {
+            maksimumo: MAKSIMA_MESAGXO,
+            akirita: self.mesagxo.len(),
+        })?;
+        skribilo.u32(longo);
+        skribilo.bajtoj(self.mesagxo.as_bytes());
+        skribilo.u64(self.kreita_je);
+        skribi_gepatron(&mut skribilo, self.dua_gepatro.as_ref());
+        Ok(skribilo.fino())
     }
 
     /// Malseriigas komiton el `postcard`-bajtoj.
@@ -277,6 +288,17 @@ impl Komito {
             kreita_je,
             dua_gepatro,
         })
+    }
+}
+
+/// Skribas la etikedon kaj la bajtojn de laŭvola patro.
+fn skribi_gepatron(skribilo: &mut Skribilo, gepatro: Option<&Haketo>) {
+    match gepatro {
+        None => skribilo.u8(0),
+        Some(haketo) => {
+            skribilo.u8(1);
+            skribilo.haketo(haketo);
+        }
     }
 }
 
