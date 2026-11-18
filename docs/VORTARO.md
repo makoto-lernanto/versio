@@ -41,7 +41,7 @@ kaj protokolaj nomoj sekvu ĝin.
 | `maksimuma preta atendo` | maximum ready wait | `MAKSA_PRETA_ATENDO = 28` tikoj por konstante preta fadeno: sep aliaj tempopecoj de maksimume kvar tikoj, sub regulaj planistaj vokoj. |
 | `antaŭokupa provo` | preemption test | `antaŭokupa_provo`, `ANTAŬOKUPAJ_PRETOJ`, `ANTAŬOKUPA_KOMENCO`: kvar testfadenoj trapasas barilon sen cedo kaj observas tikojn dum komuna 32-tika intervalo. |
 | `paĝo` | page | Tekstoj uzas `paĝ`; la modula dosiero estas `pagado.rs`. |
-| `paĝado` | paging | Rust ne permesas ne-ASCII-modulnomojn, do la modulo estas `pagado`. |
+| `paĝado` | paging | `mod paĝado;` postulus ne-ASKIIan dosiernomon, kiun la aŭtomata modulŝarĝo rifuzas (E0754); ni elektis la ASKIIan `pagado`. |
 | `kadro` | frame | Neniam uzu `frame`. |
 | `kadra alokilo` | frame allocator | `KadraAlokilo`. |
 | `virtuala adreso` | virtual address | |
@@ -478,3 +478,7 @@ eksteraj protokolaj nomoj:
     ikono maldekstre, titolo centre. `Ligo` estas vera fenestro, do ĝi montras
     la tri regilojn dekstre (stato antaŭ ili); `Eniro` ne havas fenestrajn
     regilojn kaj fermiĝas per `Esc` aŭ klako sur la malantaŭa kurteno.
+12. Modulaj dosiernomoj restas ASKIAJ (`pagado.rs`), dum la prozo uzas la
+    diakritojn («paĝado», «paĝa tabelo»). Ne-ASKIAj identigiloj kiel
+    `PaĝaTablo` estas permesataj; la limo koncernas nur la aŭtomatan
+    modulŝarĝon (E0754).
