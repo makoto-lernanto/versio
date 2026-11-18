@@ -195,7 +195,7 @@ fn kontroli_kadron(komito: &Komito, arbo: &[u8; HAKETA_LONGO], minimumo: usize, 
 ///
 /// Ĉiu kadra formo havas propran pruvon kun fiksaj gepatroj: se la gepatroj
 /// estus simbolaj buleanoj, la solvilo esplorus ĉiujn formojn en unu formulo.
-/// Kune la kvar pruvoj kovras la saman enigan spacon kiel unu sola voko.
+/// Kune la tri pruvoj kovras la saman enigan spacon kiel unu sola voko.
 ///
 /// La malkunigo de 40 estas necesa: la haketo estas 32 bajtoj, do la
 /// `memcpy`- kaj `memcmp`-bukloj de la norma biblioteko bezonas pli ol 32
@@ -248,47 +248,28 @@ fn pruvo_gepatra_kadro() {
     kontroli_kadron(&komito, &arbo, 68, 78);
 }
 
-/// Seriigo de kunfanda komito kun du gepatroj kaj malplena mesaĝo.
+/// Seriigo de kunfanda komito kun du gepatroj.
 ///
-/// La kunfanda kadro estas la sola, kiu skribas 32-bajtan haketon je simbola
-/// pozicio (post la varinta tempstampo). La mesaĝa stato estas fiksata ĉi tie
-/// kaj en [`pruvo_kunfanda_mesagxo`]; la du pruvoj kune kovras ambaŭ kazojn,
-/// do la teoremo ne malvastiĝas.
+/// La gepatroj estas fiksaj; vidu [`pruvo_gepatra_kadro`].
 #[kani::proof]
 #[kani::unwind(40)]
 fn pruvo_kunfanda_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let havas_mesagxon: bool = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: Some(fiksa_haketo()),
-        mesagxo: String::new(),
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
         kreita_je,
         dua_gepatro: Some(fiksa_haketo()),
     };
 
+    kani::cover!(havas_mesagxon);
+    kani::cover!(!havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
-    kontroli_kadron(&komito, &arbo, 100, 109);
-}
-
-/// Seriigo de kunfanda komito kun du gepatroj kaj unu-bajta mesaĝo.
-#[kani::proof]
-#[kani::unwind(40)]
-fn pruvo_kunfanda_mesagxo() {
-    let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let kreita_je: u64 = kani::any();
-    let komito = Komito {
-        arbo: Haketo::el_bajtoj(arbo),
-        gepatro: Some(fiksa_haketo()),
-        mesagxo: String::from("a"),
-        kreita_je,
-        dua_gepatro: Some(fiksa_haketo()),
-    };
-
-    kani::cover!(kreita_je == u64::MAX);
-    kani::cover!(kreita_je == 0);
-    kontroli_kadron(&komito, &arbo, 101, 110);
+    kontroli_kadron(&komito, &arbo, 100, 110);
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.
