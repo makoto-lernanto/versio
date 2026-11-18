@@ -66,7 +66,7 @@ fn legi_kapon(dosierujo: &Path) -> Haketo {
         .unwrap()
 }
 
-/// Preparas du diverĝantajn liniojn el komuna bazo.
+/// Preparas du diverĝantajn branĉojn el komuna bazo.
 ///
 /// Rezulto: `majstro` kaj `fonto` ŝanĝis la saman dosieron malsame, kaj la
 /// laborspaco staras sur `majstro`.
@@ -123,11 +123,11 @@ fn testo_kunfandi_kreas_dugepatran_komiton() {
     let komito = deponejo.legi_komiton(&kunfando).unwrap();
     assert_eq!(komito.gepatro, Some(majstro));
     assert_eq!(komito.dua_gepatro, Some(fonto));
-    assert_eq!(komito.mesaĝo, "Kunfandis linion fonto");
+    assert_eq!(komito.mesaĝo, "Kunfandis branĉon fonto");
     assert_eq!(
         deponejo.legi_branĉon("majstro").unwrap(),
         Some(kunfando),
-        "la nuna linio devas montri al la kunfanda komito"
+        "la nuna branĉo devas montri al la kunfanda komito"
     );
     assert!(deponejo.stato().unwrap().estas_pura());
 
@@ -202,7 +202,7 @@ fn testo_kunfandi_rifuzas_malpuron_laborspacon() {
 }
 
 #[test]
-fn testo_kunfandi_raportas_mankantan_linion() {
+fn testo_kunfandi_raportas_mankantan_branĉon() {
     let prov = ProvDosierujo::nova("mankanta");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"a").unwrap();
@@ -212,7 +212,7 @@ fn testo_kunfandi_raportas_mankantan_linion() {
     assert!(!eligo.status.success());
     assert!(
         String::from_utf8_lossy(&eligo.stderr).contains("ne ekzistas"),
-        "mankas klara eraro pri neekzistanta linio"
+        "mankas klara eraro pri neekzistanta branĉo"
     );
 }
 
@@ -245,7 +245,7 @@ fn testo_historio_montras_ambaŭ_gepatrojn() {
     certigi_sukceson(&eligo);
     let teksto = String::from_utf8_lossy(&eligo.stdout);
 
-    for deviga in ["Kunfandis linion fonto", "Fonto", "Pura", "Unua"] {
+    for deviga in ["Kunfandis branĉon fonto", "Fonto", "Pura", "Unua"] {
         assert!(
             teksto.contains(deviga),
             "mankas «{deviga}» en la historio:\n{teksto}"
@@ -264,7 +264,7 @@ fn testo_helpo_listigas_kunfandi() {
         "mankas kunfandi en la helppano:\n{teksto}"
     );
     assert!(
-        teksto.contains("Kunfandas linion"),
+        teksto.contains("Kunfandas branĉon"),
         "mankas la priskribo de kunfandi:\n{teksto}"
     );
 }

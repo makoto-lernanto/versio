@@ -150,7 +150,7 @@ impl Indekso {
         let mut enskriboj = Vec::with_capacity(kvanto);
         for _ in 0..kvanto {
             enskriboj.push(IndeksEnskribo {
-                vojo: legilo.limigita_string(MAKSIMA_VOJO)?,
+                vojo: legilo.limigita_teksto(MAKSIMA_VOJO)?,
                 mtempo: legilo.u64()?,
                 grandeco: legilo.u64()?,
                 haketo: legilo.haketo()?,

@@ -72,24 +72,24 @@ enum Komando {
         #[arg(short = 'f', long = "perforta")]
         perforta: bool,
     },
-    /// Kreas linion ĉe KAPO aŭ ĉe la donita komito.
+    /// Kreas branĉon ĉe KAPO aŭ ĉe la donita komito.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Linio {
-        /// Nomo de la nova linio.
+        /// Nomo de la nova branĉo.
         #[arg(value_name = "NOMO")]
         nomo: String,
-        /// Komito, ĉe kiu krei la linion (defaŭlte KAPO).
+        /// Komito, ĉe kiu krei la branĉon (defaŭlte KAPO).
         #[arg(value_name = "HAKETO")]
         bazo: Option<String>,
     },
-    /// Listigas la liniojn kaj markas la nunan.
+    /// Listigas la branĉojn kaj markas la nunan.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Linioj,
-    /// Kunfandas linion en la nunan linion.
+    /// Kunfandas branĉon en la nunan branĉon.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Kunfandi {
-        /// Nomo de la linio, kiun kunfandi.
-        #[arg(value_name = "LINIO")]
+        /// Nomo de la branĉo, kiun kunfandi.
+        #[arg(value_name = "NOMO")]
         linio: String,
     },
     /// Montras la ĝeneralan helppanon.
@@ -97,7 +97,25 @@ enum Komando {
     Helpo,
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> std::process::ExitCode {
+    match plenumi() {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(eraro) => {
+            eprintln!("Eraro: {eraro}");
+            let kaŭzoj: Vec<_> = eraro.chain().skip(1).collect();
+            if !kaŭzoj.is_empty() {
+                eprintln!();
+                eprintln!("Kaŭzite de:");
+                for kaŭzo in kaŭzoj {
+                    eprintln!("    {kaŭzo}");
+                }
+            }
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+fn plenumi() -> anyhow::Result<()> {
     let argumentoj = Argumentoj::parse();
 
     match argumentoj.komando {

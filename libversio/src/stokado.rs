@@ -169,7 +169,7 @@ impl MemoraKonservilo {
 
     /// La nombro da konservitaj objektoj.
     #[must_use]
-    pub fn n_objektoj(&self) -> usize {
+    pub fn objektnombro(&self) -> usize {
         self.objektoj.borrow().len()
     }
 }
@@ -542,11 +542,11 @@ mod testoj {
     #[test]
     fn testo_memora_konservilo() {
         let stokejo = MemoraKonservilo::nova();
-        assert_eq!(stokejo.n_objektoj(), 0);
+        assert_eq!(stokejo.objektnombro(), 0);
 
         let haketo = stokejo.konservi(b"enmemora").unwrap();
         assert_eq!(haketo, haketi(b"enmemora"));
-        assert_eq!(stokejo.n_objektoj(), 1);
+        assert_eq!(stokejo.objektnombro(), 1);
         assert_eq!(stokejo.ricevi(&haketo).unwrap(), b"enmemora");
         assert!(matches!(
             stokejo.ricevi(&haketi(b"mankanta")),

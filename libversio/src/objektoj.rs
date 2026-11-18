@@ -1,4 +1,4 @@
-//! La datummodeloj de Versio: blob, arbo kaj komito.
+//! La datummodeloj de Versio: dosiero, arbo kaj komito.
 
 use alloc::string::String;
 use alloc::vec::Vec;
@@ -16,17 +16,17 @@ pub const MAKSIMAJ_ENSKRIBOJ: usize = 4096;
 /// Maksimuma longo de komita mesaĝo en bajtoj.
 pub const MAKSIMA_MESAĜO: usize = 64 * 1024;
 
-/// Blob: la kruda enhavo de unu dosiero.
+/// Dosiera objekto: la kruda enhavo de unu dosiero.
 ///
-/// Bloboj estas konservataj sen kroma kapsegigo, do ilia haketo egalas al la
-/// `BLAKE3`-haketo de la dosiera enhavo.
+/// Dosieraj objektoj estas konservataj sen kroma kapsegigo, do ilia haketo
+/// egalas al la `BLAKE3`-haketo de la dosiera enhavo.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Dosiero {
     enhavo: Vec<u8>,
 }
 
 impl Dosiero {
-    /// Kreas blobon el la donita enhavo.
+    /// Kreas dosieran objekton el la donita enhavo.
     #[must_use]
     pub fn nova(enhavo: impl Into<Vec<u8>>) -> Self {
         Self {
@@ -34,19 +34,19 @@ impl Dosiero {
         }
     }
 
-    /// La kruda enhavo de la blobo.
+    /// La kruda enhavo de la dosiera objekto.
     #[must_use]
     pub fn enhavo(&self) -> &[u8] {
         &self.enhavo
     }
 
-    /// La enhavadresita haketo de la blobo.
+    /// La enhavadresita haketo de la dosiera objekto.
     #[must_use]
     pub fn haketo(&self) -> Haketo {
         haketi(&self.enhavo)
     }
 
-    /// Konservas la blobon en la donita stokejo.
+    /// Konservas la dosieran objekton en la donita stokejo.
     ///
     /// # Errors
     ///
@@ -55,7 +55,7 @@ impl Dosiero {
         stokejo.konservi(&self.enhavo)
     }
 
-    /// Legas blobon el la donita stokejo, kontrolante ĝian haketon.
+    /// Legas dosieran objekton el la donita stokejo, kontrolante ĝian haketon.
     ///
     /// # Errors
     ///
@@ -80,11 +80,11 @@ pub struct Arbo {
 /// Unu enskribo en arbo.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum ArbaEnskribo {
-    /// Regula dosiero, kies enhavo estas blobo en la stokejo.
+    /// Regula dosiero, kies enhavo estas dosiera objekto en la stokejo.
     Dosiero {
         /// La nomo de la dosiero ene de la patra dosierujo.
         nomo: String,
-        /// La haketo de la blobo.
+        /// La haketo de la dosiera objekto.
         haketo: Haketo,
         /// La grandeco de la malkunpremita enhavo en bajtoj.
         grandeco: u64,
@@ -190,7 +190,7 @@ impl Arbo {
 fn malseriigi_enskribon(legilo: &mut Legilo<'_>) -> Result<ArbaEnskribo, Eraro> {
     match legilo.u32()? {
         0 => {
-            let nomo = legilo.limigita_string(MAKSIMA_KOMPONANTO)?;
+            let nomo = legilo.limigita_teksto(MAKSIMA_KOMPONANTO)?;
             let haketo = legilo.haketo()?;
             let grandeco = legilo.u64()?;
             Ok(ArbaEnskribo::Dosiero {
@@ -200,7 +200,7 @@ fn malseriigi_enskribon(legilo: &mut Legilo<'_>) -> Result<ArbaEnskribo, Eraro> 
             })
         }
         1 => {
-            let nomo = legilo.limigita_string(MAKSIMA_KOMPONANTO)?;
+            let nomo = legilo.limigita_teksto(MAKSIMA_KOMPONANTO)?;
             let haketo = legilo.haketo()?;
             Ok(ArbaEnskribo::SubArbo { nomo, haketo })
         }
@@ -277,7 +277,7 @@ impl Komito {
                 });
             }
         };
-        let mesaĝo = legilo.limigita_string(MAKSIMA_MESAĜO)?;
+        let mesaĝo = legilo.limigita_teksto(MAKSIMA_MESAĜO)?;
         let kreita_je = legilo.u64()?;
         if dua_gepatro.is_some() && gepatro.is_none() {
             return Err(Eraro::NevalidaDatumo {

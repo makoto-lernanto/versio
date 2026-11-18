@@ -147,8 +147,8 @@ impl<'a> Legilo<'a> {
         Ok(Haketo::el_bajtoj(aranĝo))
     }
 
-    /// Legas signoĉenon kun eksplicita supra limo por la longo.
-    pub(crate) fn limigita_string(&mut self, maksimumo: usize) -> Result<String, Eraro> {
+    /// Legas tekston kun eksplicita supra limo por la longo.
+    pub(crate) fn limigita_teksto(&mut self, maksimumo: usize) -> Result<String, Eraro> {
         let longo = self.u32()?;
         let longo = usize::try_from(longo).map_err(|_| Eraro::TrolongaEnigo {
             maksimumo,

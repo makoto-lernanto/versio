@@ -1,7 +1,7 @@
 # VORTARO — Esperanto–angla terminaro
 
-Ĉi tiu vortaro fiksas la terminologion de MiKerno. Novaj identigiloj, komentoj
-kaj protokolaj nomoj sekvu ĝin.
+Ĉi tiu vortaro fiksas la terminologion de MiKerno kaj Versio. Novaj identigiloj,
+komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 
 | Esperanto | Angla | Rimarko |
 | --- | --- | --- |
@@ -13,6 +13,18 @@ kaj protokolaj nomoj sekvu ĝin.
 | `DI` | Continuous Integration (CI) | Daŭra Integrado: la laborfluo `di.yml` kaj la matrico `kani-kontroli`. |
 | `KI` | command-line interface (CLI) | Komandliniaj Iloj; en Versio la dosierujo `versio-ki`. |
 | `EAS` | content-addressable storage (CAS) | Enhavadresita Stokado; en Versio `libversio::stokado`. |
+| `dosiera objekto` | blob | La kruda enhavo de unu dosiero; la tipo estas `Dosiero`. Neniam uzu `blob` en tekstoj aŭ identigiloj. |
+| `branĉo` | branch | La koncepto; surdiske `.vs/referencoj/branĉoj`. La KI-komandoj restas `linio` kaj `linioj` pro la ASKIA limo. |
+| `linio` / `linioj` | branch command names | ASKIAJ komandnomoj por krei kaj listigi branĉojn; la prozo uzas `branĉo`. |
+| `KAPO` | HEAD | La dosiero `.vs/KAPO`; neniam uzu `HEAD` en identigiloj. |
+| `laborspaco` | working tree | La dosierujo ekster `.vs`; `stato` komparas ĝin kun `KAPO`. |
+| `laborspaca indekso` | work-tree index | `.vs/indekso`: metadatumkaŝmemoro por `stato` kaj `komitu`. |
+| `eltiri` | checkout / restore | `vs eltiri <branĉo|haketo>`; restarigas la laborspacon. |
+| `kunfandi` | merge | `vs kunfandi <branĉo>`; tri-voja kunfando. |
+| `momentfoto` | snapshot | La arbo plus la komitaj metadatumoj; ne konfuzu kun `bildo`. |
+| `seriigi` / `malseriigi` | serialize / deserialize | `Komito::seriigi`, `Legilo`; la surdiska kadro. |
+| `movhistorio` | reflog | Fazo 5: la movoj de `KAPO` kaj de branĉoj. |
+| `rubokolekti` | garbage collect | Fazo 5: forigi neatingeblajn objektojn. |
 | `komito` | commit | `Komito`; la komando `vs komitu`. Neniam uzu `commit`. |
 | `tirpeto` | pull request (PR) | `pull_request` restas kiel la nomo de la GitHub-events. |
 | `Cargo-laborloko` | Cargo workspace | La radika `[workspace]` en `Cargo.toml`. |
@@ -131,7 +143,7 @@ kaj protokolaj nomoj sekvu ĝin.
 | `permeso` | permission | `Permesoj`: `SENDI`, `RICEVI`, `REVOKI`, `ĈIUJ`, `PLENAJ`. |
 | `tenilo` | handle | `Tenilo`: 8 bitoj da indekso + 24 bitoj da generacio; `0` estas malvalida. |
 | `generacio` | generation | 24 bitoj, komenciĝas ĉe `1`; altiĝas ĉe reuzo de fendo (kontraŭ-ABA). |
-| `indekso` | index | `Tenilo::indekso`, `0..=15`; `Tenilo` rifuzas pli grandan valoron. |
+| `indekso` | index | `Tenilo::indekso`, `0..=15`; `Tenilo` rifuzas pli grandan valoron. En Versio la laborspaca indekso estas aparta koncepto (vidu supre). |
 | `finpunkta objekto` | endpoint object | `FinaPunktoObjekto` (Fazo 2); posedas la vicon kaj la atendoliston. |
 | `revoki` | revoke | `REVOKI` (8): ĉiam tutfinpunkta (C14); `rsi` devas esti `0`; finpunkta generacio +1, ĉiuj teniloj malvalidiĝas; blokita ricevanto vekiĝas per `-32`. |
 | `revokita` | revoked | `IkEraro::Revokita`: la finpunkto revokiĝis aŭ ĝia posedanto finiĝis; `-32`. |
@@ -155,7 +167,7 @@ kaj protokolaj nomoj sekvu ĝin.
 | `akiri kapablon` | acquire capability | `akiri_kapablon(procezo, tenilo, bezonataj)`: unua nivelo (fendo + tenilo + permesoj), dua nivelo (aktiva finpunkto kaj `fp_generacio`). |
 | `rajtoj-subaro` | rights subset | `dono_permesita`: `petitaj & !fontaj == 0`; malobservo redonas `-1`. |
 | `permesa malakcepto` | permission denial | La kapablo validas sed mankas la bito: `-1` (ne `-9`). |
-| `bootstrap-tenilo` | bootstrap handle | `BOOTSTRAP_TENILO = 0x100`: fendo `0`, unua generacio; transira distribuo antaŭ M17. |
+| `komenca tenilo` | bootstrap handle | `KOMENCA_TENILO = 0x100`: fendo `0`, unua generacio; transira distribuo antaŭ M17. |
 | `ricevanto` | receiver | `FinaPunktoObjekto.ricevanto`: la fadeno blokita en `RICEVI` sur la finpunkto; la sendinto ĝin vekas. |
 | `sendantoj` | blocked senders | `FinaPunktoObjekto.sendantoj: u16`: bitmasko de la fadenoj blokitaj en `SENDI` pro plena vico; bito `id − 1`. |
 | `senda bito` | sender bit | `senda_bito(fadeno) = 1 << (fadeno − 1)`; la vek-buklo traktas la plej malaltan biton kiel fadenon `1`. |
@@ -163,7 +175,7 @@ kaj protokolaj nomoj sekvu ĝin.
 | `sendblokado` | send blocking | `SENDI` blokas ĝis `preni_de` liberigas lokon aŭ la finpunkto revokiĝas (`-32`); nur la ripoza kunteksto ricevas `-4`. |
 | `senda decido` | send decision | `senda_decido(enmetitaj, maks, povas_bloki)`: pura funkcio kun `Enmetu`/`Atendu`/`Rifuzi`, pruvita per Kani. |
 | `IK-statistiko` | IPC statistics | `IkStatistiko`: `senditaj`, `ricevitaj`, `premregoj`, `revokoj`; `nuna_statistiko()` redonas kopion. |
-| `registri fadenon` | register thread | `registri_fadenon(fadeno, procezo)`: idempotenta; rezervas la defaŭltan finpunkton kaj instalas la bootstrap-tenilon en fendon `0`. |
+| `registri fadenon` | register thread | `registri_fadenon(fadeno, procezo)`: idempotenta; rezervas la defaŭltan finpunkton kaj instalas la komencan tenilon en fendon `0`. |
 | `krei finpunkton` | create endpoint | `KREI_FINPUNKTON` (6); redonas novan `Tenilo`. |
 | `vivas` | is alive | `planisto::vivas(id)`: la celo ekzistas kaj ne estas `Mortinta`; la shim rifuzas per `-3`. |
 | `tempolimo` | timeout | `RICEVI_TEMPO`/`SENDI_TEMPO`; `TEMPOLIMO = -110`. |
@@ -186,7 +198,7 @@ kaj protokolaj nomoj sekvu ĝin.
 | `maksimuma vekprokrasto` | maximum wakeup delay | `maks_vekprokrasto`: la plej granda distanco inter la limdato kaj la efektiva veko, en tikoj. |
 | `fonta filtro` | source filter | `RICEVI_TEMPO.rdx`: fadena id aŭ `0` (ajna); `ricevi_mesagon_atenda(fonto, atendo)` preterlasas fremdajn sendintojn. |
 | `ricevi kun tempolimo` / `sendi kun tempolimo` | receive / send with timeout | `ricevi_kun_tempolimo(tenilo, celo, fonto, ms)`, `sendi_kun_tempolimo(tenilo, mesago, ms)`. |
-| `restarigi procezon` | reset process tables | `inicialigi_procezon(id)`: la kapablotabelo estas statika laŭ identigilo, do `krei` restarigas ĝin por ke `BOOTSTRAP_TENILO` validu ankaŭ post reuzo. |
+| `restarigi procezon` | reset process tables | `inicialigi_procezon(id)`: la kapablotabelo estas statika laŭ identigilo, do `krei` restarigas ĝin por ke `KOMENCA_TENILO` validu ankaŭ post reuzo. |
 | `ABI-versio` | ABI version | `ABI_VERSIO = 2` ekde M14 Fazo 1. |
 | `versio de la pakaĵo` | package version | `env!("CARGO_PKG_VERSION")`: la saluta linio legas ĝin dum kompilado. |
 | `kontroli version` / `ĝisdatigi version` | check / update the version | `tools/versio.sh --kontroli` / `--ĝisdatigi`; la sola fonto estas `Cargo.toml`. |

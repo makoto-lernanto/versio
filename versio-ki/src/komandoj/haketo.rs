@@ -16,7 +16,7 @@ pub(crate) fn mallongigi(haketo: &Haketo) -> String {
 /// Solvas plenan aŭ unikan mallongan haketon en la objektstokejo.
 ///
 /// Nur objektoj, kiuj malseriigeblas kiel komito, estas konsiderataj; tiel
-/// bloboj kaj arboj ne kaŭzas falsajn kongruojn.
+/// dosieraj objektoj kaj arboj ne kaŭzas falsajn kongruojn.
 pub(crate) fn solvi(deponejo: &Deponejo, teksto: &str) -> anyhow::Result<Haketo> {
     let teksto = teksto.trim().to_ascii_lowercase();
     anyhow::ensure!(
@@ -39,7 +39,7 @@ pub(crate) fn solvi(deponejo: &Deponejo, teksto: &str) -> anyhow::Result<Haketo>
         }
         match deponejo.legi_komiton(&haketo) {
             Ok(_) => trovitaj.push(haketo),
-            // Bloboj kaj arboj ne malseriigeblas kiel komitoj.
+            // Dosieraj objektoj kaj arboj ne malseriigeblas kiel komitoj.
             Err(
                 Eraro::Malseriigo(_) | Eraro::NevalidaDatumo { .. } | Eraro::TrolongaEnigo { .. },
             ) => {}

@@ -92,5 +92,5 @@ pub enum Eraro {
     /// Dosiersistema eraro (nur kun la trajto `std`).
     #[cfg(feature = "std")]
     #[error("dosiera eraro: {0}")]
-    Io(#[from] std::io::Error),
+    Dosiera(#[from] std::io::Error),
 }

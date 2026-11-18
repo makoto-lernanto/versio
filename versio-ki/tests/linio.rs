@@ -112,14 +112,14 @@ fn testo_linio_eltiri_kaj_avanci() {
         format!("* ĉefa  {}\n", prefikso(&dua))
     );
 
-    // Komito sur linio movas la referencon kaj KAPO.
+    // Komito sur branĉo movas la referencon kaj KAPO.
     std::fs::write(prov.vojo.join("a.txt"), b"tria").unwrap();
     komiti(&prov.vojo, "Tria");
     let tria = legi_kapon(&prov.vojo);
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), tria);
     assert_ne!(tria, dua);
 
-    // Detaĉita eltiro ĉe malnova komito ne movas la linion.
+    // Detaĉita eltiro ĉe malnova komito ne movas la branĉon.
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", &prefikso(&unua)]));
     assert_eq!(legi_kapon(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
@@ -159,7 +159,7 @@ fn testo_linio_ce_malnova_komito_kaj_rifuzo() {
     assert!(!eligo.status.success());
     assert!(
         String::from_utf8_lossy(&eligo.stderr).contains("jam ekzistas"),
-        "mankas la rifuzo de ekzistanta linio: {}",
+        "mankas la rifuzo de ekzistanta branĉo: {}",
         String::from_utf8_lossy(&eligo.stderr)
     );
 }

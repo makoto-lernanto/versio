@@ -15,7 +15,7 @@
 - **KI (Komandliniaj Iloj) (`versio-ki`)**: norma biblioteko (`std`).
 - **Ŝlosilaj dependaĵoj**:
   - `blake3`: enhavadresita haketado (rapidega kaj kolizio-rezistema).
-  - `zstd`: objekta kunpremado.
+  - `lz4_flex`: objekta kunpremado.
   - `rayon`: paralela dosieruja trairado kaj kompara kalkulado.
   - `clap`: komandlinia analizado (kun la `derive`-trajto ŝaltita).
   - `thiserror` / `anyhow`: erartraktado.
@@ -49,9 +49,9 @@ versio/
 │           ├── stato.rs       # `vs stato` — montri la ŝanĝojn
 │           ├── historio.rs    # `vs historio` — listigi komitojn
 │           ├── eltiri.rs      # `vs eltiri` — restarigi la arbon
-│           ├── linio.rs       # `vs linio` — krei linion
-│           ├── linioj.rs      # `vs linioj` — listigi liniojn
-│           ├── kunfandi.rs    # `vs kunfandi` — kunfandi linion
+│           ├── linio.rs       # `vs linio` — krei branĉon
+│           ├── linioj.rs      # `vs linioj` — listigi branĉojn
+│           ├── kunfandi.rs    # `vs kunfandi` — kunfandi branĉon
 │           ├── haketo.rs      # komuna haket-solvado
 │           └── komitu.rs      # `vs komitu` — registri komiton
 └── .github/workflows/         # DI/DL (kontrolo, provoj, Clippy)
@@ -61,7 +61,7 @@ versio/
 
 - **Kodaj identigiloj**: uzu **Esperanton**. Ekzemple: `Deponejo`, `Kunfandi`, `Haketo`.
 - **Komentoj kaj dokumentado**: nur en Esperanto.
-- **KI-komandoj**: Esperantaj nomoj sen anglaj terminoj; la komenca komando estas la mallongigo `ini`, la ceteraj estas plenaj vortoj (ekz. `stato`, `historio`, `kunfandi`). Komandnomoj kaj argumentaj nomoj uzas nur ASKION (sen `ĉ ĝ ĥ ĵ ŝ ŭ`), por eviti terminalajn kodigajn problemojn.
+- **KI-komandoj**: Esperantaj nomoj sen anglaj terminoj; la komenca komando estas la mallongigo `ini`, la ceteraj estas plenaj vortoj (ekz. `stato`, `historio`, `kunfandi`). Komandnomoj kaj argumentaj nomoj uzas nur ASKION (sen `ĉ ĝ ĥ ĵ ŝ ŭ`), por eviti terminalajn kodigajn problemojn. La koncepto estas `branĉo`, sed la komandnomoj restas `linio` kaj `linioj` pro la ASKIA limo.
 
 ---
 
@@ -74,7 +74,7 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 **Taskoj**:
 1. Praŝalti Cargo-laborlokon kaj agordi `libversio` kiel `#![no_std]`.
 2. Realigi en `libversio::stokado` la trajton `Konservilo` kaj ĝian realigon bazitan sur la loka dosiersistemo (`DosieraKonservilo`).
-3. Realigi `konservi(datumoj: &[u8]) -> Result<Haketo, Eraro>`: kalkulu BLAKE3, kunpremu per zstd kaj konservu en la dosierujon `.vs/objektoj/`.
+3. Realigi `konservi(datumoj: &[u8]) -> Result<Haketo, Eraro>`: kalkulu BLAKE3, kunpremu per `lz4_flex` kaj konservu en la dosierujon `.vs/objektoj/`.
 4. Realigi `ricevi(haketo: &Haketo) -> Result<Vec<u8>, Eraro>`: legu, malkunpremu kaj kontrolu la haketon.
 
 **Akceptokriterioj**:
@@ -116,6 +116,115 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 **Akceptokriterioj**:
 - [x] `cargo kani` sukcese ruliĝas, pruvante ke la celataj funkcioj havas neniun transpaŝon de limoj kaj neniun nedifinitan konduton.
 - [x] Provizu dokumenton `MIKERNO_INTEGRO.md`, registrantan la preliminajn testrezultojn pri administrado de la fontkodo de `mikerno` per `vs`.
+
+La jenaj fazoj estas plano, ne promeso; la ordo kaj la amplekso povas ŝanĝiĝi laŭ mezuritaj bezonoj. Ĉiu fazo postulas verdan DI antaŭ ol la sekva komenciĝas, kaj neniu fazo rajtas malfortigi la antaŭajn kontrolojn.
+
+### Fazo 5: Historio kaj branĉoj kiel unuaklasaj objektoj
+**Celo**: Firmigi la jam ekzistantajn komandojn `linio`, `linioj`, `historio`, `eltiri` kaj `kunfandi` per kompleta referenca modelo: etikedoj, movhistorio, detaĉita `KAPO`, forigo kaj renomado de branĉoj, kaj sekura rubokolekto.
+
+**Taskoj**:
+1. Difini `Etikedo` kaj `Movhistorio` en `libversio::deponejo`; konservi ilin sub `.vs/referencoj/etikedoj` kaj `.vs/movhistorio`.
+2. Aldoni la komandojn `vs etikedi`, `vs etikedoj`, `vs renomi`, `vs forigi` (por branĉo) kaj `vs movhistorio`.
+3. Registri ĉiun movon de `KAPO` kaj de branĉo en la movhistorion, inkluzive de kunfandoj kaj antaŭenigoj.
+4. Realigi `vs rubokolekti`: forigi nur objektojn neatingeblajn el `KAPO`, branĉoj, etikedoj kaj movhistorio.
+
+**Akceptokriterioj**:
+- [ ] `vs etikedi v1.0` kaj `vs historio v1.0` funkcias; etikedo povas montri al komito aŭ al alia etikedo.
+- [ ] `vs movhistorio` montras la antaŭajn valorojn de `KAPO` kaj de ĉiu branĉo.
+- [ ] `vs rubokolekti` forigas nur neatingeblajn objektojn; unuoptesto pruvas, ke ĉiuj atingeblaj restas.
+- [ ] La atingo-kalkulo havas Kani-pruvon aŭ estas kovrita de la ekzistanta pruvo pri la legilo; la DI-matrico restas verda.
+
+### Fazo 6: Reta kunlaboro sen centra servilo
+**Celo**: Ebligi interŝanĝon inter deponejoj per simpla, rekomencigebla kaj aŭtentikigita protokolo, sen postuli specialan servilon.
+
+**Taskoj**:
+1. Difini malproksimajn deponejojn en `.vs/malproksimoj`; aldonu `vs malproksima` por administri ilin.
+2. Realigi `vs publikigi` kaj `vs akiri`: transdoni nur la objektojn, kiujn la alia flanko ankoraŭ ne havas.
+3. Subteni rekomencon post interrompo kaj kontroli ĉiun ricevitan objekton per ĝia haketo.
+4. Aŭtentikigi per SSH-ŝlosiloj aŭ subskribitaj ĵetonoj; neniam konservi pasvortojn en `.vs/`.
+5. Dokumenti la protokolajn mesaĝojn kaj iliajn limojn en aparta `PROTOKOLO.md`.
+
+**Akceptokriterioj**:
+- [ ] Du lokaj deponejoj interŝanĝas komitojn kaj branĉojn tra loka HTTP-servilo per `vs publikigi` kaj `vs akiri`.
+- [ ] Interrompita transdono rekomenciĝas sen rekopii la jam konatajn objektojn.
+- [ ] Difektita objekto haltigas la transdonon antaŭ ol ĝi eniras la stokejon.
+- [ ] Neniu sekreto aperas en `.vs/`, en la protokolo aŭ en la protokoloj de DI.
+
+### Fazo 7: Grandskala efikeco
+**Celo**: Superi `git status` kaj `git add`/`git commit` ĉe 100 000 dosieroj, grandaj dosieroj kaj malrapidaj diskaj subteniloj.
+
+**Taskoj**:
+1. Evoluigi la indekson al binara, mempriskriba formato kun versio, atomaj ĝisdatigoj kaj difekta kontrolo.
+2. Paraleligi haketadon kaj komparadon per `rayon`, sed limigi la memoruzon per fluado.
+3. Aldoni inkrementan arbokonstruadon: reuzi subarbojn, kies enhavo ne ŝanĝiĝis.
+4. Verki benchmarkojn por `stato`, `komitu`, `eltiri` kaj `historio`; la benchmarkoj ne rulas en la ĉefa DI.
+
+**Akceptokriterioj**:
+- [ ] `vs stato` finiĝas en malpli ol 100 ms ĉe 100 000 dosieroj post unu ŝanĝo (release, varma kaŝmemoro).
+- [ ] `vs komitu` uzas malpli ol 256 MiB da memoro ĉe 1 GiB da dosieroj.
+- [ ] Reuzo de subarboj estas pruvita per unuoptesto kaj mezurita per benchmarko.
+- [ ] Neniu ekzistanta testo aŭ pruvo regresas; la DI-matrico restas verda.
+
+### Fazo 8: Sekureco, subskriboj kaj daŭripova stokado
+**Celo**: Garantii la aŭtentecon kaj integrecon de komitoj, arboj kaj dosieraj objektoj.
+
+**Taskoj**:
+1. Subskribi komitojn per Ed25519; aldonu `vs subskribi` kaj `vs kontroli`.
+2. Konservi publikajn ŝlosilojn en `.vs/ŝlosiloj` kaj politikojn en `.vs/agordo`.
+3. Kontroli subskribojn dum `eltiri` kaj `kunfandi`; permesi politikon `postuli-subskribon`.
+4. Certigi, ke `vs rubokolekti` ne forigas subskribitajn objektojn, kiujn la politiko protektas.
+5. Aldoni fuzz-testojn por la malkodado kaj daŭrigi la Kani-pruvojn pri la legilo.
+
+**Akceptokriterioj**:
+- [ ] Ŝanĝita komito aŭ arbo estas rifuzata, se ĝia subskribo ne validas.
+- [ ] Subskribo de unu komito validas tra `kunfandi` kaj `eltiri`.
+- [ ] Fuzz-kampanjo de 24 horoj ne trovas panikon en la malkodado.
+- [ ] La Kani-matrico restas verda kaj neniu `#[allow]` estas aldonita.
+
+### Fazo 9: Kongrueco kun Git kaj migrado
+**Celo**: Povi legi kaj skribi Git-deponejojn sen perdi historion, branĉojn aŭ etikedojn.
+
+**Taskoj**:
+1. Legi Git-pack-dosierojn, `refs` kaj la indekson; mapi Git-objektojn al la Versio-datummodelo.
+2. Skribi Git-kongruan arbon kaj komiton, kiujn `git log` kaj `git fsck` akceptas.
+3. Realigi `vs importi` kaj `vs eksporti` por komitoj, branĉoj kaj etikedoj; dokumenti la limojn ĉe submoduloj kaj simbolaj ligiloj.
+4. Raporti malsamajn kodigojn de dosiernomoj anstataŭ silente konverti ilin.
+
+**Akceptokriterioj**:
+- [ ] `vs importi <git-deponejo>` konservas ĉiun komiton, branĉon kaj etikedon de la testa MiKerno-deponejo.
+- [ ] `git fsck` akceptas la eksportitan deponejon.
+- [ ] Rondiro Versio→Git→Versio konservas la arbo-identigon kaj la komitajn mesaĝojn.
+- [ ] Ĉiuj limoj aperas en la dokumentaro kaj en la testoj.
+
+### Fazo 10: Integriĝo kun MiKerno
+**Celo**: Uzi la saman kernon en la rulanta MiKerno, sen `std` kaj sen hosta dosiersistemo.
+
+**Taskoj**:
+1. Certigi, ke `libversio` restas `no_std` kaj daŭre trapasas la sentinelon en DI.
+2. Provizi adaptilon por la MiKerno-dosiersistemo (SNDS aŭ posta skriba dosiersistemo) kaj por la kapabla modelo.
+3. Enkonduki komandon en Horizonto por krei kaj restarigi momentfoton de la laborspaco.
+4. Dokumenti la limojn: neniuj simbolaj ligiloj, permesbitoj aŭ sekurigitaj dosieroj.
+
+**Akceptokriterioj**:
+- [ ] `libversio` konstruiĝas sen `std` kaj la sentinelo restas verda.
+- [ ] Horizonto kreas kaj restarigas momentfoton en QEMU.
+- [ ] `MIKERNO_INTEGRO.md` estas ĝisdatigita per la novaj limoj kaj la mezuritaj rezultoj.
+- [ ] Neniu kerna dependeco al `std` aŭ al hosta dosiersistemo.
+
+### Fazo 11: Stabileco kaj eldono 1.0
+**Celo**: Fiksi la datumformatojn, dokumenti la migradon kaj publikigi stabilan eldonon.
+
+**Taskoj**:
+1. Versii ĉiun surdiskan formaton kaj skribi migradojn el la antaŭaj versioj.
+2. Aldoni kongruectestojn inter eldonoj kaj testi ĝisdatigon de malnova deponejo.
+3. Prepari pakaĵojn, manlibrajn paĝojn kaj ripeteblajn konstruaĵojn.
+4. Publikigi `1.0` kun subskribitaj aktivaĵoj kaj klara listo de limoj.
+
+**Akceptokriterioj**:
+- [ ] Deponejo kreita per la antaŭa eldono malfermiĝas kaj funkcias sen permana riparo.
+- [ ] La datumformatoj havas version kaj migradon kovritan de testoj.
+- [ ] `cargo install` kaj la elŝutitaj pakaĵoj produktas funkciantan `vs`.
+- [ ] La eldono `1.0` havas verdan DI-matricon kaj subskribitajn aktivaĵojn.
 
 ---
 
@@ -183,7 +292,9 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 - **Kani-kodo ne kompiliĝas loke**: `libversio/src/pruvoj.rs` estas `#[cfg(kani)]`, do lokaj `fmt`, `Clippy` kaj testoj ne kaptas erarojn en ĝi. Ĉiu ŝanĝo al la pruvoj validas nur post verda DI-matrico.
 - **Nuba stato**: revizio `580dfb8` sukcese finis la DI-rulon [`44302583687`](https://github.com/makoto-lernanto/versio/actions/runs/44302583687) — `Kontroli kaj konstrui` kaj ĉiuj ok `Kani (...)`-laboroj verdaj (2026-11-18).
 - **Aŭtomata liverado**: post kodŝanĝoj kaj la permesitaj lokaj kontroloj, aŭtomate kreu novan komiton kaj puŝu ĝin por ekigi DI, sen aparta konfirmo. Se DI malsukcesas, analizu la protokolojn, korektu la kaŭzon kaj denove komitu kaj puŝu; ne malfortigu kontrolojn. Tiu permeso ne inkluzivas devigan puŝon aŭ reverkadon de historio.
-- **Nur-dokumentaj ŝanĝoj**: se nur dokumentoj (ekz. `VERSIO.md`, `MIKERNO_INTEGRO.md`) ŝanĝiĝas kaj la ĉefa kodo, testoj aŭ DI-agordo restas netuŝitaj, metu `[skip ci]` en la komitan mesaĝon kaj klarigu, ke la ĉefa kodo ne ŝanĝiĝis; tiam DI ne bezonas ruli. Ĉiu ajn ŝanĝo al kodo, testoj aŭ `.github/` devige rulas DI.
+- **Nur-dokumentaj ŝanĝoj**: se nur dokumentoj (ekz. `VERSIO.md`, `MIKERNO_INTEGRO.md`) ŝanĝiĝas kaj la ĉefa kodo, testoj aŭ DI-agordo restas netuŝitaj, metu `[skip ci]` en la komitan mesaĝon kaj klarigu, ke la ĉefa kodo ne ŝanĝiĝis; tiam DI ne bezonas ruli.
+- **Pure nomaj ŝanĝoj**: terminologiaj aŭ nomaj ŝanĝoj sen efiko al la konduto (ekz. `limigita_string` → `limigita_teksto`) rajtas uzi `[skip ci]`, se la komita mesaĝo eksplicite notas, ke nur nomoj, komentoj kaj dokumentaro ŝanĝiĝis kaj ke la lokaj `fmt`, `Clippy` kaj testoj estis verdaj. La escepto ne validas por ŝanĝoj al la datumformato, la algoritmoj aŭ la DI-agordo.
+- **Ĉiuj aliaj kodaj ŝanĝoj**: ajna ŝanĝo al kodo, testoj aŭ `.github/`, kiu ne estas pure dokumenta aŭ pure nomŝanĝo, devige rulas DI.
 - **Kontrolo de rezultoj**: uzu la langeton **Actions** de la deponejo aŭ `gh run list` / `gh run watch`.
 - **Difino de finiteco**: la laboro `Kontroli kaj konstrui` kaj ĉiuj laboroj `Kani (...)` devas esti verdaj en GitHub Actions.
 

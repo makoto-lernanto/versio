@@ -1088,7 +1088,7 @@ mod testoj {
     }
 
     #[test]
-    fn testo_kapti_arbon_kaj_legi_blobojn() {
+    fn testo_kapti_arbon_kaj_legi_dosierajn_objektojn() {
         let prov = ProvDeponejo::nova("arbo");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
 
@@ -1118,7 +1118,7 @@ mod testoj {
         assert_eq!(subarbo.enskriboj().len(), 1);
 
         let ArbaEnskribo::Dosiero {
-            haketo: blob_haketo,
+            haketo: dosiera_haketo,
             grandeco,
             ..
         } = &subarbo.enskriboj()[0]
@@ -1127,7 +1127,7 @@ mod testoj {
         };
         assert_eq!(*grandeco, 6);
         assert_eq!(
-            deponejo.stokejo().ricevi(blob_haketo).unwrap(),
+            deponejo.stokejo().ricevi(dosiera_haketo).unwrap(),
             b"mondo\n".to_vec()
         );
     }
