@@ -60,6 +60,11 @@ jobs:
       fail-fast: false
       matrix:
         harness:
+          - pruvo_arbo_kanonika
+          - pruvo_arbo_duplikatoj
+          - pruvo_vojo_sekura
+          - pruvo_legilo_neniam_panikas
+          - pruvo_dekodo_limigita
           - pruvo_komito_seriigo
           - pruvo_gepatra_kadro
           - pruvo_kunfanda_kadro
