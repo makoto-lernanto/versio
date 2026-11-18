@@ -173,10 +173,12 @@ fn pruvo_legilo_neniam_panikas() {
 /// havas propran pruvon [`pruvo_kunfanda_kadro`], por ke la solvilo ne devu
 /// trakti ambaŭ formojn en unu formulo.
 ///
-/// La malkunigo de 16 sufiĉas: la varinta buklo havas 10 fiksajn iteraciojn,
-/// kaj la haketoj kaj la mesaĝo estas kopiataj per unu operacio.
+/// La malkunigo de 40 estas necesa: la haketo estas 32 bajtoj, do la
+/// `memcpy`- kaj `memcmp`-bukloj de la norma biblioteko bezonas pli ol 32
+/// iteraciojn por esti plene modelitaj. Pli malgranda valoro tranĉas la
+/// komparadon kaj la kopiadon duone, kio kaŝus erarojn en la postaj bajtoj.
 #[kani::proof]
-#[kani::unwind(16)]
+#[kani::unwind(40)]
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let gepatra: [u8; HAKETA_LONGO] = kani::any();
@@ -215,7 +217,7 @@ fn pruvo_komito_seriigo() {
 
 /// Kunfanda kadro kun du gepatroj restas en la difinita longa intervalo.
 #[kani::proof]
-#[kani::unwind(16)]
+#[kani::unwind(40)]
 fn pruvo_kunfanda_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let unua: [u8; HAKETA_LONGO] = kani::any();
