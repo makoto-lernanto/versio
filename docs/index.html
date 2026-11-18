@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-t="meta.titolo">Versio — versiokontrola sistemo en Rust</title>
   <meta name="description" data-t-meta="meta.priskribo"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, ses formalaj pruvoj kaj reala importo de MiKerno.">
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio kaj branĉoj, ses formalaj pruvoj kaj reala importo de MiKerno.">
   <meta name="theme-color" content="#0A0D1C">
   <meta property="og:title" content="Versio — versiokontrola sistemo en Rust"
     data-t-meta="meta.titolo">
   <meta property="og:description"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, ses formalaj pruvoj kaj reala importo de MiKerno."
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio kaj branĉoj, ses formalaj pruvoj kaj reala importo de MiKerno."
     data-t-meta="meta.priskribo">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://makoto-lernanto.github.io/versio/">
@@ -36,6 +36,7 @@
     <nav class="navigado" aria-label="Ĉefaj sekcioj" data-t-aria="nav.aria">
       <a href="#superrigardo" data-t="nav.superrigardo">Superrigardo</a>
       <a href="#fluo" data-t="nav.fluo">Fluo</a>
+      <a href="#historio" data-t="nav.historio">Historio</a>
       <a href="#arkitekturo" data-t="nav.arkitekturo">Arkitekturo</a>
       <a href="#pruvoj" data-t="nav.pruvoj">Pruvoj</a>
       <a href="#mikerno" data-t="nav.mikerno">MiKerno</a>
@@ -88,8 +89,9 @@
         <p class="heroo-moto" data-t="hero.moto">«La stato, tuj videbla.»</p>
         <p class="heroo-priskribo" data-t-html="hero.teksto">
           Versio registras la laborspacon sen kaŝitaj tavoloj: <code>vs ini</code>
-          starigas la deponejon, <code>vs stato</code> montras la ŝanĝojn, kaj
-          <code>vs komitu --noto</code> kaptas la tutan arbon en unu klara komito.
+          starigas la deponejon, <code>vs stato</code> montras la ŝanĝojn,
+          <code>vs komitu --noto</code> kaptas la tutan arbon, kaj
+          <code>vs historio</code> kun <code>vs eltiri</code> navigas la historion.
         </p>
         <div class="principoj">
           <span class="principo vigla" data-t="hero.principo1">no_std-kerno</span>
@@ -172,7 +174,7 @@
 
     <div class="statistiko" data-aperu data-t-aria="stat.aria">
       <div class="statistikero">
-        <strong>4</strong>
+        <strong>5</strong>
         <span data-t="stat.1">fazoj finitaj</span>
       </div>
       <div class="statistikero">
@@ -195,8 +197,9 @@
         <div>
           <h2 id="superrigardo-titolo" data-t="super.titolo">Superrigardo</h2>
           <p data-t="super.teksto">
-            La unuaj kvar fazoj starigis realan, testeblan kaj pruvitan fundamenton:
-            de la enhavadresita stokado ĝis la komandlinia fluo kaj la MiKerno-importo.
+            La unuaj kvin fazoj starigis realan, testeblan kaj pruvitan fundamenton:
+            de la enhavadresita stokado ĝis la komandlinia fluo, la historio kaj
+            branĉoj, kaj la MiKerno-importo.
           </p>
         </div>
       </div>
@@ -212,10 +215,11 @@
           <h3 data-t="karto1.titolo">Unu klara fluo</h3>
           <p data-t-html="karto1.teksto">
             Ne ekzistas aparta <code>add</code>: <code>vs komitu</code> kaptas la tutan
-            labordosierujon. <code>vs stato</code> kaj <code>vs historio</code> estas
-            la legaj komandoj.
+            labordosierujon. <code>vs stato</code>, <code>vs historio</code> kaj
+            <code>vs brancxoj</code> estas la legaj komandoj; <code>vs eltiri</code>
+            restarigas ajnan komiton aŭ branĉon.
           </p>
-          <span class="sildeto">ini · stato · historio · komitu</span>
+          <span class="sildeto">ini · stato · komitu · historio · branĉoj</span>
         </article>
 
         <article class="karto" data-aperu>
@@ -340,7 +344,7 @@
             <h3 data-t="fluo.p3.titolo">Komiti</h3>
             <p data-t-html="fluo.p3.teksto">
               <code>vs komitu --noto</code> konservas la tutan arbon, kreas komiton
-              kun gepatro kaj ĝisdatigas <code>HEAD</code>.
+              kun gepatro, avancas la nunan branĉon kaj ĝisdatigas <code>HEAD</code>.
             </p>
           </div>
           <span class="sildeto">vs komitu</span>
@@ -418,9 +422,132 @@
       </div>
     </section>
 
-    <section class="sceno" id="arkitekturo" aria-labelledby="arkitekturo-titolo">
+    <section class="sceno" id="historio" aria-labelledby="historio-titolo">
       <div class="scena-kapo" data-aperu>
         <span class="scena-numero" aria-hidden="true">03</span>
+        <div>
+          <h2 id="historio-titolo" data-t="hist.titolo">Historio kaj branĉoj</h2>
+          <p data-t-html="hist.teksto">
+            La historio estas nurlegebla kaj la branĉoj estas malpezaj referencoj
+            en <code>.vs/refs/heads</code>. <code>vs eltiri</code> restarigas la
+            laborspacon al branĉo aŭ al mallonga haketo, sen kaŝitaj stadioj.
+          </p>
+        </div>
+      </div>
+
+      <div class="tavoloj" data-aperu>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">01</span>
+          <div>
+            <h3 data-t="hist.p1.titolo">Legi la historion</h3>
+            <p data-t-html="hist.p1.teksto">
+              <code>vs historio</code> listigas la komitojn de <code>HEAD</code>
+              malantaŭen: mallonga haketo, UTC-tempstampo kaj unulinia mesaĝo.
+              <code>-n</code> limigas la nombron da komitoj.
+            </p>
+          </div>
+          <span class="sildeto">vs historio</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">02</span>
+          <div>
+            <h3 data-t="hist.p2.titolo">Krei branĉojn</h3>
+            <p data-t-html="hist.p2.teksto">
+              <code>vs brancxo &lt;nomo&gt; [bazo]</code> kreas branĉon ĉe la nuna
+              <code>HEAD</code> aŭ ĉe donita komito; <code>vs brancxoj</code> montras
+              la branĉojn kaj markas la nunan per <code>*</code>.
+            </p>
+          </div>
+          <span class="sildeto">vs brancxo · brancxoj</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">03</span>
+          <div>
+            <h3 data-t="hist.p3.titolo">Restarigi la laborspacon</h3>
+            <p data-t-html="hist.p3.teksto">
+              <code>vs eltiri &lt;branĉo|haketo&gt;</code> restarigas la dosierojn,
+              forigas la superfluajn kaj ĝisdatigas <code>HEAD</code>;
+              <code>--perforta</code> preterlasas la purecan kontrolon.
+            </p>
+          </div>
+          <span class="sildeto">vs eltiri</span>
+        </div>
+        <div class="tavolo">
+          <span class="tavola-numero" aria-hidden="true">04</span>
+          <div>
+            <h3 data-t="hist.p4.titolo">Avancigi la nunan branĉon</h3>
+            <p data-t-html="hist.p4.teksto">
+              Ĉiu <code>vs komitu</code> avancas la nunan branĉon. En sendependa
+              <code>HEAD</code> — post <code>vs eltiri &lt;haketo&gt;</code> — neniu
+              branĉo moviĝas.
+            </p>
+          </div>
+          <span class="sildeto">komitu</span>
+        </div>
+      </div>
+
+      <div class="terminala-scene" data-scene style="margin-top: 18px">
+        <div class="terminalo revelo" data-fenestro="historio" data-aperu>
+          <div class="terminala-kapo" data-treni>
+            <div class="terminala-flanko">
+              <span class="terminala-sigilo">VS</span>
+              <span class="sildeto">REF</span>
+            </div>
+            <div class="terminala-centro">
+              <span class="terminala-titolo" data-t="hist.fenestro.titolo">Historio, branĉoj kaj eltiri</span>
+            </div>
+            <div class="terminala-dekstro">
+              <span class="terminala-stato">REALA</span>
+              <div class="regiloj" role="group" aria-label="Fenestraj regiloj" data-t-aria="fenestro.regiloj">
+                <button type="button" data-ago="malgrandigi" title="Malgrandigi" aria-label="Malgrandigi"
+                  data-t-title="fenestro.malgrandigi" data-t-aria="fenestro.malgrandigi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 5h6"></path>
+                  </svg>
+                </button>
+                <button type="button" data-ago="pligrandigi" title="Pligrandigi" aria-label="Pligrandigi"
+                  data-t-title="fenestro.pligrandigi" data-t-aria="fenestro.pligrandigi">
+                  <svg class="ikono-pligrandigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.2">
+                    <rect x="1.8" y="1.8" width="6.4" height="6.4"></rect>
+                  </svg>
+                  <svg class="ikono-restarigi" viewBox="0 0 10 10" aria-hidden="true" fill="none"
+                    stroke="currentColor" stroke-width="1.1">
+                    <rect x="1.6" y="3" width="5.4" height="5.4"></rect>
+                    <path d="M3.4 3V1.6h5v5H6.9"></path>
+                  </svg>
+                </button>
+                <button type="button" class="fermi" data-ago="fermi" title="Fermi" aria-label="Fermi"
+                  data-t-title="fenestro.fermi" data-t-aria="fenestro.fermi">
+                  <svg viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">
+                    <path d="M2 2l6 6M8 2 2 8"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="terminala-korpo">
+            <pre class="log" id="historiaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/versio-demo.ixhnd0</span><span class="linio"><span class="akcento">$</span> printf 'unua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua"</span><span class="linio sukceso">Komito c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> vs brancxo ĉefa</span><span class="linio sukceso">Kreita branĉo ĉefa ĉe c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> vs eltiri ĉefa</span><span class="linio sukceso">Sur branĉo ĉefa (c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a)</span><span class="linio"><span class="akcento">$</span> vs brancxo eksperimento</span><span class="linio sukceso">Kreita branĉo eksperimento ĉe c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> printf 'dua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Dua"</span><span class="linio sukceso">Komito 0ea2666d33982dc09470abdc3b8b08bec50b3ca6c40c04e804510dcecb2b4763</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">  eksperimento  c57f7c795479</span><span class="linio">* ĉefa  0ea2666d3398</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">0ea2666d3398  2026-11-18 07:52:33 UTC  Dua</span><span class="linio">c57f7c795479  2026-11-18 07:52:33 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs eltiri eksperimento</span><span class="linio sukceso">Sur branĉo eksperimento (c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a)</span><span class="linio"><span class="akcento">$</span> cat noto.txt</span><span class="linio">unua</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">* eksperimento  c57f7c795479</span><span class="linio">  ĉefa  0ea2666d3398</span></pre>
+          </div>
+          <div class="terminala-piedo">
+            <span class="stato-punkto" aria-hidden="true"></span>
+            <span data-t="hist.fenestro.noto">La eligoj venas el reala deponejo kun du branĉoj.</span>
+            <button class="buto malgranda subtila" type="button" data-kopii="historiaEligo"
+              data-t="hist.kopii">Kopii la sesion</button>
+            <span class="sildeto">REALA</span>
+          </div>
+        </div>
+        <div class="restarigo" data-restarigi="historio" hidden>
+          <h3 data-t="fenestro.restarigi.titolo">Fenestro kaŝita</h3>
+          <p data-t="hist.restarigi.teksto">La historia eligo ankoraŭ disponeblas.</p>
+          <button class="buto akcenta" type="button" data-restarigi-butono data-t="fenestro.restarigi">Restarigi</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sceno" id="arkitekturo" aria-labelledby="arkitekturo-titolo">
+      <div class="scena-kapo" data-aperu>
+        <span class="scena-numero" aria-hidden="true">04</span>
         <div>
           <h2 id="arkitekturo-titolo" data-t="ark.titolo">Arkitekturo</h2>
           <p data-t="ark.teksto">
@@ -438,7 +565,8 @@
             <p data-t-html="ark.t1.teksto">
               Komandlinia enirpunkto: <code>ini</code>, <code>stato</code>,
               <code>historio</code>, <code>komitu</code>, <code>eltiri</code>,
-              <code>brancxo</code>, <code>helpo</code>; ĉiu eligo estas Esperanta.
+              <code>brancxo</code>, <code>brancxoj</code>, <code>helpo</code>;
+              ĉiu eligo estas Esperanta.
             </p>
           </div>
           <span class="sildeto">bin</span>
@@ -459,7 +587,8 @@
           <div>
             <h3>libversio</h3>
             <p data-t="ark.t3.teksto">
-              Datummodeloj, voja validigo, kodigo, deponeja stato kaj indekso.
+              Datummodeloj, voja validigo, kodigo, deponeja stato, indekso kaj
+              referencoj.
             </p>
           </div>
           <span class="sildeto">core + alloc</span>
@@ -480,8 +609,9 @@
           <div>
             <h3>.vs/</h3>
             <p data-t-html="ark.t5.teksto">
-              <code>HEAD</code>, <code>indekso</code> kaj <code>objektoj/</code> —
-              la tuta stato de la deponejo en unu dosierujo.
+              <code>HEAD</code>, <code>brancxo</code>, <code>refs/heads/</code>,
+              <code>indekso</code> kaj <code>objektoj/</code> — la tuta stato de la
+              deponejo en unu dosierujo.
             </p>
           </div>
           <span class="sildeto">CAS</span>
@@ -498,7 +628,7 @@
 
     <section class="sceno" id="pruvoj" aria-labelledby="pruvoj-titolo">
       <div class="scena-kapo" data-aperu>
-        <span class="scena-numero" aria-hidden="true">04</span>
+        <span class="scena-numero" aria-hidden="true">05</span>
         <div>
           <h2 id="pruvoj-titolo" data-t="pruv.titolo">Formala pruvado</h2>
           <p data-t="pruv.teksto">
@@ -613,14 +743,14 @@
         </p>
       </div>
       <p class="scena-ligiloj" data-aperu>
-        <span data-t-html="pruv.nuba">La Fazo-4-CI-rulo estis verda: <code>Lint and build</code> kaj ĉiuj ses <code>Kani (...)</code>-laboroj.</span>
-        <a href="https://github.com/makoto-lernanto/versio/actions/runs/43865689840">GitHub Actions · 43865689840</a>
+        <span data-t-html="pruv.nuba">La CI-rulo de la branĉa funkcio estis verda: <code>Lint and build</code> kaj ĉiuj ses <code>Kani (...)</code>-laboroj.</span>
+        <a href="https://github.com/makoto-lernanto/versio/actions/runs/44261396865">GitHub Actions · 44261396865</a>
       </p>
     </section>
 
     <section class="sceno" id="mikerno" aria-labelledby="mikerno-titolo">
       <div class="scena-kapo" data-aperu>
-        <span class="scena-numero" aria-hidden="true">05</span>
+        <span class="scena-numero" aria-hidden="true">06</span>
         <div>
           <h2 id="mikerno-titolo" data-t="mik.titolo">MiKerno-integro</h2>
           <p data-t="mik.teksto">
@@ -768,7 +898,7 @@
 
     <section class="sceno" id="komenci" aria-labelledby="komenci-titolo">
       <div class="scena-kapo" data-aperu>
-        <span class="scena-numero" aria-hidden="true">06</span>
+        <span class="scena-numero" aria-hidden="true">07</span>
         <div>
           <h2 id="komenci-titolo" data-t="komenci.titolo">Komenci</h2>
           <p data-t-html="komenci.teksto">
@@ -899,7 +1029,7 @@
       <a href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md">MIKERNO_INTEGRO.md</a>
     </div>
     <p class="pieda-noto" data-t="piedo.noto">
-      Fazo 4 finita · CI verda · dokumentaro sen eksteraj skriptoj
+      Fazo 5 finita · CI verda · dokumentaro sen eksteraj skriptoj
     </p>
   </footer>
 
