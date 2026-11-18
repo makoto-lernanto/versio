@@ -19,12 +19,6 @@ pub(crate) struct Skribilo {
 
 impl Skribilo {
     /// Kreas malplenan skribilon.
-    ///
-    /// JUSTIFIKO: antaŭrezervita 128-bajta bufro ŝajne simpligas la kodigon,
-    /// sed ĝi multege malhelpas la solvilon: ĉe du simbollongaj kampoj la
-    /// kreska kontrolo de `Vec::push` fariĝas nedecidebla kaj la pruvo
-    /// superas la 600-sekundan buĝeton. Kresko laŭ postulo kiel ĉe
-    /// `postcard` restas malmultekosta por la solvilo.
     pub(crate) fn nova() -> Self {
         Self { bajtoj: Vec::new() }
     }
@@ -40,15 +34,35 @@ impl Skribilo {
     }
 
     /// Aldonas `u64`-valoron kiel varintan nombron.
-    pub(crate) fn u64(&mut self, mut valoro: u64) {
-        for _ in 0..10 {
-            let malalta = valoro.to_le_bytes()[0] & 0x7f;
-            if valoro < 0x80 {
-                self.bajtoj.push(malalta);
-                return;
+    ///
+    /// JUSTIFIKO: la varinto estas konstruata en loka tabelo kaj aldonata per
+    /// unu `extend_from_slice`. La diagnozaj pruvoj mezuris, ke `Vec::push`-oj
+    /// ene de buklo kun simbola ripetnombro multekostigas la formulon (3654
+    /// restantaj kontroloj), dum la sama kadro tra `postcard`, kiu uzas ĉi
+    /// tiun strukturon, restas ĉe 984. La tabelo havas 10 bajtojn (10 × 7 ≥
+    /// 64 bitoj), do `get_mut` neniam revenas `None`.
+    pub(crate) fn u64(&mut self, valoro: u64) {
+        let mut buf = [0u8; 10];
+        let mut longo = 0usize;
+        let mut restanta = valoro;
+        while longo < 10 {
+            let malalta = (restanta & 0x7f).to_le_bytes()[0];
+            restanta >>= 7;
+            let bajto = if restanta == 0 {
+                malalta
+            } else {
+                malalta | 0x80
+            };
+            if let Some(selo) = buf.get_mut(longo) {
+                *selo = bajto;
             }
-            self.bajtoj.push(malalta | 0x80);
-            valoro >>= 7;
+            longo = longo.saturating_add(1);
+            if restanta == 0 {
+                break;
+            }
+        }
+        if let Some(uzo) = buf.get(..longo) {
+            self.bajtoj.extend_from_slice(uzo);
         }
     }
 
