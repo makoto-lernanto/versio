@@ -1,4 +1,4 @@
-//! Integraj testoj por `vs brancxo` kaj `vs brancxoj`.
+//! Integraj testoj por `vs linio` kaj `vs linioj`.
 
 // PERMESO-JUSTIFIKO: nur testa kodo; panikigaj konstruaĵoj estas akcepteblaj.
 #![allow(
@@ -24,7 +24,7 @@ impl ProvDosierujo {
     fn nova(etikedo: &str) -> Self {
         let nombro = PROVOJ.fetch_add(1, Ordering::Relaxed);
         let vojo = std::env::temp_dir().join(format!(
-            "versio-brancxo-{etikedo}-{}-{nombro}",
+            "versio-linio-{etikedo}-{}-{nombro}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&vojo);
@@ -78,7 +78,7 @@ fn prefikso(haketo: &str) -> String {
 }
 
 #[test]
-fn testo_brancxo_eltiri_kaj_avanci() {
+fn testo_linio_eltiri_kaj_avanci() {
     let prov = ProvDosierujo::nova("avanci");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
@@ -88,10 +88,10 @@ fn testo_brancxo_eltiri_kaj_avanci() {
     komiti(&prov.vojo, "Dua");
     let dua = legi_head(&prov.vojo);
 
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "ĉefa"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "ĉefa"]));
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), dua);
 
-    let eligo = ruli(&prov.vojo, &["brancxoj"]);
+    let eligo = ruli(&prov.vojo, &["linioj"]);
     certigi_sukceson(&eligo);
     assert_eq!(
         String::from_utf8_lossy(&eligo.stdout),
@@ -100,24 +100,24 @@ fn testo_brancxo_eltiri_kaj_avanci() {
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "ĉefa"]));
     assert_eq!(legi_head(&prov.vojo), dua);
-    let eligo = ruli(&prov.vojo, &["brancxoj"]);
+    let eligo = ruli(&prov.vojo, &["linioj"]);
     assert_eq!(
         String::from_utf8_lossy(&eligo.stdout),
         format!("* ĉefa  {}\n", prefikso(&dua))
     );
 
-    // Komito sur branĉo movas la referencon kaj HEAD.
+    // Komito sur linio movas la referencon kaj HEAD.
     std::fs::write(prov.vojo.join("a.txt"), b"tria").unwrap();
     komiti(&prov.vojo, "Tria");
     let tria = legi_head(&prov.vojo);
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), tria);
     assert_ne!(tria, dua);
 
-    // Detaĉita eltiro ĉe malnova komito ne movas la branĉon.
+    // Detaĉita eltiro ĉe malnova komito ne movas la linion.
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", &prefikso(&unua)]));
     assert_eq!(legi_head(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
-    let eligo = ruli(&prov.vojo, &["brancxoj"]);
+    let eligo = ruli(&prov.vojo, &["linioj"]);
     assert_eq!(
         String::from_utf8_lossy(&eligo.stdout),
         format!("  ĉefa  {}\n", prefikso(&tria))
@@ -133,7 +133,7 @@ fn testo_brancxo_eltiri_kaj_avanci() {
 }
 
 #[test]
-fn testo_brancxo_ce_malnova_komito_kaj_rifuzo() {
+fn testo_linio_ce_malnova_komito_kaj_rifuzo() {
     let prov = ProvDosierujo::nova("malnova");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
@@ -142,46 +142,46 @@ fn testo_brancxo_ce_malnova_komito_kaj_rifuzo() {
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
     komiti(&prov.vojo, "Dua");
 
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "malnova", &prefikso(&unua)]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "malnova", &prefikso(&unua)]));
     assert_eq!(legi_ref(&prov.vojo, "malnova"), unua);
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "malnova"]));
     assert_eq!(legi_head(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
 
-    let eligo = ruli(&prov.vojo, &["brancxo", "malnova"]);
+    let eligo = ruli(&prov.vojo, &["linio", "malnova"]);
     assert!(!eligo.status.success());
     assert!(
         String::from_utf8_lossy(&eligo.stderr).contains("jam ekzistas"),
-        "mankas la rifuzo de ekzistanta branĉo: {}",
+        "mankas la rifuzo de ekzistanta linio: {}",
         String::from_utf8_lossy(&eligo.stderr)
     );
 }
 
 #[test]
-fn testo_brancxo_rifuzas_malvalidajn_nomojn() {
+fn testo_linio_rifuzas_malvalidajn_nomojn() {
     let prov = ProvDosierujo::nova("nomoj");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
     komiti(&prov.vojo, "Unua");
 
     for nomo in ["a/b", ".kaŝita", "kun spaco"] {
-        let eligo = ruli(&prov.vojo, &["brancxo", nomo]);
+        let eligo = ruli(&prov.vojo, &["linio", nomo]);
         assert!(!eligo.status.success(), "la nomo «{nomo}» estis akceptita");
     }
 }
 
 #[test]
-fn testo_brancxo_sen_komito_malsukcesas() {
+fn testo_linio_sen_komito_malsukcesas() {
     let prov = ProvDosierujo::nova("sen-komito");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
-    let eligo = ruli(&prov.vojo, &["brancxo", "ĉefa"]);
+    let eligo = ruli(&prov.vojo, &["linio", "ĉefa"]);
     assert!(!eligo.status.success());
 }
 
 #[test]
-fn testo_brancxoj_sen_deponejo_malsukcesas() {
+fn testo_linioj_sen_deponejo_malsukcesas() {
     let prov = ProvDosierujo::nova("sen-deponejo");
-    let eligo = ruli(&prov.vojo, &["brancxoj"]);
+    let eligo = ruli(&prov.vojo, &["linioj"]);
     assert!(!eligo.status.success());
 }

@@ -21,7 +21,7 @@
   <script src="retejo.js" defer></script>
 </head>
 <body>
-  <a class="salto" href="#cxefa" data-t="salto">Salti al la enhavo</a>
+  <a class="salto" href="#ĉefa" data-t="salto">Salti al la enhavo</a>
 
   <header class="kapo">
     <a class="marko" href="#hejmo" aria-label="Versio — hejmo" data-t-aria="marko.aria">
@@ -49,7 +49,7 @@
           aria-label="Akcento: oro" title="oro" aria-pressed="false"></button>
         <button class="akcento-elektilo" type="button" data-akcento="koralo" style="--koloro:#FF5C8A"
           aria-label="Akcento: koralo" title="koralo" aria-pressed="false"></button>
-        <button class="akcento-elektilo" type="button" data-akcento="cxielo" style="--koloro:#4CC9FF"
+        <button class="akcento-elektilo" type="button" data-akcento="ĉielo" style="--koloro:#4CC9FF"
           aria-label="Akcento: ĉielo" title="ĉielo" aria-pressed="false"></button>
         <button class="akcento-elektilo" type="button" data-akcento="verdo" style="--koloro:#57E389"
           aria-label="Akcento: verdo" title="verdo" aria-pressed="true"></button>
@@ -59,10 +59,10 @@
           aria-label="Akcento: bluo" title="bluo" aria-pressed="false"></button>
       </div>
 
-      <label class="sxaltilo" title="Ŝalti inter la malluma kaj hela temoj"
-        data-t-title="temo.sxalti">
+      <label class="ŝaltilo" title="Ŝalti inter la malluma kaj hela temoj"
+        data-t-title="temo.ŝalti">
         <span id="temoEtikedo">Malluma</span>
-        <input type="checkbox" id="temoSxaltilo" checked aria-label="Malluma temo">
+        <input type="checkbox" id="temoŜaltilo" checked aria-label="Malluma temo">
       </label>
 
       <div class="lingvo" role="group" aria-label="Lingvo / Language">
@@ -81,7 +81,7 @@
     </div>
   </header>
 
-  <main id="cxefa">
+  <main id="ĉefa">
     <section class="heroo" id="hejmo">
       <div class="heroo-teksto" data-aperu>
         <p class="supera-etikedo" data-t="hero.supera">Versio 0.1.0 · Rust 2024 · no_std-kerno</p>
@@ -217,10 +217,10 @@
           <p data-t-html="karto1.teksto">
             Ne ekzistas aparta <code>add</code>: <code>vs komitu</code> kaptas la tutan
             labordosierujon. <code>vs stato</code>, <code>vs historio</code> kaj
-            <code>vs brancxoj</code> estas la legaj komandoj; <code>vs eltiri</code>
+            <code>vs linioj</code> estas la legaj komandoj; <code>vs eltiri</code>
             restarigas ajnan komiton aŭ branĉon.
           </p>
-          <span class="sildeto">ini · stato · komitu · historio · branĉoj</span>
+          <span class="sildeto">ini · stato · komitu · historio · linioj</span>
         </article>
 
         <article class="karto" data-aperu>
@@ -456,12 +456,12 @@
           <div>
             <h3 data-t="hist.p2.titolo">Krei branĉojn</h3>
             <p data-t-html="hist.p2.teksto">
-              <code>vs brancxo &lt;nomo&gt; [bazo]</code> kreas branĉon ĉe la nuna
-              <code>HEAD</code> aŭ ĉe donita komito; <code>vs brancxoj</code> montras
+              <code>vs linio &lt;nomo&gt; [bazo]</code> kreas branĉon ĉe la nuna
+              <code>HEAD</code> aŭ ĉe donita komito; <code>vs linioj</code> montras
               la branĉojn kaj markas la nunan per <code>*</code>.
             </p>
           </div>
-          <span class="sildeto">vs brancxo · brancxoj</span>
+          <span class="sildeto">vs linio · linioj</span>
         </div>
         <div class="tavolo">
           <span class="tavola-numero" aria-hidden="true">03</span>
@@ -492,7 +492,7 @@
           <div>
             <h3 data-t="hist.p5.titolo">Kunfandi branĉojn</h3>
             <p data-t-html="hist.p5.teksto">
-              <code>vs kunfandi &lt;branĉo&gt;</code> antaŭenigas la nunan
+              <code>vs kunfandi &lt;linio&gt;</code> antaŭenigas la nunan
               branĉon aŭ kreas komiton kun du gepatroj. La tri-voja kunfandado
               bazas sur la komuna antaŭulo; veraj konfliktoj haltigas la
               operacion sen tuŝi la laborspacon.
@@ -543,7 +543,7 @@
             </div>
           </div>
           <div class="terminala-korpo">
-            <pre class="log" id="historiaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/versio-demo.ixhnd0</span><span class="linio"><span class="akcento">$</span> printf 'unua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua"</span><span class="linio sukceso">Komito c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> vs brancxo ĉefa</span><span class="linio sukceso">Kreita branĉo ĉefa ĉe c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> vs eltiri ĉefa</span><span class="linio sukceso">Sur branĉo ĉefa (c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a)</span><span class="linio"><span class="akcento">$</span> vs brancxo eksperimento</span><span class="linio sukceso">Kreita branĉo eksperimento ĉe c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a</span><span class="linio"><span class="akcento">$</span> printf 'dua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Dua"</span><span class="linio sukceso">Komito 0ea2666d33982dc09470abdc3b8b08bec50b3ca6c40c04e804510dcecb2b4763</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">  eksperimento  c57f7c795479</span><span class="linio">* ĉefa  0ea2666d3398</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">0ea2666d3398  2026-11-18 07:52:33 UTC  Dua</span><span class="linio">c57f7c795479  2026-11-18 07:52:33 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs eltiri eksperimento</span><span class="linio sukceso">Sur branĉo eksperimento (c57f7c795479f965108edd02ada8ffc215132af1cb9886d13ada76ea2f5d450a)</span><span class="linio"><span class="akcento">$</span> cat noto.txt</span><span class="linio">unua</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">* eksperimento  c57f7c795479</span><span class="linio">  ĉefa  0ea2666d3398</span></pre>
+            <pre class="log" id="historiaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/versio-demo</span><span class="linio"><span class="akcento">$</span> printf 'unua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua"</span><span class="linio sukceso">Komito 0f310cde173d74478d5be05e18f0cb5ca8270ebb9eb4dff57254830451dcc4a6</span><span class="linio"><span class="akcento">$</span> vs linio ĉefa</span><span class="linio sukceso">Kreita linio ĉefa ĉe 0f310cde173d74478d5be05e18f0cb5ca8270ebb9eb4dff57254830451dcc4a6</span><span class="linio"><span class="akcento">$</span> vs eltiri ĉefa</span><span class="linio sukceso">Sur linio ĉefa (0f310cde173d74478d5be05e18f0cb5ca8270ebb9eb4dff57254830451dcc4a6)</span><span class="linio"><span class="akcento">$</span> vs linio eksperimento</span><span class="linio sukceso">Kreita linio eksperimento ĉe 0f310cde173d74478d5be05e18f0cb5ca8270ebb9eb4dff57254830451dcc4a6</span><span class="linio"><span class="akcento">$</span> printf 'dua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Dua"</span><span class="linio sukceso">Komito 7fe5db335a17befa1f95484c998c0928cae1b465f70807fef14a645624cd1b67</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">  eksperimento  0f310cde173d</span><span class="linio">* ĉefa  7fe5db335a17</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">7fe5db335a17  2026-11-18 12:38:07 UTC  Dua</span><span class="linio">0f310cde173d  2026-11-18 12:38:07 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs eltiri eksperimento</span><span class="linio sukceso">Sur linio eksperimento (0f310cde173d74478d5be05e18f0cb5ca8270ebb9eb4dff57254830451dcc4a6)</span><span class="linio"><span class="akcento">$</span> cat noto.txt</span><span class="linio">unua</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">* eksperimento  0f310cde173d</span><span class="linio">  ĉefa  7fe5db335a17</span></pre>
           </div>
           <div class="terminala-piedo">
             <span class="stato-punkto" aria-hidden="true"></span>
@@ -601,7 +601,7 @@
             </div>
           </div>
           <div class="terminala-korpo">
-            <pre class="log" id="kunfandaEligo" lang="eo"><span class="linio komento"># tri-voja kunfando: majstro kaj fonto diverĝis</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio sukceso">Kunfanda komito b9658d88ec435ca86c27a566f20c668e6345321296774720455b2b7360af430a</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">b9658d88ec43  2026-11-18 08:08:11 UTC  Kunfandis branĉon fonto</span><span class="linio">ad89370a766b  2026-11-18 08:08:10 UTC  Majstra ŝanĝo</span><span class="linio">8187da910ae5  2026-11-18 08:08:10 UTC  Unua komito</span><span class="linio">a26fc94080fd  2026-11-18 08:08:11 UTC  Fonta ŝanĝo</span><span class="linio"><span class="akcento">$</span> vs brancxoj</span><span class="linio">  fonto  a26fc94080fd</span><span class="linio">* majstro  b9658d88ec43</span><span class="linio komento"></span><span class="linio komento"># antaŭenigo: la nuna komito estas antaŭulo de la celo</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio sukceso">Antaŭen al 73e7718205ec3c61e18a7ce17c67f775672442072cbaeb8d0420b24a32b988a8 (fonto)</span><span class="linio komento"></span><span class="linio komento"># konflikto: ambaŭ flankoj ŝanĝis la saman dosieron</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio eraro">Error: malsukcesis kunfandi</span><span class="linio eraro"></span><span class="linio eraro">Caused by:</span><span class="linio eraro">    kunfanda konflikto en: a.txt</span><span class="linio"><span class="akcento">$</span> cat a.txt</span><span class="linio">majstra</span></pre>
+            <pre class="log" id="kunfandaEligo" lang="eo"><span class="linio komento"># tri-voja kunfando: majstro kaj fonto diverĝis</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio sukceso">Kunfanda komito 4076899d5ea56e123b25d0ea3db705e9499eb517e4716e07169385488f4705a3</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">4076899d5ea5  2026-11-18 12:38:15 UTC  Kunfandis linion fonto</span><span class="linio">e21af93a74f9  2026-11-18 12:38:15 UTC  Majstra ŝanĝo</span><span class="linio">e859f5c420c8  2026-11-18 12:38:15 UTC  Unua komito</span><span class="linio">1de5943b8619  2026-11-18 12:38:15 UTC  Fonta ŝanĝo</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">  fonto  1de5943b8619</span><span class="linio">* majstro  4076899d5ea5</span><span class="linio komento"># antaŭenigo: la celo entenas la nunan komiton</span><span class="linio"><span class="akcento">$</span> vs linio malnova e859f5c420c8087542a63e410103bc891cb76f3b452d359336683ddfe39c481a</span><span class="linio sukceso">Kreita linio malnova ĉe e859f5c420c8087542a63e410103bc891cb76f3b452d359336683ddfe39c481a</span><span class="linio"><span class="akcento">$</span> vs eltiri malnova</span><span class="linio sukceso">Sur linio malnova (e859f5c420c8087542a63e410103bc891cb76f3b452d359336683ddfe39c481a)</span><span class="linio"><span class="akcento">$</span> vs kunfandi majstro</span><span class="linio sukceso">Antaŭen al 4076899d5ea56e123b25d0ea3db705e9499eb517e4716e07169385488f4705a3 (majstro)</span><span class="linio"><span class="akcento">$</span> vs eltiri majstro</span><span class="linio sukceso">Sur linio majstro (4076899d5ea56e123b25d0ea3db705e9499eb517e4716e07169385488f4705a3)</span><span class="linio komento"># konflikto: ambaŭ flankoj ŝanĝis la saman dosieron</span><span class="linio"><span class="akcento">$</span> vs kunfandi fonto</span><span class="linio eraro">Error: malsukcesis kunfandi</span><span class="linio eraro"></span><span class="linio eraro">Caused by:</span><span class="linio eraro">    kunfanda konflikto en: a.txt</span><span class="linio"><span class="akcento">$</span> cat a.txt</span><span class="linio">majstra dua</span></pre>
           </div>
           <div class="terminala-piedo">
             <span class="stato-punkto" aria-hidden="true"></span>
@@ -639,7 +639,7 @@
             <p data-t-html="ark.t1.teksto">
               Komandlinia enirpunkto: <code>ini</code>, <code>stato</code>,
               <code>historio</code>, <code>komitu</code>, <code>eltiri</code>,
-              <code>brancxo</code>, <code>brancxoj</code>, <code>kunfandi</code>, <code>helpo</code>;
+              <code>linio</code>, <code>linioj</code>, <code>kunfandi</code>, <code>helpo</code>;
               ĉiu eligo estas Esperanta.
             </p>
           </div>
@@ -683,7 +683,7 @@
           <div>
             <h3>.vs/</h3>
             <p data-t-html="ark.t5.teksto">
-              <code>HEAD</code>, <code>brancxo</code>, <code>refs/heads/</code>,
+              <code>HEAD</code>, <code>branĉo</code>, <code>refs/heads/</code>,
               <code>indekso</code> kaj <code>objektoj/</code> — la tuta stato de la
               deponejo en unu dosierujo.
             </p>
@@ -810,7 +810,7 @@
         </article>
       </div>
 
-      <div class="elssxuta-noto" data-aperu>
+      <div class="elsŝuta-noto" data-aperu>
         <h3 data-t="pruv.limo.titolo">Kio restas ekster Kani</h3>
         <p data-t-html="pruv.limo.teksto">
           Plena malkodado de arbitraj <code>Komito</code>-kadroj ne estis pruvita:
@@ -874,9 +874,9 @@
         </div>
       </div>
 
-      <div class="elssxutoj" style="margin-top: 18px" data-aperu>
-        <article class="elssxuto">
-          <div class="elssxuta-kapo">
+      <div class="elsŝutoj" style="margin-top: 18px" data-aperu>
+        <article class="elsŝuto">
+          <div class="elsŝuta-kapo">
             <h3 data-t="mik.rezulto.titolo">Rezulto</h3>
             <span class="sildeto tenila">PASS</span>
           </div>
@@ -892,8 +892,8 @@
           </dl>
         </article>
 
-        <article class="elssxuto">
-          <div class="elssxuta-kapo">
+        <article class="elsŝuto">
+          <div class="elsŝuta-kapo">
             <h3 data-t="mik.kontrolo.titolo">Sen ŝanĝo en la fonto</h3>
             <span class="sildeto">GIT</span>
           </div>
@@ -907,7 +907,7 @@
             <div><dt data-t="mik.dl.rezulto">Rezulto</dt><dd><code>PASS</code></dd></div>
             <div><dt data-t="mik.dl.fonto">Origina fonto</dt><dd><code>UNCHANGED</code></dd></div>
           </dl>
-          <div class="elssxuta-butonoj">
+          <div class="elsŝuta-butonoj">
             <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md"
               data-t="mik.ligilo">Legi MIKERNO_INTEGRO.md</a>
           </div>
@@ -985,9 +985,9 @@
         </div>
       </div>
 
-      <div class="elssxutoj" data-aperu>
-        <article class="elssxuto">
-          <div class="elssxuta-kapo">
+      <div class="elsŝutoj" data-aperu>
+        <article class="elsŝuto">
+          <div class="elsŝuta-kapo">
             <h3 data-t="komenci.karto1.titolo">Elŝuti la fonton</h3>
             <span class="sildeto">GIT</span>
           </div>
@@ -999,14 +999,14 @@
             <div><dt data-t="komenci.dl.kerno">Kerno</dt><dd>no_std + alloc</dd></div>
             <div><dt data-t="komenci.dl.binara">Binara</dt><dd>vs</dd></div>
           </dl>
-          <div class="elssxuta-butonoj">
+          <div class="elsŝuta-butonoj">
             <a class="buto akcenta" href="https://github.com/makoto-lernanto/versio"
               data-t="komenci.karto1.butono">Malfermi GitHub</a>
           </div>
         </article>
 
-        <article class="elssxuto">
-          <div class="elssxuta-kapo">
+        <article class="elsŝuto">
+          <div class="elsŝuta-kapo">
             <h3 data-t="komenci.karto2.titolo">Legi la dokumentojn</h3>
             <span class="sildeto">MD</span>
           </div>
@@ -1019,7 +1019,7 @@
             <div><dt data-t="komenci.dl.integro">Integro</dt><dd>MIKERNO_INTEGRO.md</dd></div>
             <div><dt data-t="komenci.dl.pruvoj">Pruvoj</dt><dd>8 · Kani</dd></div>
           </dl>
-          <div class="elssxuta-butonoj">
+          <div class="elsŝuta-butonoj">
             <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/VERSIO.md">VERSIO.md</a>
             <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md">MIKERNO_INTEGRO.md</a>
           </div>
@@ -1084,7 +1084,7 @@
         </div>
       </div>
 
-      <div class="elssxuta-noto" data-aperu>
+      <div class="elsŝuta-noto" data-aperu>
         <p data-t-html="komenci.noto">
           Ne rulu <code>vs ini</code> rekte en la origina Git-deponejo: Versio
           preterlasas nur <code>.vs</code>, ne <code>.git</code>, kaj ne interpretas
@@ -1110,6 +1110,6 @@
     </p>
   </footer>
 
-  <div class="fulmomesagxoj" id="fulmomesagxoj" aria-live="polite"></div>
+  <div class="fulmomesaĝoj" id="fulmomesaĝoj" aria-live="polite"></div>
 </body>
 </html>

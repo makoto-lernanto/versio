@@ -74,25 +74,25 @@ enum Komando {
         #[arg(short = 'f', long = "perforta")]
         perforta: bool,
     },
-    /// Kreas branĉon ĉe HEAD aŭ ĉe la donita komito.
+    /// Kreas linion ĉe HEAD aŭ ĉe la donita komito.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
-    Brancxo {
-        /// Nomo de la nova branĉo.
+    Linio {
+        /// Nomo de la nova linio.
         #[arg(value_name = "NOMO")]
         nomo: String,
-        /// Komito, ĉe kiu krei la branĉon (defaŭlte HEAD).
+        /// Komito, ĉe kiu krei la linion (defaŭlte HEAD).
         #[arg(value_name = "HAKETO")]
         bazo: Option<String>,
     },
-    /// Listigas la branĉojn kaj markas la nunan.
+    /// Listigas la liniojn kaj markas la nunan.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
-    Brancxoj,
-    /// Kunfandas branĉon en la nunan branĉon.
+    Linioj,
+    /// Kunfandas linion en la nunan linion.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Kunfandi {
-        /// Nomo de la branĉo, kiun kunfandi.
-        #[arg(value_name = "BRANCHO")]
-        brancxo: String,
+        /// Nomo de la linio, kiun kunfandi.
+        #[arg(value_name = "LINIO")]
+        linio: String,
     },
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
@@ -108,9 +108,9 @@ fn main() -> anyhow::Result<()> {
         Komando::Stato => komandoj::stato::plenumi(),
         Komando::Historio { nombro } => komandoj::historio::plenumi(nombro),
         Komando::Eltiri { haketo, perforta } => komandoj::eltiri::plenumi(&haketo, perforta),
-        Komando::Brancxo { nomo, bazo } => komandoj::brancxo::plenumi(&nomo, bazo.as_deref()),
-        Komando::Brancxoj => komandoj::brancxoj::plenumi(),
-        Komando::Kunfandi { brancxo } => komandoj::kunfandi::plenumi(&brancxo),
+        Komando::Linio { nomo, bazo } => komandoj::linio::plenumi(&nomo, bazo.as_deref()),
+        Komando::Linioj => komandoj::linioj::plenumi(),
+        Komando::Kunfandi { linio } => komandoj::kunfandi::plenumi(&linio),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();

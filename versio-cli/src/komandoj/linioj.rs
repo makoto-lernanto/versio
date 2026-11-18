@@ -1,4 +1,4 @@
-//! `vs brancxoj`: listigas la branĉojn kaj markas la nunan.
+//! `vs linioj`: listigas la liniojn kaj markas la nunan.
 
 use std::io::{BufWriter, Write};
 
@@ -13,17 +13,17 @@ pub(crate) fn plenumi() -> anyhow::Result<()> {
     let deponejo =
         Deponejo::malfermi(radiko).context("la nuna dosierujo ne estas Versio-deponejo")?;
     let nuna = deponejo
-        .nuna_brancxo()
-        .context("malsukcesis legi la nunan branĉon")?;
-    let brancxoj = deponejo
-        .brancxoj()
-        .context("malsukcesis listigi la branĉojn")?;
+        .nuna_branĉo()
+        .context("malsukcesis legi la nunan linion")?;
+    let linioj = deponejo
+        .branĉoj()
+        .context("malsukcesis listigi la liniojn")?;
 
     let mut eligo = BufWriter::new(std::io::stdout().lock());
-    if brancxoj.is_empty() {
-        writeln!(eligo, "Neniu branĉo")?;
+    if linioj.is_empty() {
+        writeln!(eligo, "Neniu linio")?;
     } else {
-        for (nomo, haketo) in brancxoj {
+        for (nomo, haketo) in linioj {
             let marko = if nuna.as_deref() == Some(nomo.as_str()) {
                 "*"
             } else {

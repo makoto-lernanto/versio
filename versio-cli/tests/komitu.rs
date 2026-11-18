@@ -76,7 +76,7 @@ fn testo_iniciati_kaj_komitu() {
 
     let deponejo = Deponejo::malfermi(prov.vojo.clone()).unwrap();
     let komito = deponejo.legi_komiton(&haketo).unwrap();
-    assert_eq!(komito.mesagxo, "Unua komito");
+    assert_eq!(komito.mesaĝo, "Unua komito");
     assert_eq!(komito.gepatro, None);
 
     let arbo = deponejo.legi_arbon(&komito.arbo).unwrap();

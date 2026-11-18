@@ -66,7 +66,7 @@ fn legi_head(dosierujo: &Path) -> Haketo {
         .unwrap()
 }
 
-/// Preparas du diverĝantajn branĉojn el komuna bazo.
+/// Preparas du diverĝantajn liniojn el komuna bazo.
 ///
 /// Rezulto: `majstro` kaj `fonto` ŝanĝis la saman dosieron malsame, kaj la
 /// laborspaco staras sur `majstro`.
@@ -76,8 +76,8 @@ fn preparu_diverĝon(prov: &ProvDosierujo) -> (Haketo, Haketo) {
     std::fs::write(prov.vojo.join("konflikta.txt"), b"bazo").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua"]));
 
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "majstro"]));
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "fonto"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "majstro"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "fonto"]));
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "majstro"]));
     std::fs::write(prov.vojo.join("nur-majstro.txt"), b"m").unwrap();
@@ -95,7 +95,7 @@ fn preparu_diverĝon(prov: &ProvDosierujo) -> (Haketo, Haketo) {
     let majstro = legi_head(&prov.vojo);
     let fonto = Deponejo::malfermi(prov.vojo.clone())
         .unwrap()
-        .legi_brancxon("fonto")
+        .legi_branĉon("fonto")
         .unwrap()
         .unwrap();
     (majstro, fonto)
@@ -123,11 +123,11 @@ fn testo_kunfandi_kreas_dugepatran_komiton() {
     let komito = deponejo.legi_komiton(&kunfando).unwrap();
     assert_eq!(komito.gepatro, Some(majstro));
     assert_eq!(komito.dua_gepatro, Some(fonto));
-    assert_eq!(komito.mesagxo, "Kunfandis branĉon fonto");
+    assert_eq!(komito.mesaĝo, "Kunfandis linion fonto");
     assert_eq!(
-        deponejo.legi_brancxon("majstro").unwrap(),
+        deponejo.legi_branĉon("majstro").unwrap(),
         Some(kunfando),
-        "la nuna branĉo devas montri al la kunfanda komito"
+        "la nuna linio devas montri al la kunfanda komito"
     );
     assert!(deponejo.stato().unwrap().estas_pura());
 
@@ -140,13 +140,13 @@ fn testo_kunfandi_kreas_dugepatran_komiton() {
 }
 
 #[test]
-fn testo_kunfandi_antauxenigas() {
-    let prov = ProvDosierujo::nova("antauxen");
+fn testo_kunfandi_antaŭenigas() {
+    let prov = ProvDosierujo::nova("antaŭen");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua"]));
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "majstro"]));
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "fonto"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "majstro"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "fonto"]));
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "fonto"]));
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
@@ -163,7 +163,7 @@ fn testo_kunfandi_antauxenigas() {
 
     assert_eq!(legi_head(&prov.vojo), dua);
     let deponejo = Deponejo::malfermi(prov.vojo.clone()).unwrap();
-    assert_eq!(deponejo.legi_brancxon("majstro").unwrap(), Some(dua));
+    assert_eq!(deponejo.legi_branĉon("majstro").unwrap(), Some(dua));
     assert!(deponejo.stato().unwrap().estas_pura());
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"dua");
 }
@@ -202,7 +202,7 @@ fn testo_kunfandi_rifuzas_malpuron_laborspacon() {
 }
 
 #[test]
-fn testo_kunfandi_raportas_mankantan_branĉon() {
+fn testo_kunfandi_raportas_mankantan_linion() {
     let prov = ProvDosierujo::nova("mankanta");
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"a").unwrap();
@@ -212,7 +212,7 @@ fn testo_kunfandi_raportas_mankantan_branĉon() {
     assert!(!eligo.status.success());
     assert!(
         String::from_utf8_lossy(&eligo.stderr).contains("ne ekzistas"),
-        "mankas klara eraro pri neekzistanta branĉo"
+        "mankas klara eraro pri neekzistanta linio"
     );
 }
 
@@ -222,7 +222,7 @@ fn testo_kunfandi_jam_kunfandita() {
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"a").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua"]));
-    certigi_sukceson(&ruli(&prov.vojo, &["brancxo", "majstro"]));
+    certigi_sukceson(&ruli(&prov.vojo, &["linio", "majstro"]));
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "majstro"]));
 
     let eligo = ruli(&prov.vojo, &["kunfandi", "majstro"]);
@@ -245,7 +245,7 @@ fn testo_historio_montras_ambaŭ_gepatrojn() {
     certigi_sukceson(&eligo);
     let teksto = String::from_utf8_lossy(&eligo.stdout);
 
-    for deviga in ["Kunfandis branĉon fonto", "Fonto", "Pura", "Unua"] {
+    for deviga in ["Kunfandis linion fonto", "Fonto", "Pura", "Unua"] {
         assert!(
             teksto.contains(deviga),
             "mankas «{deviga}» en la historio:\n{teksto}"
@@ -264,7 +264,7 @@ fn testo_helpo_listigas_kunfandi() {
         "mankas kunfandi en la helppano:\n{teksto}"
     );
     assert!(
-        teksto.contains("Kunfandas branĉon"),
+        teksto.contains("Kunfandas linion"),
         "mankas la priskribo de kunfandi:\n{teksto}"
     );
 }

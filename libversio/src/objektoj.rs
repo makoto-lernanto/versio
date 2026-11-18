@@ -218,7 +218,7 @@ pub struct Komito {
     /// La haketo de la unua patra komito, se ekzistas.
     pub gepatro: Option<Haketo>,
     /// La mesaĝo de la komito.
-    pub mesagxo: String,
+    pub mesaĝo: String,
     /// Uniksa tempstampo de la kreo, en sekundoj.
     pub kreita_je: u64,
     /// La dua patro de kunfanda komito; `None` por ordinaraj komitoj.
@@ -240,12 +240,12 @@ impl Komito {
         skribilo.haketo(&self.arbo);
         skribi_gepatron(&mut skribilo, self.gepatro.as_ref());
         skribi_gepatron(&mut skribilo, self.dua_gepatro.as_ref());
-        let longo = u32::try_from(self.mesagxo.len()).map_err(|_| Eraro::TrolongaEnigo {
+        let longo = u32::try_from(self.mesaĝo.len()).map_err(|_| Eraro::TrolongaEnigo {
             maksimumo: MAKSIMA_MESAGXO,
-            akirita: self.mesagxo.len(),
+            akirita: self.mesaĝo.len(),
         })?;
         skribilo.u32(longo);
-        skribilo.bajtoj(self.mesagxo.as_bytes());
+        skribilo.bajtoj(self.mesaĝo.as_bytes());
         skribilo.u64(self.kreita_je);
         Ok(skribilo.fino())
     }
@@ -277,7 +277,7 @@ impl Komito {
                 });
             }
         };
-        let mesagxo = legilo.limigita_string(MAKSIMA_MESAGXO)?;
+        let mesaĝo = legilo.limigita_string(MAKSIMA_MESAGXO)?;
         let kreita_je = legilo.u64()?;
         if dua_gepatro.is_some() && gepatro.is_none() {
             return Err(Eraro::NevalidaDatumo {
@@ -288,7 +288,7 @@ impl Komito {
         Ok(Self {
             arbo,
             gepatro,
-            mesagxo,
+            mesaĝo,
             kreita_je,
             dua_gepatro,
         })
@@ -412,7 +412,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(3),
             gepatro: Some(haketo(4)),
-            mesagxo: "Unua komito".into(),
+            mesaĝo: "Unua komito".into(),
             kreita_je: 1_700_000_000,
             dua_gepatro: None,
         };
@@ -454,7 +454,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(3),
             gepatro: None,
-            mesagxo: "a".repeat(MAKSIMA_MESAGXO + 1),
+            mesaĝo: "a".repeat(MAKSIMA_MESAGXO + 1),
             kreita_je: 1,
             dua_gepatro: None,
         };
@@ -469,7 +469,7 @@ mod testoj {
     fn testo_komito_rondiro_limoj() {
         for gepatro in [None, Some(haketo(4))] {
             for dua_gepatro in [None, gepatro.map(|_| haketo(5))] {
-                for mesagxo in [
+                for mesaĝo in [
                     String::new(),
                     String::from("a\0é𐐀"),
                     "a".repeat(MAKSIMA_MESAGXO),
@@ -478,7 +478,7 @@ mod testoj {
                         let komito = Komito {
                             arbo: haketo(3),
                             gepatro,
-                            mesagxo: mesagxo.clone(),
+                            mesaĝo: mesaĝo.clone(),
                             kreita_je,
                             dua_gepatro,
                         };
@@ -491,13 +491,13 @@ mod testoj {
     }
 
     #[test]
-    fn testo_komito_rifuzas_trancxojn_kaj_postrestojn() {
+    fn testo_komito_rifuzas_tranĉojn_kaj_postrestojn() {
         for gepatro in [None, Some(haketo(4))] {
             for dua_gepatro in [None, gepatro.map(|_| haketo(5))] {
                 let komito = Komito {
                     arbo: haketo(3),
                     gepatro,
-                    mesagxo: String::from("mesaĝo"),
+                    mesaĝo: String::from("mesaĝo"),
                     kreita_je: u64::MAX,
                     dua_gepatro,
                 };
@@ -517,7 +517,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(3),
             gepatro: None,
-            mesagxo: String::from("a"),
+            mesaĝo: String::from("a"),
             kreita_je: 128,
             dua_gepatro: None,
         };
@@ -538,7 +538,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(3),
             gepatro: Some(haketo(4)),
-            mesagxo: String::from("a"),
+            mesaĝo: String::from("a"),
             kreita_je: 128,
             dua_gepatro: None,
         };
@@ -555,7 +555,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(7),
             gepatro: None,
-            mesagxo: String::from("a"),
+            mesaĝo: String::from("a"),
             kreita_je: 128,
             dua_gepatro: None,
         };
@@ -570,7 +570,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(7),
             gepatro: Some(haketo(8)),
-            mesagxo: String::new(),
+            mesaĝo: String::new(),
             kreita_je: 0,
             dua_gepatro: Some(haketo(9)),
         };
@@ -599,7 +599,7 @@ mod testoj {
 
             let komito = Komito::malseriigi(&bajtoj).unwrap();
             assert_eq!(komito.kreita_je, kreita_je);
-            assert_eq!(komito.mesagxo, "a");
+            assert_eq!(komito.mesaĝo, "a");
             assert_eq!(komito.arbo, haketo(7));
             assert_eq!(komito.gepatro, None);
         }

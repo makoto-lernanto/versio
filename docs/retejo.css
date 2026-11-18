@@ -12,7 +12,7 @@
   --akcento: #57E389;
   --akcenta-soft: color-mix(in srgb, var(--akcento) 14%, transparent);
   --sukcesa-soft: color-mix(in srgb, var(--sukceso) 12%, transparent);
-  --dangxera-soft: color-mix(in srgb, var(--danĝero) 12%, transparent);
+  --danĝera-soft: color-mix(in srgb, var(--danĝero) 12%, transparent);
   --averta-soft: color-mix(in srgb, var(--averto) 12%, transparent);
   --informa-soft: color-mix(in srgb, var(--informo) 12%, transparent);
   --tiparo: "Segoe UI", "Noto Sans", "DejaVu Sans", system-ui, sans-serif;
@@ -295,7 +295,7 @@ code {
   box-shadow: 0 0 0 2px var(--fondo), 0 0 0 4px var(--koloro);
 }
 
-.sxaltilo {
+.ŝaltilo {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -306,7 +306,7 @@ code {
   user-select: none;
 }
 
-.sxaltilo input {
+.ŝaltilo input {
   appearance: none;
   -webkit-appearance: none;
   position: relative;
@@ -321,7 +321,7 @@ code {
   transition: background .2s var(--mov-kurbo), border-color .2s var(--mov-kurbo);
 }
 
-.sxaltilo input::after {
+.ŝaltilo input::after {
   content: "";
   position: absolute;
   top: 4px;
@@ -333,22 +333,22 @@ code {
   transition: transform .22s var(--mov-kurbo), width .18s var(--mov-kurbo), background .2s linear;
 }
 
-.sxaltilo input:hover::after {
+.ŝaltilo input:hover::after {
   width: 17px;
 }
 
-.sxaltilo input:checked {
+.ŝaltilo input:checked {
   background: color-mix(in srgb, var(--akcento) 62%, transparent);
   border-color: color-mix(in srgb, var(--akcento) 70%, transparent);
 }
 
-.sxaltilo input:checked::after {
+.ŝaltilo input:checked::after {
   transform: translateX(18px);
   width: 13px;
   background: #0A0D1C;
 }
 
-.sxaltilo input:checked:hover::after {
+.ŝaltilo input:checked:hover::after {
   width: 17px;
   transform: translateX(14px);
 }
@@ -450,13 +450,13 @@ code {
   color: var(--teksto);
 }
 
-.buto.dangxera {
-  background: var(--dangxera-soft);
+.buto.danĝera {
+  background: var(--danĝera-soft);
   color: var(--danĝero);
   border-color: color-mix(in srgb, var(--danĝero) 34%, transparent);
 }
 
-.buto.dangxera:hover {
+.buto.danĝera:hover {
   background: color-mix(in srgb, var(--danĝero) 20%, transparent);
 }
 
@@ -1072,7 +1072,7 @@ main {
   flex: none;
 }
 
-.flanko .sxaltilo {
+.flanko .ŝaltilo {
   margin: 8px;
   font-size: 12px;
 }
@@ -1297,7 +1297,7 @@ main {
   background: linear-gradient(var(--akcento), var(--limo) 58%, var(--limo2));
 }
 
-.mejlosxtono {
+.mejloŝtono {
   position: relative;
   margin-bottom: 9px;
   padding: 13px 16px;
@@ -1307,12 +1307,12 @@ main {
   transition: border-color .18s var(--mov-kurbo), transform .18s var(--mov-kurbo);
 }
 
-.mejlosxtono:hover {
+.mejloŝtono:hover {
   border-color: color-mix(in srgb, var(--akcento) 26%, var(--limo));
   transform: translateX(2px);
 }
 
-.mejlosxtono.nuna {
+.mejloŝtono.nuna {
   border-color: color-mix(in srgb, var(--akcento) 42%, var(--limo));
   background:
     radial-gradient(440px 130px at 12% 0%, color-mix(in srgb, var(--akcento) 12%, transparent), transparent 72%),
@@ -1330,7 +1330,7 @@ main {
   border: 2px solid var(--limo);
 }
 
-.mejlosxtono.nuna .tempa-punkto {
+.mejloŝtono.nuna .tempa-punkto {
   border-color: var(--akcento);
   background: var(--akcento);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--akcento) 16%, transparent);
@@ -1375,12 +1375,12 @@ main {
   background: var(--akcenta-soft);
 }
 
-.mejlosxtono h3 {
+.mejloŝtono h3 {
   margin: 0 0 2px;
   font-size: 15.5px;
 }
 
-.mejlosxtono p {
+.mejloŝtono p {
   margin: 0;
   font-size: 12.5px;
   line-height: 1.6;
@@ -1610,13 +1610,13 @@ main {
 }
 
 /* ── Elŝuto ──────────────────────────────────────────────────────────── */
-.elssxutoj {
+.elsŝutoj {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
-.elssxuto {
+.elsŝuto {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1629,7 +1629,7 @@ main {
   box-shadow: var(--ombro-malgranda);
 }
 
-.elssxuta-kapo {
+.elsŝuta-kapo {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1637,58 +1637,58 @@ main {
   flex-wrap: wrap;
 }
 
-.elssxuta-kapo h3 {
+.elsŝuta-kapo h3 {
   margin: 0;
   font-size: 22px;
   letter-spacing: -.02em;
 }
 
-.elssxuto > p {
+.elsŝuto > p {
   margin: 0;
   font-size: 13px;
   color: var(--teksto2);
 }
 
-.elssxuto dl {
+.elsŝuto dl {
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 7px;
 }
 
-.elssxuto dl > div {
+.elsŝuto dl > div {
   display: grid;
   grid-template-columns: 68px minmax(0, 1fr);
   gap: 10px;
   align-items: baseline;
 }
 
-.elssxuto dt {
+.elsŝuto dt {
   font-size: 11px;
   color: var(--teksto3);
 }
 
-.elssxuto dd {
+.elsŝuto dd {
   margin: 0;
   font: 600 11px/1.5 var(--mono);
   color: var(--teksto2);
 }
 
-.elssxuto dd code {
+.elsŝuto dd code {
   font-size: 10.5px;
   line-height: 1.5;
   word-break: break-all;
   color: var(--teksto2);
 }
 
-.elssxuta-butonoj {
+.elsŝuta-butonoj {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-top: auto;
 }
 
-.elssxuta-noto {
+.elsŝuta-noto {
   margin-top: 14px;
   padding: 14px 16px;
   border-left: 3px solid var(--akcento);
@@ -1699,15 +1699,15 @@ main {
   color: var(--teksto2);
 }
 
-.elssxuta-noto p {
+.elsŝuta-noto p {
   margin: 0 0 4px;
 }
 
-.elssxuta-noto p:last-child {
+.elsŝuta-noto p:last-child {
   margin-bottom: 0;
 }
 
-.elssxuta-noto code {
+.elsŝuta-noto code {
   color: var(--akcento);
 }
 
@@ -2007,7 +2007,7 @@ main {
 }
 
 /* ── Fulmomesaĝoj ────────────────────────────────────────────────────── */
-.fulmomesagxoj {
+.fulmomesaĝoj {
   position: fixed;
   right: 20px;
   bottom: 20px;
@@ -2019,7 +2019,7 @@ main {
   pointer-events: none;
 }
 
-.fulmomesagxo {
+.fulmomesaĝo {
   padding: 11px 14px;
   border: 1px solid var(--limo);
   border-left: 3px solid var(--informo);
@@ -2031,19 +2031,19 @@ main {
   animation: enflugi .22s var(--mov-kurbo);
 }
 
-.fulmomesagxo.sukceso {
+.fulmomesaĝo.sukceso {
   border-left-color: var(--sukceso);
 }
 
-.fulmomesagxo.averto {
+.fulmomesaĝo.averto {
   border-left-color: var(--averto);
 }
 
-.fulmomesagxo.dangxero {
+.fulmomesaĝo.danĝero {
   border-left-color: var(--danĝero);
 }
 
-.fulmomesagxo.foriri {
+.fulmomesaĝo.foriri {
   animation: elflugi .22s var(--mov-kurbo) forwards;
 }
 
@@ -2229,7 +2229,7 @@ main {
 
   .kartaro,
   .materialoj,
-  .elssxutoj {
+  .elsŝutoj {
     grid-template-columns: 1fr;
   }
 
@@ -2293,7 +2293,7 @@ main {
     margin: 0;
   }
 
-  .elssxuto dl > div {
+  .elsŝuto dl > div {
     grid-template-columns: 1fr;
     gap: 2px;
   }
@@ -2309,7 +2309,7 @@ main {
     display: none;
   }
 
-  .sxaltilo span {
+  .ŝaltilo span {
     display: none;
   }
 

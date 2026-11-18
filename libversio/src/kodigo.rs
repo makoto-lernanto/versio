@@ -141,10 +141,10 @@ impl<'a> Legilo<'a> {
     /// Legas unu haketon (32 fiksaj bajtoj).
     pub(crate) fn haketo(&mut self) -> Result<Haketo, Eraro> {
         let bajtoj = self.bajtoj(HAKETA_LONGO)?;
-        let arangxo: [u8; HAKETA_LONGO] = bajtoj.try_into().map_err(|_| Eraro::NevalidaDatumo {
+        let aranĝo: [u8; HAKETA_LONGO] = bajtoj.try_into().map_err(|_| Eraro::NevalidaDatumo {
             kialo: "haketa longo maltrafas",
         })?;
-        Ok(Haketo::el_bajtoj(arangxo))
+        Ok(Haketo::el_bajtoj(aranĝo))
     }
 
     /// Legas signoĉenon kun eksplicita supra limo por la longo.

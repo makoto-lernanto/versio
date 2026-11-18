@@ -121,15 +121,15 @@ fn testo_stato_10000_dosieroj_sub_100_ms() {
     // La unua `stato` plenigas la indekson.
     assert_eq!(sukcesa_eligo(&prov.vojo, &["stato"]), "Neniu ŝanĝo\n");
 
-    std::fs::write(prov.vojo.join("d042").join("f042.txt"), b"sxangxita\n").unwrap();
+    std::fs::write(prov.vojo.join("d042").join("f042.txt"), b"modifita\n").unwrap();
 
     let komenco = Instant::now();
     let eligo = sukcesa_eligo(&prov.vojo, &["stato"]);
-    let dauxro = komenco.elapsed();
+    let daŭro = komenco.elapsed();
 
     assert_eq!(eligo, "Modifitaj:\n  d042/f042.txt\n");
     assert!(
-        dauxro < Duration::from_millis(100),
-        "vs stato daŭris {dauxro:?}"
+        daŭro < Duration::from_millis(100),
+        "vs stato daŭris {daŭro:?}"
     );
 }

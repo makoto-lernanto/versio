@@ -37,8 +37,8 @@ impl Rezultoj {
         }
     }
 
-    fn kontroli(&mut self, nomo: &str, kondicxo: bool) {
-        if kondicxo {
+    fn kontroli(&mut self, nomo: &str, kondiĉo: bool) {
+        if kondiĉo {
             self.sukcesoj = self.sukcesoj.saturating_add(1);
             semihosting::println!("  OK   {nomo}");
         } else {

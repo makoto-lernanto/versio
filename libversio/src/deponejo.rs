@@ -30,7 +30,7 @@ pub const INDEKSO_DOSIERO: &str = "indekso";
 
 const REFS_DOSIERUJO: &str = "refs";
 const BRANCHOJ_DOSIERUJO: &str = "heads";
-const NUNA_BRANCHO_DOSIERO: &str = "brancxo";
+const NUNA_BRANCHO_DOSIERO: &str = "branĉo";
 
 /// Dosieroj modifitaj malpli ol tiom antaŭ la skanado ne estas kaŝmemorataj.
 ///
@@ -81,7 +81,7 @@ struct HaketitaDosiero {
     haketo: Haketo,
     grandeco: u64,
     /// `(mtempo, grandeco)`, se la dosiero estas sufiĉe malnova por la kaŝmemoro.
-    kasxebla: Option<(u64, u64)>,
+    kaŝebla: Option<(u64, u64)>,
 }
 
 #[derive(Clone, Copy)]
@@ -197,7 +197,7 @@ impl Deponejo {
         )
     }
 
-    fn brancxo_vojo(&self, nomo: &str) -> PathBuf {
+    fn branĉo_vojo(&self, nomo: &str) -> PathBuf {
         self.metadatumoj()
             .join(REFS_DOSIERUJO)
             .join(BRANCHOJ_DOSIERUJO)
@@ -211,9 +211,9 @@ impl Deponejo {
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
-    pub fn legi_brancxon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
-        validi_brancxan_nomon(nomo)?;
-        match fs::read_to_string(self.brancxo_vojo(nomo)) {
+    pub fn legi_branĉon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
+        validi_branĉan_nomon(nomo)?;
+        match fs::read_to_string(self.branĉo_vojo(nomo)) {
             Ok(teksto) => Ok(Some(teksto.trim().parse()?)),
             Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
             Err(eraro) => Err(eraro.into()),
@@ -226,14 +226,14 @@ impl Deponejo {
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
-    pub fn skribi_brancxon(&self, nomo: &str, haketo: &Haketo) -> Result<(), Eraro> {
-        validi_brancxan_nomon(nomo)?;
+    pub fn skribi_branĉon(&self, nomo: &str, haketo: &Haketo) -> Result<(), Eraro> {
+        validi_branĉan_nomon(nomo)?;
         fs::create_dir_all(
             self.metadatumoj()
                 .join(REFS_DOSIERUJO)
                 .join(BRANCHOJ_DOSIERUJO),
         )?;
-        skribi_atome(&self.brancxo_vojo(nomo), haketo.to_string().as_bytes())
+        skribi_atome(&self.branĉo_vojo(nomo), haketo.to_string().as_bytes())
     }
 
     /// Listigas la branĉojn kaj iliajn celajn komitojn, ordigitajn laŭ nomo.
@@ -241,7 +241,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas dosiersisteman aŭ haketan eraron por difektita referenco.
-    pub fn brancxoj(&self) -> Result<Vec<(String, Haketo)>, Eraro> {
+    pub fn branĉoj(&self) -> Result<Vec<(String, Haketo)>, Eraro> {
         let dosierujo = self
             .metadatumoj()
             .join(REFS_DOSIERUJO)
@@ -252,7 +252,7 @@ impl Deponejo {
             Err(eraro) => return Err(eraro.into()),
         };
 
-        let mut brancxoj = Vec::new();
+        let mut branĉoj = Vec::new();
         for eniro in eniroj {
             let eniro = eniro?;
             if !eniro.file_type()?.is_file() {
@@ -266,10 +266,10 @@ impl Deponejo {
                 continue;
             }
             let haketo = fs::read_to_string(eniro.path())?.trim().parse()?;
-            brancxoj.push((nomo, haketo));
+            branĉoj.push((nomo, haketo));
         }
-        brancxoj.sort_unstable_by(|unu, du| unu.0.cmp(&du.0));
-        Ok(brancxoj)
+        branĉoj.sort_unstable_by(|unu, du| unu.0.cmp(&du.0));
+        Ok(branĉoj)
     }
 
     /// La nomo de la nuna branĉo; `None` signifas detaĉitan `HEAD`.
@@ -277,7 +277,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas dosiersisteman eraron.
-    pub fn nuna_brancxo(&self) -> Result<Option<String>, Eraro> {
+    pub fn nuna_branĉo(&self) -> Result<Option<String>, Eraro> {
         match fs::read_to_string(self.metadatumoj().join(NUNA_BRANCHO_DOSIERO)) {
             Ok(teksto) => {
                 let nomo = teksto.trim();
@@ -298,8 +298,8 @@ impl Deponejo {
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
-    pub fn agordi_nunan_brancxon(&self, nomo: &str) -> Result<(), Eraro> {
-        validi_brancxan_nomon(nomo)?;
+    pub fn agordi_nunan_branĉon(&self, nomo: &str) -> Result<(), Eraro> {
+        validi_branĉan_nomon(nomo)?;
         skribi_atome(
             &self.metadatumoj().join(NUNA_BRANCHO_DOSIERO),
             nomo.as_bytes(),
@@ -311,7 +311,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas dosiersisteman eraron, escepte de mankanta dosiero.
-    pub fn forigi_nunan_brancxon(&self) -> Result<(), Eraro> {
+    pub fn forigi_nunan_branĉon(&self) -> Result<(), Eraro> {
         match fs::remove_file(self.metadatumoj().join(NUNA_BRANCHO_DOSIERO)) {
             Ok(()) => Ok(()),
             Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
@@ -440,13 +440,13 @@ impl Deponejo {
         &self,
         nuna: &Haketo,
         celo: &Haketo,
-        mesagxo: &str,
+        mesaĝo: &str,
         kreita_je: u64,
     ) -> Result<Kunfando, Eraro> {
-        if nuna == celo || self.estas_antauxulo(celo, nuna)? {
+        if nuna == celo || self.estas_antaŭulo(celo, nuna)? {
             return Ok(Kunfando::Nenio);
         }
-        if self.estas_antauxulo(nuna, celo)? {
+        if self.estas_antaŭulo(nuna, celo)? {
             self.eltiri(celo)?;
             return Ok(Kunfando::Antauen(*celo));
         }
@@ -458,7 +458,7 @@ impl Deponejo {
         let komito = Komito {
             arbo,
             gepatro: Some(*nuna),
-            mesagxo: mesagxo.to_owned(),
+            mesaĝo: mesaĝo.to_owned(),
             kreita_je,
             dua_gepatro: Some(*celo),
         };
@@ -467,12 +467,12 @@ impl Deponejo {
         Ok(Kunfando::Kunfandita(haketo))
     }
 
-    /// Ĉu `antauxulo` estas atingebla ekde `posteulo` sekvante gepatrojn.
-    fn estas_antauxulo(&self, antauxulo: &Haketo, posteulo: &Haketo) -> Result<bool, Eraro> {
+    /// Ĉu `antaŭulo` estas atingebla ekde `posteulo` sekvante gepatrojn.
+    fn estas_antaŭulo(&self, antaŭulo: &Haketo, posteulo: &Haketo) -> Result<bool, Eraro> {
         let mut stako = vec![*posteulo];
         let mut vizititaj = HashSet::new();
         while let Some(haketo) = stako.pop() {
-            if &haketo == antauxulo {
+            if &haketo == antaŭulo {
                 return Ok(true);
             }
             if !vizititaj.insert(haketo) {
@@ -487,10 +487,10 @@ impl Deponejo {
 
     /// Trovas komunan antaŭulon de la du komitoj, se ĝi ekzistas.
     fn komuna_gepatro(&self, unua: &Haketo, dua: &Haketo) -> Result<Option<Haketo>, Eraro> {
-        let mut antauxuloj = HashSet::new();
+        let mut antaŭuloj = HashSet::new();
         let mut stako = vec![*unua];
         while let Some(haketo) = stako.pop() {
-            if !antauxuloj.insert(haketo) {
+            if !antaŭuloj.insert(haketo) {
                 continue;
             }
             let komito = self.legi_komiton(&haketo)?;
@@ -501,7 +501,7 @@ impl Deponejo {
         let mut vizititaj = HashSet::new();
         let mut stako = vec![*dua];
         while let Some(haketo) = stako.pop() {
-            if antauxuloj.contains(&haketo) {
+            if antaŭuloj.contains(&haketo) {
                 return Ok(Some(haketo));
             }
             if !vizititaj.insert(haketo) {
@@ -551,16 +551,16 @@ impl Deponejo {
             }
         }
 
-        let mut antauxa: Option<&String> = None;
+        let mut antaŭa: Option<&String> = None;
         for vojo in rezulto.keys() {
-            if let Some(antauxa) = antauxa
-                && vojo.starts_with(antauxa.as_str())
-                && vojo.as_bytes().get(antauxa.len()) == Some(&b'/')
+            if let Some(antaŭa) = antaŭa
+                && vojo.starts_with(antaŭa.as_str())
+                && vojo.as_bytes().get(antaŭa.len()) == Some(&b'/')
             {
-                konfliktoj.push(antauxa.clone());
+                konfliktoj.push(antaŭa.clone());
                 konfliktoj.push(vojo.clone());
             }
-            antauxa = Some(vojo);
+            antaŭa = Some(vojo);
         }
 
         if !konfliktoj.is_empty() {
@@ -609,7 +609,7 @@ impl Deponejo {
             .into_par_iter()
             .map(|dosiero| self.konservi_laboran(dosiero, &malnova, limo))
             .collect::<Result<Vec<_>, Eraro>>()?;
-        self.gxisdatigi_indekson(&malnova, &haketitaj)?;
+        self.ĝisdatigi_indekson(&malnova, &haketitaj)?;
 
         self.konservi_nodon(&nodo_el_dosieroj(
             haketitaj
@@ -631,26 +631,26 @@ impl Deponejo {
             .filter(|mtempo| limo.is_some_and(|limo| *mtempo < limo));
 
         if let Some(mtempo) = mtempo
-            && let Some(haketo) = indekso.kasxita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
+            && let Some(haketo) = indekso.kaŝita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
             && self.stokejo.havas(&haketo)
         {
             return Ok(HaketitaDosiero {
                 vojo: dosiero.vojo,
                 haketo,
                 grandeco: dosiero.grandeco,
-                kasxebla: Some((mtempo, dosiero.grandeco)),
+                kaŝebla: Some((mtempo, dosiero.grandeco)),
             });
         }
 
         let (haketo, grandeco) = self.stokejo.konservi_dosieron(&dosiero.absoluta)?;
-        let kasxebla = mtempo
+        let kaŝebla = mtempo
             .filter(|_| grandeco == dosiero.grandeco)
             .map(|mtempo| (mtempo, grandeco));
         Ok(HaketitaDosiero {
             vojo: dosiero.vojo,
             haketo,
             grandeco,
-            kasxebla,
+            kaŝebla,
         })
     }
 
@@ -703,7 +703,7 @@ impl Deponejo {
                     .into_par_iter()
                     .map(|dosiero| haketi_laboran(dosiero, &malnova, limo))
                     .collect::<Result<Vec<_>, Eraro>>()?;
-                self.gxisdatigi_indekson(&malnova, &haketitaj)?;
+                self.ĝisdatigi_indekson(&malnova, &haketitaj)?;
                 Ok(haketitaj)
             },
             || -> Result<HashMap<String, Haketo>, Eraro> {
@@ -724,20 +724,20 @@ impl Deponejo {
     }
 
     /// Reskribas la indekson, se la kaŝeblaj enskriboj ŝanĝiĝis.
-    fn gxisdatigi_indekson(
+    fn ĝisdatigi_indekson(
         &self,
         malnova: &Indekso,
         haketitaj: &[HaketitaDosiero],
     ) -> Result<(), Eraro> {
         // La vojoj estas unikaj, do egala nombro kaj kongruo de ĉiu kaŝebla
         // dosiero signifas egalan indekson; tiel la kutima kazo evitas rekonstruon.
-        let kasxeblaj = haketitaj
+        let kaŝeblaj = haketitaj
             .par_iter()
-            .filter(|dosiero| dosiero.kasxebla.is_some())
+            .filter(|dosiero| dosiero.kaŝebla.is_some())
             .count();
-        let sama = kasxeblaj == malnova.enskriboj().len()
+        let sama = kaŝeblaj == malnova.enskriboj().len()
             && haketitaj.par_iter().all(|dosiero| {
-                dosiero.kasxebla.is_none_or(|(mtempo, grandeco)| {
+                dosiero.kaŝebla.is_none_or(|(mtempo, grandeco)| {
                     malnova.trovi(&dosiero.vojo).is_some_and(|enskribo| {
                         enskribo.mtempo == mtempo
                             && enskribo.grandeco == grandeco
@@ -753,7 +753,7 @@ impl Deponejo {
             haketitaj
                 .iter()
                 .filter_map(|dosiero| {
-                    dosiero.kasxebla.map(|(mtempo, grandeco)| IndeksEnskribo {
+                    dosiero.kaŝebla.map(|(mtempo, grandeco)| IndeksEnskribo {
                         vojo: dosiero.vojo.clone(),
                         mtempo,
                         grandeco,
@@ -805,7 +805,7 @@ impl Deponejo {
 
 /// Validas branĉan nomon: ĝi estas unu sekura voja komponanto, kiu ne
 /// komenciĝas per punkto (tiel ĝi ne kolizias kun provizoraj dosieroj).
-fn validi_brancxan_nomon(nomo: &str) -> Result<(), Eraro> {
+fn validi_branĉan_nomon(nomo: &str) -> Result<(), Eraro> {
     validi_komponanton(nomo)?;
     if nomo.starts_with('.') || nomo.chars().any(char::is_whitespace) {
         return Err(Eraro::NevalidaVojaKomponanto);
@@ -856,8 +856,8 @@ fn nodo_el_dosieroj<'a>(dosieroj: impl IntoIterator<Item = (&'a str, Haketo, u64
 }
 
 fn nanosekundoj(tempo: SystemTime) -> Option<u64> {
-    let dauxro = tempo.duration_since(UNIX_EPOCH).ok()?;
-    u64::try_from(dauxro.as_nanos()).ok()
+    let daŭro = tempo.duration_since(UNIX_EPOCH).ok()?;
+    u64::try_from(daŭro.as_nanos()).ok()
 }
 
 /// Rekursie forprenas malplenajn dosierujojn, preterlasante `.vs`.
@@ -933,27 +933,27 @@ fn haketi_laboran(
         .filter(|mtempo| limo.is_some_and(|limo| *mtempo < limo));
 
     if let Some(mtempo) = mtempo
-        && let Some(haketo) = indekso.kasxita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
+        && let Some(haketo) = indekso.kaŝita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
     {
         return Ok(HaketitaDosiero {
             vojo: dosiero.vojo,
             haketo,
             grandeco: dosiero.grandeco,
-            kasxebla: Some((mtempo, dosiero.grandeco)),
+            kaŝebla: Some((mtempo, dosiero.grandeco)),
         });
     }
 
     let (haketo, grandeco) = haketi_dosieron(&dosiero.absoluta)?;
     // Se la grandeco ŝanĝiĝis inter `stat` kaj legado, la dosiero estas
     // ankoraŭ skribata; ĝi ne estas kaŝmemorata.
-    let kasxebla = mtempo
+    let kaŝebla = mtempo
         .filter(|_| grandeco == dosiero.grandeco)
         .map(|mtempo| (mtempo, grandeco));
     Ok(HaketitaDosiero {
         vojo: dosiero.vojo,
         haketo,
         grandeco,
-        kasxebla,
+        kaŝebla,
     })
 }
 
@@ -1142,7 +1142,7 @@ mod testoj {
         let komito1 = Komito {
             arbo: arbo1,
             gepatro: deponejo.legi_head().unwrap(),
-            mesagxo: "Unua".into(),
+            mesaĝo: "Unua".into(),
             kreita_je: 1,
             dua_gepatro: None,
         };
@@ -1155,7 +1155,7 @@ mod testoj {
         let komito2 = Komito {
             arbo: arbo2,
             gepatro: deponejo.legi_head().unwrap(),
-            mesagxo: "Dua".into(),
+            mesaĝo: "Dua".into(),
             kreita_je: 2,
             dua_gepatro: None,
         };
@@ -1164,15 +1164,15 @@ mod testoj {
 
         let legita = deponejo.legi_komiton(&h2).unwrap();
         assert_eq!(legita.gepatro, Some(h1));
-        assert_eq!(legita.mesagxo, "Dua");
+        assert_eq!(legita.mesaĝo, "Dua");
 
         let denove = Deponejo::malfermi(prov.radiko.clone()).unwrap();
         assert_eq!(denove.legi_head().unwrap(), Some(h2));
     }
 
     #[test]
-    fn testo_kunfandi_antauxenigas() {
-        let prov = ProvDeponejo::nova("kunfandi-antauxen");
+    fn testo_kunfandi_antaŭenigas() {
+        let prov = ProvDeponejo::nova("kunfandi-antaŭen");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
         komiti(&deponejo);
@@ -1203,7 +1203,7 @@ mod testoj {
         let prov = ProvDeponejo::nova("kunfandi-tri");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         fs::write(prov.radiko.join("komuna.txt"), b"bazo").unwrap();
-        fs::write(prov.radiko.join("sangxota.txt"), b"bazo").unwrap();
+        fs::write(prov.radiko.join("sanĝota.txt"), b"bazo").unwrap();
         komiti(&deponejo);
         let bazo = deponejo.legi_head().unwrap().unwrap();
 
@@ -1213,7 +1213,7 @@ mod testoj {
 
         deponejo.eltiri(&bazo).unwrap();
         deponejo.skribi_head(&bazo).unwrap();
-        fs::write(prov.radiko.join("sangxota.txt"), b"fonto").unwrap();
+        fs::write(prov.radiko.join("sanĝota.txt"), b"fonto").unwrap();
         fs::write(prov.radiko.join("nur-fonto.txt"), b"f").unwrap();
         komiti(&deponejo);
         let fonto = deponejo.legi_head().unwrap().unwrap();
@@ -1229,11 +1229,8 @@ mod testoj {
         let komito = deponejo.legi_komiton(&kunfando).unwrap();
         assert_eq!(komito.gepatro, Some(majstro));
         assert_eq!(komito.dua_gepatro, Some(fonto));
-        assert_eq!(komito.mesagxo, "Kunfandis");
-        assert_eq!(
-            fs::read(prov.radiko.join("sangxota.txt")).unwrap(),
-            b"fonto"
-        );
+        assert_eq!(komito.mesaĝo, "Kunfandis");
+        assert_eq!(fs::read(prov.radiko.join("sanĝota.txt")).unwrap(), b"fonto");
         assert_eq!(fs::read(prov.radiko.join("komuna.txt")).unwrap(), b"bazo");
         assert!(prov.radiko.join("nur-majstro.txt").is_file());
         assert!(prov.radiko.join("nur-fonto.txt").is_file());
@@ -1316,7 +1313,7 @@ mod testoj {
             .konservi_komiton(&Komito {
                 arbo,
                 gepatro: None,
-                mesagxo: "Unua".into(),
+                mesaĝo: "Unua".into(),
                 kreita_je: 1,
                 dua_gepatro: None,
             })
@@ -1325,7 +1322,7 @@ mod testoj {
             .konservi_komiton(&Komito {
                 arbo,
                 gepatro: None,
-                mesagxo: "Dua".into(),
+                mesaĝo: "Dua".into(),
                 kreita_je: 2,
                 dua_gepatro: None,
             })
@@ -1351,7 +1348,7 @@ mod testoj {
         let komito = Komito {
             arbo: deponejo.kapti_arbon().unwrap(),
             gepatro: deponejo.legi_head().unwrap(),
-            mesagxo: "testo".into(),
+            mesaĝo: "testo".into(),
             kreita_je: 1,
             dua_gepatro: None,
         };
@@ -1384,8 +1381,8 @@ mod testoj {
     }
 
     #[test]
-    fn testo_stato_detektas_sxangxojn() {
-        let prov = ProvDeponejo::nova("stato-sxangxoj");
+    fn testo_stato_detektas_ŝanĝojn() {
+        let prov = ProvDeponejo::nova("stato-ŝanĝoj");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         fs::create_dir(prov.radiko.join("sub")).unwrap();
         fs::write(prov.radiko.join("restanta.txt"), b"sama").unwrap();
@@ -1410,8 +1407,8 @@ mod testoj {
     }
 
     #[test]
-    fn testo_stato_uzas_kasxmemoron() {
-        let prov = ProvDeponejo::nova("stato-kasxmemoro");
+    fn testo_stato_uzas_kaŝmemoron() {
+        let prov = ProvDeponejo::nova("stato-kaŝmemoro");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         let dosiero = prov.radiko.join("a.txt");
         fs::write(&dosiero, b"unua").unwrap();
@@ -1439,8 +1436,8 @@ mod testoj {
     }
 
     #[test]
-    fn testo_stato_ne_kasxmemoras_fresxajn_dosierojn() {
-        let prov = ProvDeponejo::nova("stato-fresxa");
+    fn testo_stato_ne_kaŝmemoras_freŝajn_dosierojn() {
+        let prov = ProvDeponejo::nova("stato-freŝa");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         let dosiero = prov.radiko.join("a.txt");
         fs::write(&dosiero, b"unua").unwrap();
@@ -1471,7 +1468,7 @@ mod testoj {
 
     #[test]
     fn testo_komito_reuzas_indekson() {
-        let prov = ProvDeponejo::nova("komito-kasxmemoro");
+        let prov = ProvDeponejo::nova("komito-kaŝmemoro");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
         let dosiero = prov.radiko.join("a.txt");
         fs::write(&dosiero, b"unua").unwrap();
@@ -1622,36 +1619,36 @@ mod testoj {
     }
 
     #[test]
-    fn testo_brancxoj_kaj_nuna_brancxo() {
-        let prov = ProvDeponejo::nova("brancxoj");
+    fn testo_branĉoj_kaj_nuna_branĉo() {
+        let prov = ProvDeponejo::nova("branĉoj");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
-        assert_eq!(deponejo.brancxoj().unwrap(), Vec::new());
-        assert_eq!(deponejo.nuna_brancxo().unwrap(), None);
+        assert_eq!(deponejo.branĉoj().unwrap(), Vec::new());
+        assert_eq!(deponejo.nuna_branĉo().unwrap(), None);
 
         let cefa = Haketo::el_bajtoj([9; 32]);
-        deponejo.skribi_brancxon("ĉefa", &cefa).unwrap();
+        deponejo.skribi_branĉon("ĉefa", &cefa).unwrap();
         deponejo
-            .skribi_brancxon("eksperimento", &Haketo::el_bajtoj([8; 32]))
+            .skribi_branĉon("eksperimento", &Haketo::el_bajtoj([8; 32]))
             .unwrap();
-        assert_eq!(deponejo.legi_brancxon("ĉefa").unwrap(), Some(cefa));
-        let brancxoj = deponejo.brancxoj().unwrap();
+        assert_eq!(deponejo.legi_branĉon("ĉefa").unwrap(), Some(cefa));
+        let branĉoj = deponejo.branĉoj().unwrap();
         assert_eq!(
-            brancxoj,
+            branĉoj,
             [
                 ("eksperimento".to_owned(), Haketo::el_bajtoj([8; 32])),
                 ("ĉefa".to_owned(), cefa)
             ]
         );
 
-        deponejo.agordi_nunan_brancxon("ĉefa").unwrap();
-        assert_eq!(deponejo.nuna_brancxo().unwrap().as_deref(), Some("ĉefa"));
-        deponejo.forigi_nunan_brancxon().unwrap();
-        assert_eq!(deponejo.nuna_brancxo().unwrap(), None);
+        deponejo.agordi_nunan_branĉon("ĉefa").unwrap();
+        assert_eq!(deponejo.nuna_branĉo().unwrap().as_deref(), Some("ĉefa"));
+        deponejo.forigi_nunan_branĉon().unwrap();
+        assert_eq!(deponejo.nuna_branĉo().unwrap(), None);
 
         for malvalida in ["", "../fuĝo", ".kaŝita", "a/b"] {
             assert!(
                 matches!(
-                    deponejo.skribi_brancxon(malvalida, &cefa),
+                    deponejo.skribi_branĉon(malvalida, &cefa),
                     Err(Eraro::NevalidaVojaKomponanto)
                 ),
                 "la nomo «{malvalida}» devus esti rifuzita"

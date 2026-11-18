@@ -168,8 +168,8 @@ fn pruvo_legilo_neniam_panikas() {
 }
 
 /// Simbola, unu-bajta mesaĝo aŭ malplena mesaĝo.
-fn prova_mesagxo(havas_mesagxon: bool, signo: u8) -> String {
-    if havas_mesagxon {
+fn prova_mesaĝo(havas_mesaĝon: bool, signo: u8) -> String {
+    if havas_mesaĝon {
         String::from(char::from(signo & 0x7f))
     } else {
         String::new()
@@ -205,18 +205,18 @@ fn kontroli_kadron(komito: &Komito, arbo: &[u8; HAKETA_LONGO], minimumo: usize, 
 #[kani::unwind(40)]
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let havas_mesagxon: bool = kani::any();
+    let havas_mesaĝon: bool = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: None,
-        mesagxo: prova_mesagxo(havas_mesagxon, 42),
+        mesaĝo: prova_mesaĝo(havas_mesaĝon, 42),
         kreita_je,
         dua_gepatro: None,
     };
 
-    kani::cover!(havas_mesagxon);
-    kani::cover!(!havas_mesagxon);
+    kani::cover!(havas_mesaĝon);
+    kani::cover!(!havas_mesaĝon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
     kontroli_kadron(&komito, &arbo, 36, 46);
@@ -231,18 +231,18 @@ fn pruvo_komito_seriigo() {
 #[kani::unwind(40)]
 fn pruvo_gepatra_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let havas_mesagxon: bool = kani::any();
+    let havas_mesaĝon: bool = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: Some(fiksa_haketo()),
-        mesagxo: prova_mesagxo(havas_mesagxon, 42),
+        mesaĝo: prova_mesaĝo(havas_mesaĝon, 42),
         kreita_je,
         dua_gepatro: None,
     };
 
-    kani::cover!(havas_mesagxon);
-    kani::cover!(!havas_mesagxon);
+    kani::cover!(havas_mesaĝon);
+    kani::cover!(!havas_mesaĝon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
     kontroli_kadron(&komito, &arbo, 68, 78);
@@ -255,18 +255,18 @@ fn pruvo_gepatra_kadro() {
 #[kani::unwind(40)]
 fn pruvo_kunfanda_kadro() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let havas_mesagxon: bool = kani::any();
+    let havas_mesaĝon: bool = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: Some(fiksa_haketo()),
-        mesagxo: prova_mesagxo(havas_mesagxon, 42),
+        mesaĝo: prova_mesaĝo(havas_mesaĝon, 42),
         kreita_je,
         dua_gepatro: Some(fiksa_haketo()),
     };
 
-    kani::cover!(havas_mesagxon);
-    kani::cover!(!havas_mesagxon);
+    kani::cover!(havas_mesaĝon);
+    kani::cover!(!havas_mesaĝon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
     kontroli_kadron(&komito, &arbo, 100, 110);

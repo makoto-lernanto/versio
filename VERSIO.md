@@ -49,8 +49,8 @@ versio/
 │           ├── stato.rs       # vs stato (status)
 │           ├── historio.rs    # vs historio (log)
 │           ├── eltiri.rs      # vs eltiri (checkout)
-│           ├── brancxo.rs     # vs brancxo (branch create)
-│           ├── brancxoj.rs    # vs brancxoj (branch list)
+│           ├── linio.rs       # vs linio (branch create)
+│           ├── linioj.rs      # vs linioj (branch list)
 │           ├── kunfandi.rs    # vs kunfandi (merge)
 │           ├── haketo.rs      # komuna haket-solvado
 │           └── komitu.rs      # vs komitu (commit)

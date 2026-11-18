@@ -85,7 +85,7 @@ impl Indekso {
 
     /// Redonas la memoritan haketon, se la metadatumoj ne ŝanĝiĝis.
     #[must_use]
-    pub fn kasxita_haketo(&self, vojo: &str, mtempo: u64, grandeco: u64) -> Option<Haketo> {
+    pub fn kaŝita_haketo(&self, vojo: &str, mtempo: u64, grandeco: u64) -> Option<Haketo> {
         self.trovi(vojo)
             .filter(|enskribo| enskribo.mtempo == mtempo && enskribo.grandeco == grandeco)
             .map(|enskribo| enskribo.haketo)
@@ -231,13 +231,13 @@ mod testoj {
     }
 
     #[test]
-    fn testo_kasxita_haketo_postulas_samajn_metadatumojn() {
+    fn testo_kaŝita_haketo_postulas_samajn_metadatumojn() {
         let indekso = ekzemplo();
         let haketo = haketi(b"src/a.rs");
-        assert_eq!(indekso.kasxita_haketo("src/a.rs", 2, 7), Some(haketo));
-        assert_eq!(indekso.kasxita_haketo("src/a.rs", 3, 7), None);
-        assert_eq!(indekso.kasxita_haketo("src/a.rs", 2, 8), None);
-        assert_eq!(indekso.kasxita_haketo("mankanta", 2, 7), None);
+        assert_eq!(indekso.kaŝita_haketo("src/a.rs", 2, 7), Some(haketo));
+        assert_eq!(indekso.kaŝita_haketo("src/a.rs", 3, 7), None);
+        assert_eq!(indekso.kaŝita_haketo("src/a.rs", 2, 8), None);
+        assert_eq!(indekso.kaŝita_haketo("mankanta", 2, 7), None);
     }
 
     #[test]

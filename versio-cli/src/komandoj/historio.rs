@@ -46,10 +46,10 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
             "{}  {}  {}",
             mallongigi(&haketo),
             formati_tempon(komito.kreita_je),
-            unulinia(&komito.mesagxo)
+            unulinia(&komito.mesaĝo)
         )?;
         // La stako estas LIFO: la dua gepatro estas puŝita unue, do la unua
-        // gepatro kaj ĝia ĉeno estas montritaj antaŭ la kunfandita branĉo.
+        // gepatro kaj ĝia ĉeno estas montritaj antaŭ la kunfandita linio.
         if let Some(dua) = komito.dua_gepatro {
             stako.push(dua);
         }
@@ -60,8 +60,8 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
 }
 
 /// Kunpremas la komitan mesaĝon al unu linio.
-fn unulinia(mesagxo: &str) -> String {
-    mesagxo.split_whitespace().collect::<Vec<_>>().join(" ")
+fn unulinia(mesaĝo: &str) -> String {
+    mesaĝo.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 /// Formats uniksan tempstampon kiel `YYYY-MM-DD HH:MM:SS UTC`.

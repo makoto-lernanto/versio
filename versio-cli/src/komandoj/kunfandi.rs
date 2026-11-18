@@ -1,20 +1,20 @@
-//! `vs kunfandi`: kunfandas branĉon en la nunan branĉon.
+//! `vs kunfandi`: kunfandas linion en la nunan linion.
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Context;
 use libversio::deponejo::{Deponejo, Kunfando};
 
-/// Plenumas la komandon por la donita branĉo.
-pub(crate) fn plenumi(brancxo: &str) -> anyhow::Result<()> {
+/// Plenumas la komandon por la donita linio.
+pub(crate) fn plenumi(linio: &str) -> anyhow::Result<()> {
     let radiko = std::env::current_dir().context("ne povas determini la nunan dosierujon")?;
     let deponejo =
         Deponejo::malfermi(radiko).context("la nuna dosierujo ne estas Versio-deponejo")?;
 
     let celo = deponejo
-        .legi_brancxon(brancxo)
-        .with_context(|| format!("malsukcesis legi la branĉon {brancxo}"))?
-        .ok_or_else(|| anyhow::anyhow!("la branĉo {brancxo} ne ekzistas"))?;
+        .legi_branĉon(linio)
+        .with_context(|| format!("malsukcesis legi la linion {linio}"))?
+        .ok_or_else(|| anyhow::anyhow!("la linio {linio} ne ekzistas"))?;
     let nuna = deponejo
         .legi_head()
         .context("malsukcesis legi HEAD")?
@@ -32,34 +32,34 @@ pub(crate) fn plenumi(brancxo: &str) -> anyhow::Result<()> {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_secs();
-    let mesagxo = format!("Kunfandis branĉon {brancxo}");
+    let mesaĝo = format!("Kunfandis linion {linio}");
     let rezulto = deponejo
-        .kunfandi(&nuna, &celo, &mesagxo, kreita_je)
+        .kunfandi(&nuna, &celo, &mesaĝo, kreita_je)
         .context("malsukcesis kunfandi")?;
 
     match rezulto {
-        Kunfando::Nenio => println!("Nenio farenda: {brancxo} jam estas kunfandita"),
+        Kunfando::Nenio => println!("Nenio farenda: {linio} jam estas kunfandita"),
         Kunfando::Antauen(haketo) => {
-            gxisdatigi_refs(&deponejo, &haketo)?;
-            println!("Antaŭen al {haketo} ({brancxo})");
+            ĝisdatigi_refs(&deponejo, &haketo)?;
+            println!("Antaŭen al {haketo} ({linio})");
         }
         Kunfando::Kunfandita(haketo) => {
-            gxisdatigi_refs(&deponejo, &haketo)?;
+            ĝisdatigi_refs(&deponejo, &haketo)?;
             println!("Kunfanda komito {haketo}");
         }
     }
     Ok(())
 }
 
-/// Movas la nunan branĉon kaj `HEAD` al la donita komito.
-fn gxisdatigi_refs(deponejo: &Deponejo, haketo: &libversio::stokado::Haketo) -> anyhow::Result<()> {
+/// Movas la nunan linion kaj `HEAD` al la donita komito.
+fn ĝisdatigi_refs(deponejo: &Deponejo, haketo: &libversio::stokado::Haketo) -> anyhow::Result<()> {
     if let Some(nomo) = deponejo
-        .nuna_brancxo()
-        .context("malsukcesis legi la nunan branĉon")?
+        .nuna_branĉo()
+        .context("malsukcesis legi la nunan linion")?
     {
         deponejo
-            .skribi_brancxon(&nomo, haketo)
-            .with_context(|| format!("malsukcesis ĝisdatigi la branĉon {nomo}"))?;
+            .skribi_branĉon(&nomo, haketo)
+            .with_context(|| format!("malsukcesis ĝisdatigi la linion {nomo}"))?;
     }
     deponejo
         .skribi_head(haketo)

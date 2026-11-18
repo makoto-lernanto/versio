@@ -13,7 +13,7 @@
   const AKCENTOJ = {
     oro: "#FFB454",
     koralo: "#FF5C8A",
-    cxielo: "#4CC9FF",
+    ĉielo: "#4CC9FF",
     verdo: "#57E389",
     viola: "#A78BFA",
     bluo: "#5B7CFA",
@@ -21,7 +21,7 @@
   const AKCENTAJ_NOMOJ = {
     oro: "oro",
     koralo: "koralo",
-    cxielo: "ĉielo",
+    ĉielo: "ĉielo",
     verdo: "verdo",
     viola: "viola",
     bluo: "bluo",
@@ -105,7 +105,7 @@
 
     agordiTemon(radiko.dataset.temo || "malluma", false);
     agordiAkcenton(radiko.dataset.akcento || "verdo", false);
-    gxisdatigiFenestrojn();
+    ĝisdatigiFenestrojn();
 
     if (konservu) {
       skribi("versio-lingvo", lingvo);
@@ -116,7 +116,7 @@
     const valoro = temo === "hela" ? "hela" : "malluma";
     radiko.dataset.temo = valoro;
 
-    const ŝaltilo = $("#temoSxaltilo");
+    const ŝaltilo = $("#temoŜaltilo");
     if (ŝaltilo) {
       ŝaltilo.checked = valoro === "malluma";
       ŝaltilo.setAttribute(
@@ -165,13 +165,13 @@
     }
   }
 
-  function gxisdatigiVersion() {
+  function ĝisdatigiVersion() {
     $$("[data-versio-montri]").forEach((elemento) => {
       elemento.textContent = VERSIO;
     });
   }
 
-  function gxisdatigiFenestrojn() {
+  function ĝisdatigiFenestrojn() {
     $$("[data-fenestro]").forEach((fenestro) => {
       const maksimuma = $('[data-ago="pligrandigi"]', fenestro);
       if (!maksimuma) {
@@ -188,7 +188,7 @@
     });
   }
 
-  function sxaltiFenestrojn() {
+  function ŝaltiFenestrojn() {
     $$("[data-fenestro]").forEach((fenestro) => {
       const identigilo = fenestro.dataset.fenestro;
       const sceno = fenestro.closest("[data-scene]");
@@ -196,7 +196,7 @@
         ? $(`[data-restarigi="${identigilo}"]`, sceno)
         : null;
 
-      const kasxi = (klaso) => {
+      const kaŝi = (klaso) => {
         fenestro.classList.remove("pligrandigita");
         fenestro.classList.add(klaso);
         fenestro.inert = true;
@@ -212,11 +212,11 @@
           const ago = butono.dataset.ago;
           if (ago === "pligrandigi") {
             fenestro.classList.toggle("pligrandigita");
-            gxisdatigiFenestrojn();
+            ĝisdatigiFenestrojn();
           } else if (ago === "malgrandigi") {
-            kasxi("malgrandigita");
+            kaŝi("malgrandigita");
           } else if (ago === "fermi") {
-            kasxi("fermita");
+            kaŝi("fermita");
           }
         });
       });
@@ -228,7 +228,7 @@
             return;
           }
           fenestro.classList.toggle("pligrandigita");
-          gxisdatigiFenestrojn();
+          ĝisdatigiFenestrojn();
         });
       }
 
@@ -238,7 +238,7 @@
           fenestro.inert = false;
           fenestro.removeAttribute("aria-hidden");
           restarigo.hidden = true;
-          gxisdatigiFenestrojn();
+          ĝisdatigiFenestrojn();
           $('[data-ago="malgrandigi"]', fenestro)?.focus();
         });
       }
@@ -268,13 +268,13 @@
     }
   }
 
-  function fulmomesagxo(titolo, teksto, semantiko = "sukceso") {
-    const ujo = $("#fulmomesagxoj");
+  function fulmomesaĝo(titolo, teksto, semantiko = "sukceso") {
+    const ujo = $("#fulmomesaĝoj");
     if (!ujo) {
       return;
     }
     const mesaĝo = document.createElement("div");
-    mesaĝo.className = `fulmomesagxo ${semantiko}`;
+    mesaĝo.className = `fulmomesaĝo ${semantiko}`;
 
     const titola = document.createElement("div");
     titola.className = "fulma-titolo";
@@ -295,7 +295,7 @@
     }, 3400);
   }
 
-  function sxaltiKopiojn() {
+  function ŝaltiKopiojn() {
     $$("[data-kopii]").forEach((butono) => {
       butono.addEventListener("click", async () => {
         const celo = document.getElementById(butono.dataset.kopii);
@@ -303,18 +303,18 @@
           return;
         }
         const sukceso = await kopiiTekston(celo.textContent.trim());
-        fulmomesagxo(
+        fulmomesaĝo(
           sukceso ? t("fulmo.kopiita", "Kopiita") : t("fulmo.eraro", "Kopio malsukcesis"),
           sukceso
             ? t("fulmo.kopiita.teksto", "La teksto estas en la tondujo.")
             : t("fulmo.eraro.teksto", "Vi povas elekti la tekston permane."),
-          sukceso ? "sukceso" : "dangxero"
+          sukceso ? "sukceso" : "danĝero"
         );
       });
     });
   }
 
-  function sxaltiRevelon() {
+  function ŝaltiRevelon() {
     if (reduktitaMovo) {
       return;
     }
@@ -332,7 +332,7 @@
     });
   }
 
-  function sxaltiAperon() {
+  function ŝaltiAperon() {
     const eroj = $$("[data-aperu]");
     if (reduktitaMovo || !("IntersectionObserver" in window)) {
       eroj.forEach((elemento) => elemento.classList.add("videbla"));
@@ -356,13 +356,13 @@
 
   function starti() {
     konserviOriginalojn();
-    gxisdatigiVersion();
+    ĝisdatigiVersion();
 
     const komencaLingvo = legi("versio-lingvo", "eo") === "en" ? "en" : "eo";
     const komencaTemo = legi("versio-temo", "malluma") === "hela" ? "hela" : "malluma";
     const komencaAkcento = legi("versio-akcento", "verdo");
 
-    $("#temoSxaltilo")?.addEventListener("change", (evento) => {
+    $("#temoŜaltilo")?.addEventListener("change", (evento) => {
       agordiTemon(evento.target.checked ? "malluma" : "hela");
     });
     $$("[data-akcento]").forEach((butono) => {
@@ -372,10 +372,10 @@
       butono.addEventListener("click", () => aplikiLingvon(butono.dataset.lingvo));
     });
 
-    sxaltiFenestrojn();
-    sxaltiKopiojn();
-    sxaltiRevelon();
-    sxaltiAperon();
+    ŝaltiFenestrojn();
+    ŝaltiKopiojn();
+    ŝaltiRevelon();
+    ŝaltiAperon();
 
     agordiTemon(komencaTemo, false);
     agordiAkcenton(komencaAkcento, false);

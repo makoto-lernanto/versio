@@ -8,9 +8,9 @@ use libversio::objektoj::Komito;
 
 /// Plenumas la komandon kun la donita noto.
 pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
-    let mesagxo = noto.trim();
+    let mesaĝo = noto.trim();
     anyhow::ensure!(
-        !mesagxo.is_empty(),
+        !mesaĝo.is_empty(),
         "la komita mesaĝo ne rajtas esti malplena"
     );
 
@@ -30,7 +30,7 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
     let komito = Komito {
         arbo,
         gepatro,
-        mesagxo: mesagxo.to_owned(),
+        mesaĝo: mesaĝo.to_owned(),
         kreita_je,
         dua_gepatro: None,
     };
@@ -38,12 +38,12 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
         .konservi_komiton(&komito)
         .context("malsukcesis konservi la komiton")?;
     if let Some(nomo) = deponejo
-        .nuna_brancxo()
-        .context("malsukcesis legi la nunan branĉon")?
+        .nuna_branĉo()
+        .context("malsukcesis legi la nunan linion")?
     {
         deponejo
-            .skribi_brancxon(&nomo, &haketo)
-            .with_context(|| format!("malsukcesis ĝisdatigi la branĉon {nomo}"))?;
+            .skribi_branĉon(&nomo, &haketo)
+            .with_context(|| format!("malsukcesis ĝisdatigi la linion {nomo}"))?;
     }
     deponejo
         .skribi_head(&haketo)
