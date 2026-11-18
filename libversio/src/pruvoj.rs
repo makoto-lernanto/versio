@@ -196,9 +196,13 @@ fn pruvo_komito_seriigo() {
     kani::cover!(!havas_gepatron && !havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
-    let kodita = komito.seriigi();
+    // JUSTIFIKO: `Eraro` enhavas `Vec<String>` por la kunfandaj konfliktoj, kaj
+    // ties forĵeta gluo estas multekosta por la solvilo kvankam ĝi ne apartenas
+    // al la teoremo. `ManuallyDrop` evitigas tiun gluon; la aserto pri sukceso
+    // kaj la kadraj limoj restas plene kontrolataj.
+    let kodita = core::mem::ManuallyDrop::new(komito.seriigi());
     assert!(kodita.is_ok());
-    if let Ok(bajtoj) = kodita {
+    if let Ok(bajtoj) = &*kodita {
         assert!(bajtoj.len() >= 36);
         assert!(bajtoj.len() <= 110);
         assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
