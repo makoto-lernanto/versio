@@ -588,9 +588,11 @@ mod testoj {
             bajtoj.extend_from_slice(&[7u8; 32]);
             bajtoj.extend_from_slice(&[0, 1, b'a']);
             for indekso in 0..9 {
-                bajtoj.push((kreita_je >> (7 * indekso)) as u8 & 0x7f | 0x80);
+                let malalta = (kreita_je >> (7 * indekso)).to_le_bytes()[0];
+                bajtoj.push(malalta & 0x7f | 0x80);
             }
-            bajtoj.push((kreita_je >> 63) as u8 & 0x01);
+            let lasta = (kreita_je >> 63).to_le_bytes()[0];
+            bajtoj.push(lasta & 0x01);
             bajtoj.push(0);
 
             let komito = Komito::malseriigi(&bajtoj).unwrap();

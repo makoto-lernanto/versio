@@ -1625,7 +1625,7 @@ mod testoj {
     fn testo_brancxoj_kaj_nuna_brancxo() {
         let prov = ProvDeponejo::nova("brancxoj");
         let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
-        assert!(deponejo.brancxoj().unwrap().is_empty());
+        assert_eq!(deponejo.brancxoj().unwrap(), Vec::new());
         assert_eq!(deponejo.nuna_brancxo().unwrap(), None);
 
         let cefa = Haketo::el_bajtoj([9; 32]);
