@@ -111,9 +111,15 @@ CBMC, priskribita sube.
 
 | Pruvo | Preciza modelo kaj aserto |
 | --- | --- |
-| `pruvo_komito_seriigo` | Radika komito sen gepatroj: simbolika radika haketo, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 36 kaj 46 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
-| `pruvo_gepatra_kadro` | Unu-gepatra komito: simbolikaj radika kaj gepatra haketoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. La eliglongo devas resti inter 68 kaj 78 bajtoj, kun la radika haketo unue. |
-| `pruvo_kunfanda_kadro` | Kunfanda komito kun du gepatroj: simbolikaj radika, unua kaj dua haketoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. La eliglongo devas resti inter 100 kaj 110 bajtoj, kun la radika haketo unue. |
+| `pruvo_komito_seriigo` | Radika komito sen gepatroj: simbolika radika haketo, simbolika ĉeesto de unu-bajta mesaĝo (la enhavo estas fiksa) kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 36 kaj 46 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
+| `pruvo_gepatra_kadro` | Unu-gepatra komito: simbolika radika haketo, simbolika ĉeesto de mesaĝo kaj ajna `u64`-tempstampo; la gepatra haketo estas fiksa, ĉar neniu aserto komparas ĝiajn bajtojn. La eliglongo devas resti inter 68 kaj 78 bajtoj, kun la radika haketo unue. |
+| `pruvo_kunfanda_kadro` | Kunfanda komito kun du gepatroj: simbolika radika haketo, simbolika ĉeesto de mesaĝo kaj ajna `u64`-tempstampo; ambaŭ gepatraj haketoj estas fiksaj. La eliglongo devas resti inter 100 kaj 110 bajtoj, kun la radika haketo unue. |
+
+La kadro skribas la fiksajn kampojn (haketoj) antaŭ la varilongajn (mesaĝo,
+tempstampo). Tial ambaŭ patraj haketoj sidas ĉe konstantaj pozicioj kaj la
+variaĵoj restas malgrandaj: la kunfanda pruvo generas ĉirkaŭ 1,4 milionojn da
+klaŭzoj; kiam la dua patra haketo sekvis la varintan tempstampon, la sama
+pruvo generis 77 milionojn kaj estis nuligata de la ekzekutilo.
 
 Oni provis tri pliajn pruvojn pri `Komito::malseriigi`: rondiron de reprezentaj
 komitoj, ĉiujn gepatro-etikedojn kaj rifuzon de tranĉitaj kadroj. Eĉ kun tute
@@ -144,12 +150,14 @@ Lokaj kontroloj de ĉi tiu ŝanĝo:
 cargo fmt --all -- --check
 (exit 0)
 cargo clippy --workspace --release -- -D warnings
-Finished `release` profile [optimized] target(s) in 4.62s
+Finished `release` profile [optimized] target(s) in 1.21s
 cargo test --workspace --all-features
-test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.17s
-test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
-test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 53 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.70s
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
 ```
+
+La ceteraj testaroj de la laborloko ankaŭ estis verdaj (3, 5, 4, 4, 6 kaj 8
+testoj).
 
 La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en debug-reĝimo;
 ĝia tempolimo validas por release. Neniu nova `allow` aŭ ignorata testo estis
@@ -157,8 +165,9 @@ aldonita. La nuna CI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
 konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
 **Nuba stato: verda.** GitHub Actions-rulo
-[`43865689840`](https://github.com/makoto-lernanto/versio/actions/runs/43865689840)
-de revizio `676ecf8` sukcese finis `Lint and build` kaj ĉiujn ses
-`Kani (...)`-laborojn. La plej longa pruvo, `pruvo_arbo_kanonika`, daŭris 4
-minutojn; ĉiuj restis sub la 600-sekunda limo. Tiel la formala
-akceptokriterio de Fazo 4 estas plenumita.
+[`44302583687`](https://github.com/makoto-lernanto/versio/actions/runs/44302583687)
+de revizio `580dfb8` sukcese finis `Lint and build` kaj ĉiujn ok
+`Kani (...)`-laborojn (2026-11-18). La plej longa pruvo,
+`pruvo_arbo_kanonika`, daŭris 4 minutojn kaj 47 sekundojn; la kunfanda kadro
+daŭris 1 minuton kaj 41 sekundojn, kaj ĉiuj restis sub la 600-sekunda limo.
+Tiel la formala akceptokriterio de Fazo 4 estas plenumita.

@@ -125,7 +125,7 @@ window.TRADUKOJ_ANGLA = {
   "pruv.k5.titolo": "Bounded decode",
   "pruv.k5.teksto": "<code>pruvo_dekodo_limigita</code>: declared quantities do not exceed the fixed limits.",
   "pruv.k6.titolo": "Commit frames",
-  "pruv.k6.teksto": "<code>pruvo_komito_seriigo</code>, <code>pruvo_gepatra_kadro</code> and <code>pruvo_kunfanda_kadro</code>: symbolic hashes, message and timestamp produce a 36–46 byte root frame, a 68–78 byte single-parent frame or a 100–110 byte merge frame, with the root hash first.",
+  "pruv.k6.teksto": "<code>pruvo_komito_seriigo</code>, <code>pruvo_gepatra_kadro</code> and <code>pruvo_kunfanda_kadro</code>: a symbolic root hash, message presence and timestamp produce a 36–46 byte root frame, a 68–78 byte single-parent frame or a 100–110 byte merge frame, with the root hash first; parent hashes are fixed.",
   "pruv.limo.titolo": "What stays outside Kani",
   "pruv.limo.teksto": "Full decoding of arbitrary <code>Komito</code> frames was not proven: the UTF-8 and tree decoding paths produced more than 24,000 VCCs and over 300 seconds of symbolic execution. Unit tests and the arbitrary-byte reader proof cover that area.",
   "pruv.nuba": "The CI run for the branch feature was green: <code>Lint and build</code> and all eight <code>Kani (...)</code> jobs.",
