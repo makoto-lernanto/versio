@@ -169,6 +169,10 @@ fn pruvo_legilo_neniam_panikas() {
 
 /// La seriigilo akceptas simbolikajn kampojn kaj respektas la kadran longon.
 ///
+/// Ĉi tiu pruvo kovras ordinarajn komitojn sen dua gepatro. La kunfanda kadro
+/// havas propran pruvon [`pruvo_kunfanda_kadro`], por ke la solvilo ne devu
+/// trakti ambaŭ formojn en unu formulo.
+///
 /// La malkunigo de 16 sufiĉas: la varinta buklo havas 10 fiksajn iteraciojn,
 /// kaj la haketoj kaj la mesaĝo estas kopiataj per unu operacio.
 #[kani::proof]
@@ -176,9 +180,7 @@ fn pruvo_legilo_neniam_panikas() {
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let gepatra: [u8; HAKETA_LONGO] = kani::any();
-    let dua: [u8; HAKETA_LONGO] = kani::any();
     let havas_gepatron: bool = kani::any();
-    let havas_duan: bool = kani::any();
     let havas_mesagxon: bool = kani::any();
     let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
@@ -191,11 +193,10 @@ fn pruvo_komito_seriigo() {
             String::new()
         },
         kreita_je,
-        dua_gepatro: (havas_gepatron && havas_duan).then_some(Haketo::el_bajtoj(dua)),
+        dua_gepatro: None,
     };
 
-    kani::cover!(havas_gepatron && havas_duan);
-    kani::cover!(havas_gepatron && !havas_duan);
+    kani::cover!(havas_gepatron && havas_mesagxon);
     kani::cover!(!havas_gepatron && !havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
@@ -207,6 +208,43 @@ fn pruvo_komito_seriigo() {
     assert!(kodita.is_ok());
     if let Ok(bajtoj) = &*kodita {
         assert!(bajtoj.len() >= 36);
+        assert!(bajtoj.len() <= 78);
+        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
+    }
+}
+
+/// Kunfanda kadro kun du gepatroj restas en la difinita longa intervalo.
+#[kani::proof]
+#[kani::unwind(16)]
+fn pruvo_kunfanda_kadro() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let unua: [u8; HAKETA_LONGO] = kani::any();
+    let dua: [u8; HAKETA_LONGO] = kani::any();
+    let havas_mesagxon: bool = kani::any();
+    let signo: u8 = kani::any();
+    let kreita_je: u64 = kani::any();
+    let komito = Komito {
+        arbo: Haketo::el_bajtoj(arbo),
+        gepatro: Some(Haketo::el_bajtoj(unua)),
+        mesagxo: if havas_mesagxon {
+            String::from(char::from(signo & 0x7f))
+        } else {
+            String::new()
+        },
+        kreita_je,
+        dua_gepatro: Some(Haketo::el_bajtoj(dua)),
+    };
+
+    kani::cover!(havas_mesagxon);
+    kani::cover!(!havas_mesagxon);
+    kani::cover!(kreita_je == u64::MAX);
+    kani::cover!(kreita_je == 0);
+    // JUSTIFIKO: samkiel en `pruvo_komito_seriigo`, la forĵeta gluo de `Eraro`
+    // ne apartenas al la teoremo kaj multe kostas al la solvilo.
+    let kodita = core::mem::ManuallyDrop::new(komito.seriigi());
+    assert!(kodita.is_ok());
+    if let Ok(bajtoj) = &*kodita {
+        assert!(bajtoj.len() >= 100);
         assert!(bajtoj.len() <= 110);
         assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
     }
