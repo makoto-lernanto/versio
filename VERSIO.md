@@ -42,6 +42,7 @@ versio/
 │           ├── mod.rs
 │           ├── iniciati.rs    # vs ini (init)
 │           ├── stato.rs       # vs stato (status)
+│           ├── historio.rs    # vs historio (log)
 │           └── komitu.rs      # vs komitu (commit)
 └── .github/workflows/         # CI/CD (cargo check, test, clippy)
 ```

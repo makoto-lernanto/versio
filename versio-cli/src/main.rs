@@ -57,6 +57,13 @@ enum Komando {
     /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al HEAD.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Stato,
+    /// Montras la komitojn ekde HEAD, la plej nova unue.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Historio {
+        /// Kiom da komitoj montri (defaŭlte ĉiujn).
+        #[arg(short = 'n', long = "nombro", value_name = "NOMBRO")]
+        nombro: Option<usize>,
+    },
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Helpo,
@@ -69,6 +76,7 @@ fn main() -> anyhow::Result<()> {
         Komando::Ini => komandoj::iniciati::plenumi(),
         Komando::Komitu { noto } => komandoj::komitu::plenumi(&noto),
         Komando::Stato => komandoj::stato::plenumi(),
+        Komando::Historio { nombro } => komandoj::historio::plenumi(nombro),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();
