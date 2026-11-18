@@ -4,12 +4,12 @@ use std::io::{BufWriter, Write};
 
 use anyhow::Context;
 use libversio::deponejo::Deponejo;
-use libversio::stokado::Haketo;
+
+use super::haketo::mallongigi;
 
 const SEKUNDOJ_EN_TAGO: u64 = 86_400;
 const SEKUNDOJ_EN_HORO: u64 = 3_600;
 const SEKUNDOJ_EN_MINUTO: u64 = 60;
-const MALLONGA_LONGO: usize = 12;
 
 /// Plenumas la komandon kun la donita limo da komitoj.
 pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
@@ -46,11 +46,6 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
     }
     eligo.flush()?;
     Ok(())
-}
-
-/// La unuaj dek du deksesumaj signoj sufiĉas por la homa legado.
-fn mallongigi(haketo: &Haketo) -> String {
-    haketo.to_string().chars().take(MALLONGA_LONGO).collect()
 }
 
 /// Kunpremas la komitan mesaĝon al unu linio.
@@ -104,7 +99,8 @@ fn civila_dato(tagoj: u64) -> (u64, u64, u64) {
 
 #[cfg(test)]
 mod testoj {
-    use super::{formati_tempon, mallongigi, unulinia};
+    use super::super::haketo::mallongigi;
+    use super::{formati_tempon, unulinia};
     use libversio::stokado::Haketo;
 
     #[test]

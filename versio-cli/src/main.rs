@@ -74,6 +74,19 @@ enum Komando {
         #[arg(short = 'f', long = "perforta")]
         perforta: bool,
     },
+    /// Kreas branĉon ĉe HEAD aŭ ĉe la donita komito.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Brancxo {
+        /// Nomo de la nova branĉo.
+        #[arg(value_name = "NOMO")]
+        nomo: String,
+        /// Komito, ĉe kiu krei la branĉon (defaŭlte HEAD).
+        #[arg(value_name = "HAKETO")]
+        bazo: Option<String>,
+    },
+    /// Listigas la branĉojn kaj markas la nunan.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Brancxoj,
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Helpo,
@@ -88,6 +101,8 @@ fn main() -> anyhow::Result<()> {
         Komando::Stato => komandoj::stato::plenumi(),
         Komando::Historio { nombro } => komandoj::historio::plenumi(nombro),
         Komando::Eltiri { haketo, perforta } => komandoj::eltiri::plenumi(&haketo, perforta),
+        Komando::Brancxo { nomo, bazo } => komandoj::brancxo::plenumi(&nomo, bazo.as_deref()),
+        Komando::Brancxoj => komandoj::brancxoj::plenumi(),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();

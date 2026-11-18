@@ -28,6 +28,10 @@ pub const HEAD_DOSIERO: &str = "HEAD";
 /// Nomo de la indeksa dosiero (la metadatuma kaŝmemoro).
 pub const INDEKSO_DOSIERO: &str = "indekso";
 
+const REFS_DOSIERUJO: &str = "refs";
+const BRANCHOJ_DOSIERUJO: &str = "heads";
+const NUNA_BRANCHO_DOSIERO: &str = "brancxo";
+
 /// Dosieroj modifitaj malpli ol tiom antaŭ la skanado ne estas kaŝmemorataj.
 ///
 /// Racy-git-problemo: dosiersistemaj tempstampoj havas krudan precizecon, do
@@ -180,6 +184,128 @@ impl Deponejo {
             &self.metadatumoj().join(HEAD_DOSIERO),
             haketo.to_string().as_bytes(),
         )
+    }
+
+    fn brancxo_vojo(&self, nomo: &str) -> PathBuf {
+        self.metadatumoj()
+            .join(REFS_DOSIERUJO)
+            .join(BRANCHOJ_DOSIERUJO)
+            .join(nomo)
+    }
+
+    /// Legas la celan komiton de la donita branĉo; `None` signifas, ke ĝi
+    /// ankoraŭ ne ekzistas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
+    /// aŭ dosiersisteman eraron.
+    pub fn legi_brancxon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
+        validi_brancxan_nomon(nomo)?;
+        match fs::read_to_string(self.brancxo_vojo(nomo)) {
+            Ok(teksto) => Ok(Some(teksto.trim().parse()?)),
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(eraro) => Err(eraro.into()),
+        }
+    }
+
+    /// Skribas la celan komiton de la donita branĉo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
+    /// aŭ dosiersisteman eraron.
+    pub fn skribi_brancxon(&self, nomo: &str, haketo: &Haketo) -> Result<(), Eraro> {
+        validi_brancxan_nomon(nomo)?;
+        fs::create_dir_all(
+            self.metadatumoj()
+                .join(REFS_DOSIERUJO)
+                .join(BRANCHOJ_DOSIERUJO),
+        )?;
+        skribi_atome(&self.brancxo_vojo(nomo), haketo.to_string().as_bytes())
+    }
+
+    /// Listigas la branĉojn kaj iliajn celajn komitojn, ordigitajn laŭ nomo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman aŭ haketan eraron por difektita referenco.
+    pub fn brancxoj(&self) -> Result<Vec<(String, Haketo)>, Eraro> {
+        let dosierujo = self
+            .metadatumoj()
+            .join(REFS_DOSIERUJO)
+            .join(BRANCHOJ_DOSIERUJO);
+        let eniroj = match fs::read_dir(&dosierujo) {
+            Ok(eniroj) => eniroj,
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(eraro) => return Err(eraro.into()),
+        };
+
+        let mut brancxoj = Vec::new();
+        for eniro in eniroj {
+            let eniro = eniro?;
+            if !eniro.file_type()?.is_file() {
+                continue;
+            }
+            let Some(nomo) = eniro.file_name().to_str().map(str::to_owned) else {
+                continue;
+            };
+            // Provizoraj dosieroj de la atoma skribo komenciĝas per punkto.
+            if nomo.starts_with('.') {
+                continue;
+            }
+            let haketo = fs::read_to_string(eniro.path())?.trim().parse()?;
+            brancxoj.push((nomo, haketo));
+        }
+        brancxoj.sort_unstable_by(|unu, du| unu.0.cmp(&du.0));
+        Ok(brancxoj)
+    }
+
+    /// La nomo de la nuna branĉo; `None` signifas detaĉitan `HEAD`.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron.
+    pub fn nuna_brancxo(&self) -> Result<Option<String>, Eraro> {
+        match fs::read_to_string(self.metadatumoj().join(NUNA_BRANCHO_DOSIERO)) {
+            Ok(teksto) => {
+                let nomo = teksto.trim();
+                if nomo.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(nomo.to_owned()))
+                }
+            }
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(eraro) => Err(eraro.into()),
+        }
+    }
+
+    /// Memorigas, ke `HEAD` sekvas la donitan branĉon.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
+    /// aŭ dosiersisteman eraron.
+    pub fn agordi_nunan_brancxon(&self, nomo: &str) -> Result<(), Eraro> {
+        validi_brancxan_nomon(nomo)?;
+        skribi_atome(
+            &self.metadatumoj().join(NUNA_BRANCHO_DOSIERO),
+            nomo.as_bytes(),
+        )
+    }
+
+    /// Forigas la memoron pri la nuna branĉo (detaĉita `HEAD`).
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman eraron, escepte de mankanta dosiero.
+    pub fn forigi_nunan_brancxon(&self) -> Result<(), Eraro> {
+        match fs::remove_file(self.metadatumoj().join(NUNA_BRANCHO_DOSIERO)) {
+            Ok(()) => Ok(()),
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(eraro) => Err(eraro.into()),
+        }
     }
 
     /// Konservas arbon kaj redonas ĝian haketon.
@@ -489,6 +615,16 @@ impl Deponejo {
     }
 }
 
+/// Validas branĉan nomon: ĝi estas unu sekura voja komponanto, kiu ne
+/// komenciĝas per punkto (tiel ĝi ne kolizias kun provizoraj dosieroj).
+fn validi_brancxan_nomon(nomo: &str) -> Result<(), Eraro> {
+    validi_komponanton(nomo)?;
+    if nomo.starts_with('.') || nomo.chars().any(char::is_whitespace) {
+        return Err(Eraro::NevalidaVojaKomponanto);
+    }
+    Ok(())
+}
+
 /// Kunigas relativan vojon kun plia komponanto, respektante [`MAKSIMA_VOJO`].
 fn kunigi(prefikso: &str, nomo: &str) -> Result<String, Eraro> {
     let vojo = if prefikso.is_empty() {
@@ -707,7 +843,7 @@ mod testoj {
 
     use super::{Deponejo, Eraro, HEAD_DOSIERO, INDEKSO_DOSIERO, OBJEKTUJO, Stato, VS_DOSIERUJO};
     use crate::objektoj::{ArbaEnskribo, Komito};
-    use crate::stokado::Konservilo;
+    use crate::stokado::{Haketo, Konservilo};
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
@@ -1114,5 +1250,43 @@ mod testoj {
         deponejo.eltiri(&dua).unwrap();
         assert!(dosiero.is_dir());
         assert_eq!(fs::read(dosiero.join("b.txt")).unwrap(), b"nesto");
+    }
+
+    #[test]
+    fn testo_brancxoj_kaj_nuna_brancxo() {
+        let prov = ProvDeponejo::nova("brancxoj");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        assert!(deponejo.brancxoj().unwrap().is_empty());
+        assert_eq!(deponejo.nuna_brancxo().unwrap(), None);
+
+        let cefa = Haketo::el_bajtoj([9; 32]);
+        deponejo.skribi_brancxon("ĉefa", &cefa).unwrap();
+        deponejo
+            .skribi_brancxon("eksperimento", &Haketo::el_bajtoj([8; 32]))
+            .unwrap();
+        assert_eq!(deponejo.legi_brancxon("ĉefa").unwrap(), Some(cefa));
+        let brancxoj = deponejo.brancxoj().unwrap();
+        assert_eq!(
+            brancxoj,
+            [
+                ("eksperimento".to_owned(), Haketo::el_bajtoj([8; 32])),
+                ("ĉefa".to_owned(), cefa)
+            ]
+        );
+
+        deponejo.agordi_nunan_brancxon("ĉefa").unwrap();
+        assert_eq!(deponejo.nuna_brancxo().unwrap().as_deref(), Some("ĉefa"));
+        deponejo.forigi_nunan_brancxon().unwrap();
+        assert_eq!(deponejo.nuna_brancxo().unwrap(), None);
+
+        for malvalida in ["", "../fuĝo", ".kaŝita", "a/b"] {
+            assert!(
+                matches!(
+                    deponejo.skribi_brancxon(malvalida, &cefa),
+                    Err(Eraro::NevalidaVojaKomponanto)
+                ),
+                "la nomo «{malvalida}» devus esti rifuzita"
+            );
+        }
     }
 }

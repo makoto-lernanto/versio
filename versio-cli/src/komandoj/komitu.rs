@@ -36,6 +36,14 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
     let haketo = deponejo
         .konservi_komiton(&komito)
         .context("malsukcesis konservi la komiton")?;
+    if let Some(nomo) = deponejo
+        .nuna_brancxo()
+        .context("malsukcesis legi la nunan branĉon")?
+    {
+        deponejo
+            .skribi_brancxon(&nomo, &haketo)
+            .with_context(|| format!("malsukcesis ĝisdatigi la branĉon {nomo}"))?;
+    }
     deponejo
         .skribi_head(&haketo)
         .context("malsukcesis ĝisdatigi HEAD")?;

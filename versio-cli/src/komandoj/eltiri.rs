@@ -1,19 +1,18 @@
-//! `vs eltiri`: restarigas la laborspacon al la arbo de komito.
+//! `vs eltiri`: restarigas la laborspacon al komito aŭ branĉo.
 
 use anyhow::Context;
 use libversio::Eraro;
 use libversio::deponejo::Deponejo;
-use libversio::stokado::{HAKETA_LONGO, Haketo};
+use libversio::stokado::Haketo;
 
-const PLENA_LONGO: usize = HAKETA_LONGO.saturating_mul(2);
-const MINIMUMA_LONGO: usize = 4;
+use super::haketo;
 
-/// Plenumas la komandon kun la celata komito kaj la perforta opcio.
-pub(crate) fn plenumi(haketo: &str, perforta: bool) -> anyhow::Result<()> {
+/// Plenumas la komandon kun la celata komito aŭ branĉo kaj la perforta opcio.
+pub(crate) fn plenumi(celo: &str, perforta: bool) -> anyhow::Result<()> {
     let radiko = std::env::current_dir().context("ne povas determini la nunan dosierujon")?;
     let deponejo =
         Deponejo::malfermi(radiko).context("la nuna dosierujo ne estas Versio-deponejo")?;
-    let haketo = solvi_haketon(&deponejo, haketo)?;
+    let (haketo, brancxo) = solvi_celon(&deponejo, celo)?;
 
     if !perforta {
         let stato = deponejo
@@ -28,48 +27,35 @@ pub(crate) fn plenumi(haketo: &str, perforta: bool) -> anyhow::Result<()> {
     deponejo
         .eltiri(&haketo)
         .context("malsukcesis restarigi la laborspacon")?;
+    if let Some(nomo) = &brancxo {
+        deponejo
+            .agordi_nunan_brancxon(nomo)
+            .context("malsukcesis agordi la nunan branĉon")?;
+    } else {
+        deponejo
+            .forigi_nunan_brancxon()
+            .context("malsukcesis forigi la nunan branĉon")?;
+    }
     deponejo
         .skribi_head(&haketo)
         .context("malsukcesis ĝisdatigi HEAD")?;
 
-    println!("Laborspaco restarigita al {haketo}");
+    if let Some(nomo) = brancxo {
+        println!("Sur branĉo {nomo} ({haketo})");
+    } else {
+        println!("Laborspaco restarigita al {haketo}");
+    }
     Ok(())
 }
 
-/// Solvas plenan aŭ unikan mallongan haketon en la objektstokejo.
-fn solvi_haketon(deponejo: &Deponejo, teksto: &str) -> anyhow::Result<Haketo> {
-    let teksto = teksto.trim().to_ascii_lowercase();
-    anyhow::ensure!(
-        (MINIMUMA_LONGO..=PLENA_LONGO).contains(&teksto.len())
-            && teksto.bytes().all(|bajto| bajto.is_ascii_hexdigit()),
-        "nevalida haketo: «{teksto}»"
-    );
-    if teksto.len() == PLENA_LONGO {
-        return Ok(teksto.parse::<Haketo>()?);
+/// Solvas branĉan nomon aŭ komitan haketon; branĉo havas prioritaton.
+fn solvi_celon(deponejo: &Deponejo, celo: &str) -> anyhow::Result<(Haketo, Option<String>)> {
+    let nomo = celo.trim();
+    match deponejo.legi_brancxon(nomo) {
+        Ok(Some(haketo)) => return Ok((haketo, Some(nomo.to_owned()))),
+        // Ne ekzistanta aŭ nevalida branĉa nomo signifas, ke la celo estas haketo.
+        Ok(None) | Err(Eraro::NevalidaVojaKomponanto) => {}
+        Err(eraro) => return Err(eraro.into()),
     }
-
-    let mut trovitaj = Vec::new();
-    for haketo in deponejo.stokejo().haketoj()? {
-        let plena = haketo.to_string();
-        if plena
-            .get(..teksto.len())
-            .is_none_or(|prefikso| prefikso != teksto.as_str())
-        {
-            continue;
-        }
-        match deponejo.legi_komiton(&haketo) {
-            Ok(_) => trovitaj.push(haketo),
-            // Bloboj kaj arboj ne malseriigeblas kiel komitoj.
-            Err(
-                Eraro::Malseriigo(_) | Eraro::NevalidaDatumo { .. } | Eraro::TrolongaEnigo { .. },
-            ) => {}
-            Err(eraro) => return Err(eraro.into()),
-        }
-    }
-
-    match trovitaj.as_slice() {
-        [] => anyhow::bail!("neniu komito kongruas kun «{teksto}»"),
-        [ununura] => Ok(*ununura),
-        _ => anyhow::bail!("la mallonga haketo «{teksto}» estas ambigua"),
-    }
+    Ok((haketo::solvi(deponejo, nomo)?, None))
 }
