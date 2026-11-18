@@ -272,6 +272,81 @@ fn pruvo_kunfanda_kadro() {
     kontroli_kadron(&komito, &arbo, 100, 110);
 }
 
+/// DIAGNOZO: radika kadro sen la simbollonga mesaĝo.
+///
+/// La mesaĝo estas malplena, do la nura simbollonga parto restas la varinto de
+/// la tempstampo. Se ĉi tiu pruvo rapidas, la kosto venas de la mesaĝa kopio.
+#[kani::proof]
+#[kani::unwind(40)]
+fn diagnozo_senfina_mesagxo() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let kreita_je: u64 = kani::any();
+    let komito = Komito {
+        arbo: Haketo::el_bajtoj(arbo),
+        gepatro: None,
+        mesagxo: String::new(),
+        kreita_je,
+        dua_gepatro: None,
+    };
+
+    kani::cover!(kreita_je == u64::MAX);
+    kani::cover!(kreita_je == 0);
+    kontroli_kadron(&komito, &arbo, 36, 45);
+}
+
+/// DIAGNOZO: radika kadro kun fiksa tempstampo.
+///
+/// La tempstampo estas nulo, do la mesaĝa longo restas la nura simbollonga
+/// parto. Se ĉi tiu pruvo rapidas, la kosto venas de la tempstampa varinto.
+#[kani::proof]
+#[kani::unwind(40)]
+fn diagnozo_senfina_tempo() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let havas_mesagxon: bool = kani::any();
+    let komito = Komito {
+        arbo: Haketo::el_bajtoj(arbo),
+        gepatro: None,
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
+        kreita_je: 0,
+        dua_gepatro: None,
+    };
+
+    kani::cover!(havas_mesagxon);
+    kani::cover!(!havas_mesagxon);
+    kontroli_kadron(&komito, &arbo, 36, 37);
+}
+
+/// DIAGNOZO: la sama radika kadro tra `postcard`-serde.
+#[derive(serde::Serialize)]
+struct PostcardProvo {
+    arbo: Haketo,
+    mesagxo: String,
+    kreita_je: u64,
+}
+
+/// DIAGNOZO: kodiga komparo kontraŭ `postcard`.
+#[kani::proof]
+#[kani::unwind(40)]
+fn diagnozo_postcard() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let havas_mesagxon: bool = kani::any();
+    let kreita_je: u64 = kani::any();
+    let provo = PostcardProvo {
+        arbo: Haketo::el_bajtoj(arbo),
+        mesagxo: prova_mesagxo(havas_mesagxon, 42),
+        kreita_je,
+    };
+
+    let kodita =
+        core::mem::ManuallyDrop::new(postcard::to_allocvec(&provo).map_err(Eraro::Seriigo));
+    assert!(kodita.is_ok());
+    if let Ok(bajtoj) = &*kodita {
+        assert!(bajtoj.len() >= 34);
+        assert!(bajtoj.len() <= 45);
+        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
+    }
+}
+
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.
 #[kani::proof]
 #[kani::unwind(4)]
