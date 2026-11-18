@@ -64,6 +64,16 @@ enum Komando {
         #[arg(short = 'n', long = "nombro", value_name = "NOMBRO")]
         nombro: Option<usize>,
     },
+    /// Restarigas la laborspacon al la arbo de la donita komito.
+    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    Eltiri {
+        /// Plena aŭ mallonga haketo de la celata komito.
+        #[arg(value_name = "HAKETO")]
+        haketo: String,
+        /// Elfaras la eltiron eĉ kun nekomititaj ŝanĝoj.
+        #[arg(short = 'f', long = "perforta")]
+        perforta: bool,
+    },
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
     Helpo,
@@ -77,6 +87,7 @@ fn main() -> anyhow::Result<()> {
         Komando::Komitu { noto } => komandoj::komitu::plenumi(&noto),
         Komando::Stato => komandoj::stato::plenumi(),
         Komando::Historio { nombro } => komandoj::historio::plenumi(nombro),
+        Komando::Eltiri { haketo, perforta } => komandoj::eltiri::plenumi(&haketo, perforta),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();

@@ -84,7 +84,7 @@ window.TRADUKOJ_ANGLA = {
   "fluo.restarigi.teksto": "The status output is still available.",
   "ark.titolo": "Architecture",
   "ark.teksto": "Five layers with a narrow API. The core does not know about the terminal; the CLI does not know about the hash format.",
-  "ark.t1.teksto": "Command-line entry point: <code>ini</code>, <code>stato</code>, <code>historio</code>, <code>komitu</code>, <code>helpo</code>; every output is in Esperanto.",
+  "ark.t1.teksto": "Command-line entry point: <code>ini</code>, <code>stato</code>, <code>historio</code>, <code>komitu</code>, <code>eltiri</code>, <code>helpo</code>; every output is in Esperanto.",
   "ark.t2.teksto": "Translates arguments into core operations and handles error messages and output format.",
   "ark.t3.teksto": "Data models, path validation, encoding, repository status and index.",
   "ark.t4.titolo": "Storage",

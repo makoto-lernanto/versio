@@ -244,6 +244,27 @@ mod dosiera {
             self.vojo(haketo).is_file()
         }
 
+        /// Listigas la haketojn de ĉiuj konservitaj objektoj, ordigitajn.
+        ///
+        /// # Errors
+        ///
+        /// Redonas dosiersisteman eraron, se la objekta dosierujo ne legeblas.
+        pub fn haketoj(&self) -> Result<Vec<Haketo>, Eraro> {
+            let mut haketoj = Vec::new();
+            for eniro in fs::read_dir(&self.dosierujo)? {
+                let eniro = eniro?;
+                let nomo = eniro.file_name();
+                let Some(tigo) = nomo.to_str().and_then(|nomo| nomo.strip_suffix(".lz4")) else {
+                    continue;
+                };
+                if let Ok(haketo) = tigo.parse() {
+                    haketoj.push(haketo);
+                }
+            }
+            haketoj.sort_unstable();
+            Ok(haketoj)
+        }
+
         fn vojo(&self, haketo: &Haketo) -> PathBuf {
             self.dosierujo.join(format!("{haketo}.lz4"))
         }

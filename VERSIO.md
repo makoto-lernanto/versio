@@ -43,6 +43,7 @@ versio/
 │           ├── iniciati.rs    # vs ini (init)
 │           ├── stato.rs       # vs stato (status)
 │           ├── historio.rs    # vs historio (log)
+│           ├── eltiri.rs      # vs eltiri (checkout)
 │           └── komitu.rs      # vs komitu (commit)
 └── .github/workflows/         # CI/CD (cargo check, test, clippy)
 ```

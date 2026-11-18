@@ -1,5 +1,6 @@
 //! La subkomandoj de `vs`.
 
+pub(crate) mod eltiri;
 pub(crate) mod historio;
 pub(crate) mod iniciati;
 pub(crate) mod komitu;

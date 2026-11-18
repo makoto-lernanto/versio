@@ -218,6 +218,70 @@ impl Deponejo {
         Komito::malseriigi(&self.stokejo.ricevi(haketo)?)
     }
 
+    /// Rekonstruas la laborspacon el la arbo de la donita komito.
+    ///
+    /// Dosieroj, kies enhavo jam kongruas, restas netuŝitaj; la ceteraj estas
+    /// skribataj el la stokejo. Dosieroj, kiuj ne apartenas al la celata arbo,
+    /// estas forigitaj, kaj malplenaj dosierujoj estas forprenitaj. La indeksa
+    /// kaŝmemoro estas forviŝita, ĉar la metadatumoj de la laborspaco ŝanĝiĝis.
+    /// `HEAD` ne estas ĝisdatigata; tion faras la alvokanto.
+    ///
+    /// # Errors
+    ///
+    /// Redonas stokejan, malseriigan aŭ dosiersisteman eraron.
+    pub fn eltiri(&self, komito: &Haketo) -> Result<(), Eraro> {
+        let arbo = self.legi_komiton(komito)?.arbo;
+        let celo: HashMap<String, Haketo> = self.platigi_arbon(&arbo, "")?.into_iter().collect();
+
+        let limo = SystemTime::now()
+            .checked_sub(FRESXA_MARGENO)
+            .and_then(nanosekundoj);
+        let indekso = self.legi_indekson()?;
+        let laboraj = skani(&self.radiko, "")?
+            .into_par_iter()
+            .map(|dosiero| haketi_laboran(dosiero, &indekso, limo))
+            .collect::<Result<Vec<_>, Eraro>>()?;
+        let nunaj: HashMap<&str, Haketo> = laboraj
+            .iter()
+            .map(|dosiero| (dosiero.vojo.as_str(), dosiero.haketo))
+            .collect();
+
+        // Unue forigu la superfluajn dosierojn, por ke dosiero kaj dosierujo
+        // kun la sama nomo ne koliziu dum la skribado.
+        for dosiero in &laboraj {
+            if celo.contains_key(&dosiero.vojo) {
+                continue;
+            }
+            match fs::remove_file(self.radiko.join(&dosiero.vojo)) {
+                Ok(()) => {}
+                Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => {}
+                Err(eraro) => return Err(eraro.into()),
+            }
+        }
+        forigi_malplenajn_dosierujojn(&self.radiko)?;
+
+        celo.par_iter()
+            .map(|(vojo, haketo)| {
+                if nunaj.get(vojo.as_str()) == Some(haketo) {
+                    return Ok(());
+                }
+                let datumoj = self.stokejo.ricevi(haketo)?;
+                let absoluta = self.radiko.join(vojo);
+                if let Some(parent) = absoluta.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                fs::write(&absoluta, datumoj)?;
+                Ok(())
+            })
+            .collect::<Result<Vec<()>, Eraro>>()?;
+
+        match fs::remove_file(self.metadatumoj().join(INDEKSO_DOSIERO)) {
+            Ok(()) => Ok(()),
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(eraro) => Err(eraro.into()),
+        }
+    }
+
     /// Kaptas la nunan laborspacon kaj redonas la haketon de la radika arbo.
     ///
     /// La skanado, la haketado kaj la arba konstruo okazas paralele. Dosieroj,
@@ -462,6 +526,22 @@ fn nodo_el_dosieroj(dosieroj: &[HaketitaDosiero]) -> Nodo {
 fn nanosekundoj(tempo: SystemTime) -> Option<u64> {
     let dauxro = tempo.duration_since(UNIX_EPOCH).ok()?;
     u64::try_from(dauxro.as_nanos()).ok()
+}
+
+/// Rekursie forprenas malplenajn dosierujojn, preterlasante `.vs`.
+fn forigi_malplenajn_dosierujojn(dosierujo: &Path) -> Result<(), Eraro> {
+    for eniro in fs::read_dir(dosierujo)? {
+        let eniro = eniro?;
+        if !eniro.file_type()?.is_dir() || eniro.file_name().to_string_lossy() == VS_DOSIERUJO {
+            continue;
+        }
+        let vojo = eniro.path();
+        forigi_malplenajn_dosierujojn(&vojo)?;
+        if fs::read_dir(&vojo)?.next().is_none() {
+            fs::remove_dir(&vojo)?;
+        }
+    }
+    Ok(())
 }
 
 /// Rekursie kaj paralele listigas la regulajn dosierojn sub `dosierujo`.
@@ -965,5 +1045,74 @@ mod testoj {
         vojoj.sort_unstable();
         assert_eq!(vojoj, ["a/1.txt", "a/b/2.txt", "a/b/c/3.txt"]);
         assert!(deponejo.stato().unwrap().estas_pura());
+    }
+
+    #[test]
+    fn testo_eltiri_restarigas_arbon_kaj_forigas_la_indekson() {
+        let prov = ProvDeponejo::nova("eltiri");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        let dosiero = prov.radiko.join("a.txt");
+        fs::write(&dosiero, b"unua").unwrap();
+        malnovigi(&dosiero);
+        fs::create_dir(prov.radiko.join("sub")).unwrap();
+        let suba = prov.radiko.join("sub").join("b.txt");
+        fs::write(&suba, b"b").unwrap();
+        malnovigi(&suba);
+        komiti(&deponejo);
+        let unua = deponejo.legi_head().unwrap().unwrap();
+
+        fs::write(&dosiero, b"dua").unwrap();
+        fs::create_dir(prov.radiko.join("aldona")).unwrap();
+        fs::write(prov.radiko.join("aldona").join("nova.txt"), b"nova").unwrap();
+        komiti(&deponejo);
+        assert!(
+            prov.radiko
+                .join(VS_DOSIERUJO)
+                .join(INDEKSO_DOSIERO)
+                .is_file(),
+            "la indekso devas ekzisti antaŭ la eltiro"
+        );
+
+        deponejo.eltiri(&unua).unwrap();
+
+        assert_eq!(fs::read(&dosiero).unwrap(), b"unua");
+        assert_eq!(fs::read(&suba).unwrap(), b"b");
+        assert!(
+            !prov.radiko.join("aldona").exists(),
+            "la malplena dosierujo devas esti forprenita"
+        );
+        assert!(
+            !prov
+                .radiko
+                .join(VS_DOSIERUJO)
+                .join(INDEKSO_DOSIERO)
+                .exists(),
+            "la malnova indekso devas esti forviŝita"
+        );
+    }
+
+    #[test]
+    fn testo_eltiri_traktas_dosiernoman_kolizion() {
+        let prov = ProvDeponejo::nova("eltiri-kolizio");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        let dosiero = prov.radiko.join("a");
+        fs::write(&dosiero, b"dosiero").unwrap();
+        malnovigi(&dosiero);
+        komiti(&deponejo);
+        let unua = deponejo.legi_head().unwrap().unwrap();
+
+        fs::remove_file(&dosiero).unwrap();
+        fs::create_dir(&dosiero).unwrap();
+        fs::write(dosiero.join("b.txt"), b"nesto").unwrap();
+        komiti(&deponejo);
+        let dua = deponejo.legi_head().unwrap().unwrap();
+
+        deponejo.eltiri(&unua).unwrap();
+        assert!(dosiero.is_file());
+        assert_eq!(fs::read(&dosiero).unwrap(), b"dosiero");
+
+        deponejo.eltiri(&dua).unwrap();
+        assert!(dosiero.is_dir());
+        assert_eq!(fs::read(dosiero.join("b.txt")).unwrap(), b"nesto");
     }
 }
