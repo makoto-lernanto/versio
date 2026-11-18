@@ -68,6 +68,7 @@ jobs:
           - pruvo_komito_seriigo
           - pruvo_gepatra_kadro
           - pruvo_kunfanda_kadro
+          - pruvo_kunfanda_mesagxo
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
