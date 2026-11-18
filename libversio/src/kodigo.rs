@@ -12,20 +12,21 @@ use alloc::vec::Vec;
 use crate::eraroj::Eraro;
 use crate::stokado::{HAKETA_LONGO, Haketo};
 
-/// Kapacito sufiĉa por la plej longa komita kadro (110 bajtoj).
-const SKRIBA_KAPACITO: usize = 128;
-
 /// Skribilo por la kadro, kiun [`Legilo`] malĉifras.
 pub(crate) struct Skribilo {
     bajtoj: Vec<u8>,
 }
 
 impl Skribilo {
-    /// Kreas skribilon kun antaŭrezervita kapacito.
+    /// Kreas malplenan skribilon.
+    ///
+    /// JUSTIFIKO: antaŭrezervita 128-bajta bufro ŝajne simpligas la kodigon,
+    /// sed ĝi multege malhelpas la solvilon: ĉe du simbollongaj kampoj la
+    /// kreska kontrolo de `Vec::push` fariĝas nedecidebla kaj la pruvo
+    /// superas la 600-sekundan buĝeton. Kresko laŭ postulo kiel ĉe
+    /// `postcard` restas malmultekosta por la solvilo.
     pub(crate) fn nova() -> Self {
-        Self {
-            bajtoj: Vec::with_capacity(SKRIBA_KAPACITO),
-        }
+        Self { bajtoj: Vec::new() }
     }
 
     /// Aldonas unu `u8`-valoron.
