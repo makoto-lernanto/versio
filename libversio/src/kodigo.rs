@@ -12,15 +12,20 @@ use alloc::vec::Vec;
 use crate::eraroj::Eraro;
 use crate::stokado::{HAKETA_LONGO, Haketo};
 
+/// Kapacito sufiĉa por la plej longa komita kadro (110 bajtoj).
+const SKRIBA_KAPACITO: usize = 128;
+
 /// Skribilo por la kadro, kiun [`Legilo`] malĉifras.
 pub(crate) struct Skribilo {
     bajtoj: Vec<u8>,
 }
 
 impl Skribilo {
-    /// Kreas malplenan skribilon.
-    pub(crate) const fn nova() -> Self {
-        Self { bajtoj: Vec::new() }
+    /// Kreas skribilon kun antaŭrezervita kapacito.
+    pub(crate) fn nova() -> Self {
+        Self {
+            bajtoj: Vec::with_capacity(SKRIBA_KAPACITO),
+        }
     }
 
     /// Aldonas unu `u8`-valoron.
@@ -35,12 +40,15 @@ impl Skribilo {
 
     /// Aldonas `u64`-valoron kiel varintan nombron.
     pub(crate) fn u64(&mut self, mut valoro: u64) {
-        while valoro >= 0x80 {
+        for _ in 0..10 {
             let malalta = valoro.to_le_bytes()[0] & 0x7f;
+            if valoro < 0x80 {
+                self.bajtoj.push(malalta);
+                return;
+            }
             self.bajtoj.push(malalta | 0x80);
             valoro >>= 7;
         }
-        self.bajtoj.push(valoro.to_le_bytes()[0]);
     }
 
     /// Aldonas haketon kiel fiksajn [`HAKETA_LONGO`] bajtojn.

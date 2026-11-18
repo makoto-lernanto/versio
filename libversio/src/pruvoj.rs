@@ -168,8 +168,11 @@ fn pruvo_legilo_neniam_panikas() {
 }
 
 /// La seriigilo akceptas simbolikajn kampojn kaj respektas la kadran longon.
+///
+/// La malkunigo de 16 sufiĉas: la varinta buklo havas 10 fiksajn iteraciojn,
+/// kaj la haketoj kaj la mesaĝo estas kopiataj per unu operacio.
 #[kani::proof]
-#[kani::unwind(40)]
+#[kani::unwind(16)]
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
     let gepatra: [u8; HAKETA_LONGO] = kani::any();
