@@ -21,7 +21,7 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
     let arbo = deponejo
         .kapti_arbon()
         .context("malsukcesis legi la laborspacon")?;
-    let gepatro = deponejo.legi_head().context("malsukcesis legi HEAD")?;
+    let gepatro = deponejo.legi_kapon().context("malsukcesis legi KAPO")?;
     let kreita_je = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
@@ -46,8 +46,8 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
             .with_context(|| format!("malsukcesis ĝisdatigi la linion {nomo}"))?;
     }
     deponejo
-        .skribi_head(&haketo)
-        .context("malsukcesis ĝisdatigi HEAD")?;
+        .skribi_kapon(&haketo)
+        .context("malsukcesis ĝisdatigi KAPO")?;
 
     println!("Komito {haketo}");
     Ok(())

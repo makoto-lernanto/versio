@@ -11,9 +11,9 @@ use alloc::vec::Vec;
 
 use libversio::{Arbo, haketi};
 
-/// Vokas la purajn API-ojn de `libversio`: konstrui arbon, seriigi, haketi.
+/// Vokas la purajn interfacojn de `libversio`: konstrui arbon, seriigi, haketi.
 ///
-/// La funkcio ekzistas nur por devigi la kompilon tra la tuta API-ĉeno
+/// La funkcio ekzistas nur por devigi la kompilon tra la tuta interfaca ĉeno
 /// sen `std`.
 #[must_use]
 pub fn sentineleto() -> usize {

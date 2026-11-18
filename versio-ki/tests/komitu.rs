@@ -28,7 +28,7 @@ impl ProvDosierujo {
     fn nova(etikedo: &str) -> Self {
         let nombro = PROVOJ.fetch_add(1, Ordering::Relaxed);
         let vojo = std::env::temp_dir().join(format!(
-            "versio-cli-{etikedo}-{}-{nombro}",
+            "versio-ki-{etikedo}-{}-{nombro}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&vojo);
@@ -65,14 +65,14 @@ fn testo_iniciati_kaj_komitu() {
     let vs = prov.vojo.join(".vs");
 
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
-    assert!(vs.join("HEAD").is_file());
+    assert!(vs.join("KAPO").is_file());
     assert!(vs.join("objektoj").is_dir());
 
     std::fs::write(prov.vojo.join("testo.txt"), b"saluton\n").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua komito"]));
 
-    let head = std::fs::read_to_string(vs.join("HEAD")).unwrap();
-    let haketo: Haketo = head.trim().parse().expect("HEAD enhavu haketon");
+    let kapo = std::fs::read_to_string(vs.join("KAPO")).unwrap();
+    let haketo: Haketo = kapo.trim().parse().expect("KAPO enhavu haketon");
 
     let deponejo = Deponejo::malfermi(prov.vojo.clone()).unwrap();
     let komito = deponejo.legi_komiton(&haketo).unwrap();
@@ -108,7 +108,7 @@ fn testo_dua_komito_havas_gepatron() {
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("testo.txt"), b"unua").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Unua"]));
-    let unua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
+    let unua: Haketo = std::fs::read_to_string(vs.join("KAPO"))
         .unwrap()
         .trim()
         .parse()
@@ -116,7 +116,7 @@ fn testo_dua_komito_havas_gepatron() {
 
     std::fs::write(prov.vojo.join("testo.txt"), b"dua").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Dua"]));
-    let dua: Haketo = std::fs::read_to_string(vs.join("HEAD"))
+    let dua: Haketo = std::fs::read_to_string(vs.join("KAPO"))
         .unwrap()
         .trim()
         .parse()

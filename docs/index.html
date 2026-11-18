@@ -110,7 +110,7 @@
         </div>
         <p class="heroo-noto">
           <code>vs ini</code> · <code>vs stato</code> · <code>vs historio</code> · <code>vs kunfandi</code> · <code>vs komitu --noto</code>
-          <span data-t="hero.noto">— la CLI mem restas Esperanta.</span>
+          <span data-t="hero.noto">— la KI mem restas Esperanta.</span>
         </p>
       </div>
 
@@ -159,7 +159,7 @@
           </div>
           <div class="terminala-piedo">
             <span class="stato-punkto" aria-hidden="true"></span>
-            <span data-t="hero.terminala.noto">La eligoj montras la realan Esperantan CLI-tekston.</span>
+            <span data-t="hero.terminala.noto">La eligoj montras la realan Esperantan KI-tekston.</span>
             <button class="buto malgranda subtila" type="button" data-kopii="heroaEligo"
               data-t="hero.kopii">Kopii la sesion</button>
             <span class="sildeto" data-t="hero.terminala.sildeto">6 PRUVOJ</span>
@@ -215,7 +215,7 @@
           </span>
           <h3 data-t="karto1.titolo">Unu klara fluo</h3>
           <p data-t-html="karto1.teksto">
-            Ne ekzistas aparta <code>add</code>: <code>vs komitu</code> kaptas la tutan
+            Ne ekzistas aparta aldona komando: <code>vs komitu</code> kaptas la tutan
             labordosierujon. <code>vs stato</code>, <code>vs historio</code> kaj
             <code>vs linioj</code> estas la legaj komandoj; <code>vs eltiri</code>
             restarigas ajnan komiton aŭ branĉon.
@@ -282,7 +282,7 @@
             arbitrajn bajtojn, dekodajn limojn, radikan, unu-gepatran kaj
             du-gepatran komitajn kadrojn.
           </p>
-          <span class="sildeto">Kani · CI</span>
+          <span class="sildeto">Kani · DI</span>
         </article>
 
         <article class="karto" data-aperu>
@@ -321,7 +321,7 @@
           <div>
             <h3 data-t="fluo.p1.titolo">Iniciati</h3>
             <p data-t-html="fluo.p1.teksto">
-              <code>vs ini</code> kreas <code>.vs/</code>, la dosieron <code>HEAD</code>
+              <code>vs ini</code> kreas <code>.vs/</code>, la dosieron <code>KAPO</code>
               kaj la objektujon.
             </p>
           </div>
@@ -334,7 +334,7 @@
             <h3 data-t="fluo.p2.titolo">Kapti la staton</h3>
             <p data-t-html="fluo.p2.teksto">
               <code>vs stato</code> komparas la laborspacon kun la arbo de
-              <code>HEAD</code> kaj raportas nur modifitajn, novajn kaj forigitajn dosierojn.
+              <code>KAPO</code> kaj raportas nur modifitajn, novajn kaj forigitajn dosierojn.
             </p>
           </div>
           <span class="sildeto">vs stato</span>
@@ -346,7 +346,7 @@
             <h3 data-t="fluo.p3.titolo">Komiti</h3>
             <p data-t-html="fluo.p3.teksto">
               <code>vs komitu --noto</code> konservas la tutan arbon, kreas komiton
-              kun gepatro, avancas la nunan branĉon kaj ĝisdatigas <code>HEAD</code>.
+              kun gepatro, avancas la nunan branĉon kaj ĝisdatigas <code>KAPO</code>.
             </p>
           </div>
           <span class="sildeto">vs komitu</span>
@@ -357,11 +357,11 @@
           <div>
             <h3 data-t="fluo.p4.titolo">Kontroli</h3>
             <p data-t-html="fluo.p4.teksto">
-              Loke: formo, Clippy kaj testoj. En CI: <code>no_std</code>-sentineleto
+              Loke: formo, Clippy kaj testoj. En DI: <code>no_std</code>-sentineleto
               kaj la ok Kani-pruvoj.
             </p>
           </div>
-          <span class="sildeto">CI</span>
+          <span class="sildeto">DI</span>
         </div>
       </div>
 
@@ -431,7 +431,7 @@
           <h2 id="historio-titolo" data-t="hist.titolo">Historio kaj branĉoj</h2>
           <p data-t-html="hist.teksto">
             La historio estas nurlegebla kaj la branĉoj estas malpezaj referencoj
-            en <code>.vs/refs/heads</code>. <code>vs eltiri</code> restarigas la
+            en <code>.vs/referencoj/branĉoj</code>. <code>vs eltiri</code> restarigas la
             laborspacon al branĉo aŭ al mallonga haketo, kaj <code>vs kunfandi</code>
             kunigas branĉon per tri-voja kunfandado, sen kaŝitaj stadioj.
           </p>
@@ -444,7 +444,7 @@
           <div>
             <h3 data-t="hist.p1.titolo">Legi la historion</h3>
             <p data-t-html="hist.p1.teksto">
-              <code>vs historio</code> listigas la komitojn de <code>HEAD</code>
+              <code>vs historio</code> listigas la komitojn de <code>KAPO</code>
               malantaŭen: mallonga haketo, UTC-tempstampo kaj unulinia mesaĝo.
               <code>-n</code> limigas la nombron da komitoj.
             </p>
@@ -457,7 +457,7 @@
             <h3 data-t="hist.p2.titolo">Krei branĉojn</h3>
             <p data-t-html="hist.p2.teksto">
               <code>vs linio &lt;nomo&gt; [bazo]</code> kreas branĉon ĉe la nuna
-              <code>HEAD</code> aŭ ĉe donita komito; <code>vs linioj</code> montras
+              <code>KAPO</code> aŭ ĉe donita komito; <code>vs linioj</code> montras
               la branĉojn kaj markas la nunan per <code>*</code>.
             </p>
           </div>
@@ -469,7 +469,7 @@
             <h3 data-t="hist.p3.titolo">Restarigi la laborspacon</h3>
             <p data-t-html="hist.p3.teksto">
               <code>vs eltiri &lt;branĉo|haketo&gt;</code> restarigas la dosierojn,
-              forigas la superfluajn kaj ĝisdatigas <code>HEAD</code>;
+              forigas la superfluajn kaj ĝisdatigas <code>KAPO</code>;
               <code>--perforta</code> preterlasas la purecan kontrolon.
             </p>
           </div>
@@ -481,7 +481,7 @@
             <h3 data-t="hist.p4.titolo">Avancigi la nunan branĉon</h3>
             <p data-t-html="hist.p4.teksto">
               Ĉiu <code>vs komitu</code> avancas la nunan branĉon. En sendependa
-              <code>HEAD</code> — post <code>vs eltiri &lt;haketo&gt;</code> — neniu
+              <code>KAPO</code> — post <code>vs eltiri &lt;haketo&gt;</code> — neniu
               branĉo moviĝas.
             </p>
           </div>
@@ -625,8 +625,8 @@
         <div>
           <h2 id="arkitekturo-titolo" data-t="ark.titolo">Arkitekturo</h2>
           <p data-t="ark.teksto">
-            Kvin tavoloj kun mallarĝa API. La kerno ne scias pri la terminalo;
-            la CLI ne scias pri la haketformato.
+            Kvin tavoloj kun mallarĝa interfaco. La kerno ne scias pri la terminalo;
+            la KI ne scias pri la haketformato.
           </p>
         </div>
       </div>
@@ -648,7 +648,7 @@
         <div class="tavolo">
           <span class="tavola-numero" aria-hidden="true">02</span>
           <div>
-            <h3>versio-cli</h3>
+            <h3>versio-ki</h3>
             <p data-t="ark.t2.teksto">
               Tradukas argumentojn al kernaj operacioj kaj zorgas pri erarmesaĝoj
               kaj eligformo.
@@ -683,12 +683,12 @@
           <div>
             <h3>.vs/</h3>
             <p data-t-html="ark.t5.teksto">
-              <code>HEAD</code>, <code>branĉo</code>, <code>refs/heads/</code>,
+              <code>KAPO</code>, <code>branĉo</code>, <code>referencoj/branĉoj/</code>,
               <code>indekso</code> kaj <code>objektoj/</code> — la tuta stato de la
               deponejo en unu dosierujo.
             </p>
           </div>
-          <span class="sildeto">CAS</span>
+          <span class="sildeto">EAS</span>
         </div>
       </div>
 
@@ -820,7 +820,7 @@
         </p>
       </div>
       <p class="scena-ligiloj" data-aperu>
-        <span data-t-html="pruv.nuba">La CI-rulo de la branĉa funkcio estis verda: <code>Lint and build</code> kaj ĉiuj ok <code>Kani (...)</code>-laboroj.</span>
+        <span data-t-html="pruv.nuba">La DI-rulo de la branĉa funkcio estis verda: <code>Kontroli kaj konstrui</code> kaj ĉiuj ok <code>Kani (...)</code>-laboroj.</span>
         <a href="https://github.com/makoto-lernanto/versio/actions/runs/44302583687">GitHub Actions · 44302583687</a>
       </p>
     </section>
@@ -856,7 +856,7 @@
             <h3 data-t="mik.p2.titolo">Iniciati kaj komiti</h3>
             <p data-t-html="mik.p2.teksto">
               <code>vs ini</code>, <code>vs stato</code> kaj <code>vs komitu --noto</code>
-              kaptis la tutan arbon sen aparta <code>add</code>-komando.
+              kaptis la tutan arbon sen aparta aldona komando.
             </p>
           </div>
           <span class="sildeto">vs</span>
@@ -878,11 +878,11 @@
         <article class="elsŝuto">
           <div class="elsŝuta-kapo">
             <h3 data-t="mik.rezulto.titolo">Rezulto</h3>
-            <span class="sildeto tenila">PASS</span>
+            <span class="sildeto tenila">SUKCESO</span>
           </div>
           <p data-t="mik.rezulto.teksto">
             99 ordinaraj dosieroj · 5 106 098 bajtoj · du Versio-komitoj ·
-            SOURCE_UNCHANGED=true · RESULT=PASS.
+            la fonto restis netuŝita · la provo sukcesis.
           </p>
           <dl>
             <div><dt data-t="mik.dl.git">Git-komito</dt><dd><code>154e5062</code></dd></div>
@@ -904,7 +904,7 @@
           <dl>
             <div><dt data-t="mik.dl.dosieroj">Dosieroj</dt><dd>99</dd></div>
             <div><dt data-t="mik.dl.bajtoj">Bajtoj</dt><dd>5 106 098</dd></div>
-            <div><dt data-t="mik.dl.rezulto">Rezulto</dt><dd><code>PASS</code></dd></div>
+            <div><dt data-t="mik.dl.rezulto">Rezulto</dt><dd><code>SUKCESO</code></dd></div>
             <div><dt data-t="mik.dl.fonto">Origina fonto</dt><dd><code>UNCHANGED</code></dd></div>
           </dl>
           <div class="elsŝuta-butonoj">
@@ -992,7 +992,7 @@
             <span class="sildeto">GIT</span>
           </div>
           <p data-t="komenci.karto1.teksto">
-            La deponejo enhavas la laborlokon, la CLI-on, la testojn kaj la pruvojn.
+            La deponejo enhavas la laborlokon, la KI-on, la testojn kaj la pruvojn.
           </p>
           <dl>
             <div><dt data-t="komenci.dl.lingvo">Lingvo</dt><dd>Rust 2024</dd></div>
@@ -1106,7 +1106,7 @@
       <a href="https://github.com/makoto-lernanto/versio/blob/main/MIKERNO_INTEGRO.md">MIKERNO_INTEGRO.md</a>
     </div>
     <p class="pieda-noto" data-t="piedo.noto">
-      Fazo 5 finita · CI verda · dokumentaro sen eksteraj skriptoj
+      Fazo 5 finita · DI verda · dokumentaro sen eksteraj skriptoj
     </p>
   </footer>
 

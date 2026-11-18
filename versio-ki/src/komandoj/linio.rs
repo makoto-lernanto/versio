@@ -1,4 +1,4 @@
-//! `vs linio`: kreas linion ĉe `HEAD` aŭ ĉe la donita komito.
+//! `vs linio`: kreas linion ĉe `KAPO` aŭ ĉe la donita komito.
 
 use anyhow::Context;
 use libversio::deponejo::Deponejo;
@@ -22,8 +22,8 @@ pub(crate) fn plenumi(nomo: &str, bazo: Option<&str>) -> anyhow::Result<()> {
     let celo = match bazo {
         Some(teksto) => haketo::solvi(&deponejo, teksto)?,
         None => deponejo
-            .legi_head()
-            .context("malsukcesis legi HEAD")?
+            .legi_kapon()
+            .context("malsukcesis legi KAPO")?
             .context("ankoraŭ ne ekzistas komito por branĉi")?,
     };
     deponejo

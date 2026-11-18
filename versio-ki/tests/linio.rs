@@ -59,18 +59,24 @@ fn komiti(dosierujo: &Path, noto: &str) {
     certigi_sukceson(&ruli(dosierujo, &["komitu", "--noto", noto]));
 }
 
-fn legi_head(dosierujo: &Path) -> String {
-    std::fs::read_to_string(dosierujo.join(".vs").join("HEAD"))
+fn legi_kapon(dosierujo: &Path) -> String {
+    std::fs::read_to_string(dosierujo.join(".vs").join("KAPO"))
         .unwrap()
         .trim()
         .to_owned()
 }
 
 fn legi_ref(dosierujo: &Path, nomo: &str) -> String {
-    std::fs::read_to_string(dosierujo.join(".vs").join("refs").join("heads").join(nomo))
-        .unwrap()
-        .trim()
-        .to_owned()
+    std::fs::read_to_string(
+        dosierujo
+            .join(".vs")
+            .join("referencoj")
+            .join("branĉoj")
+            .join(nomo),
+    )
+    .unwrap()
+    .trim()
+    .to_owned()
 }
 
 fn prefikso(haketo: &str) -> String {
@@ -83,10 +89,10 @@ fn testo_linio_eltiri_kaj_avanci() {
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
     komiti(&prov.vojo, "Unua");
-    let unua = legi_head(&prov.vojo);
+    let unua = legi_kapon(&prov.vojo);
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
     komiti(&prov.vojo, "Dua");
-    let dua = legi_head(&prov.vojo);
+    let dua = legi_kapon(&prov.vojo);
 
     certigi_sukceson(&ruli(&prov.vojo, &["linio", "ĉefa"]));
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), dua);
@@ -99,23 +105,23 @@ fn testo_linio_eltiri_kaj_avanci() {
     );
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "ĉefa"]));
-    assert_eq!(legi_head(&prov.vojo), dua);
+    assert_eq!(legi_kapon(&prov.vojo), dua);
     let eligo = ruli(&prov.vojo, &["linioj"]);
     assert_eq!(
         String::from_utf8_lossy(&eligo.stdout),
         format!("* ĉefa  {}\n", prefikso(&dua))
     );
 
-    // Komito sur linio movas la referencon kaj HEAD.
+    // Komito sur linio movas la referencon kaj KAPO.
     std::fs::write(prov.vojo.join("a.txt"), b"tria").unwrap();
     komiti(&prov.vojo, "Tria");
-    let tria = legi_head(&prov.vojo);
+    let tria = legi_kapon(&prov.vojo);
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), tria);
     assert_ne!(tria, dua);
 
     // Detaĉita eltiro ĉe malnova komito ne movas la linion.
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", &prefikso(&unua)]));
-    assert_eq!(legi_head(&prov.vojo), unua);
+    assert_eq!(legi_kapon(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
     let eligo = ruli(&prov.vojo, &["linioj"]);
     assert_eq!(
@@ -128,7 +134,7 @@ fn testo_linio_eltiri_kaj_avanci() {
     assert_eq!(legi_ref(&prov.vojo, "ĉefa"), tria);
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "ĉefa"]));
-    assert_eq!(legi_head(&prov.vojo), tria);
+    assert_eq!(legi_kapon(&prov.vojo), tria);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"tria");
 }
 
@@ -138,7 +144,7 @@ fn testo_linio_ce_malnova_komito_kaj_rifuzo() {
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
     komiti(&prov.vojo, "Unua");
-    let unua = legi_head(&prov.vojo);
+    let unua = legi_kapon(&prov.vojo);
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
     komiti(&prov.vojo, "Dua");
 
@@ -146,7 +152,7 @@ fn testo_linio_ce_malnova_komito_kaj_rifuzo() {
     assert_eq!(legi_ref(&prov.vojo, "malnova"), unua);
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "malnova"]));
-    assert_eq!(legi_head(&prov.vojo), unua);
+    assert_eq!(legi_kapon(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
 
     let eligo = ruli(&prov.vojo, &["linio", "malnova"]);

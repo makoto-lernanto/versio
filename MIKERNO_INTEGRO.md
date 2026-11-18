@@ -42,7 +42,7 @@ printf 'Git-komito: %s\nVersio-deponejo: %s\n' "$REV" "$CELO"
 
 La unua `stato` listigu la eksportitajn dosierojn sub `Novaj:`; la dua
 redonu `Neniu ŝanĝo`. `komitu` kaptas la tutan labordosierujon: aparta
-`add`-komando ne ekzistas. La nova deponejo restas en `$CELO` por inspektado.
+`aldoni`-komando ne ekzistas. La nova deponejo restas en `$CELO` por inspektado.
 
 Por la ĉi-suba testita momentfoto, daŭrigu en la sama ŝelo. La ŝanĝoj tuŝas
 nur la provizoran kopion; la forigita dosiero restas en la origina Git-komito.
@@ -62,7 +62,7 @@ nur la provizoran kopion; la forigita dosiero restas en la origina Git-komito.
 ## Registrita loka provo
 
 Dato: 2026-11-16. Medio: Linux/WSL2, x86_64; loka `target/debug/vs`
-rekonstruita per la unuoptestoj. La CLI-logiko estas tiu de Versio `68be503`;
+rekonstruita per la unuoptestoj. La KI-logiko estas tiu de Versio `68be503`;
 la Fazo-4-ŝanĝoj aldonas pruvojn, testojn kaj dokumentadon.
 
 - MiKerno Git-komito: `154e506211d3a94cc759f07fc9d101d694b14869`.
@@ -98,14 +98,14 @@ Komito 105513f1a409fa962cab78867cf0006a12ecfe6abe863709b4fb6080050557c7
 Neniu ŝanĝo
 ```
 
-La du Versio-komitoj havis malsamajn identigilojn. La testprogramo finiĝis kun
-`SOURCE_UNCHANGED=true` kaj `RESULT=PASS`. Komitaj identigiloj dependas ankaŭ
+La du Versio-komitoj havis malsamajn identigilojn. La testprogramo konfirmis, ke
+la fonto restis netuŝita kaj la provo sukcesis. Komitaj identigiloj dependas ankaŭ
 de tempstampo, do alia rulo ne devas reprodukti tiujn samajn identigilojn.
 
 ## Formala pruvado kaj ĝiaj limoj
 
 La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Aldoniĝas tri
-sendependaj CI-laboroj por la tri kadraj formoj de la komita seriigado. La
+sendependaj DI-laboroj por la tri kadraj formoj de la komita seriigado. La
 plena komita malkodado restis ekster la formala modelo pro mezurita limo de
 CBMC, priskribita sube.
 
@@ -125,7 +125,7 @@ Oni provis tri pliajn pruvojn pri `Komito::malseriigi`: rondiron de reprezentaj
 komitoj, ĉiujn gepatro-etikedojn kaj rifuzon de tranĉitaj kadroj. Eĉ kun tute
 konkretaj enigaj kadroj la postcard-malkodado kaj `String::from_utf8` generis pli
 ol 24 000 VCC kaj pli ol 300 sekundojn da simbola plenumo; la laboro restis
-senfina kaj estis nuligita en CI. CBMC ankaŭ ne povas simboligi nur la
+senfina kaj estis nuligita en DI. CBMC ankaŭ ne povas simboligi nur la
 kontrolbajtojn de staka tabelo: se unu bajto estas simbola, la tuta tabelo
 fariĝas simbola. Plilongigi la tempolimon ne solvis tion, kaj `kani::assume` por
 kaŝi la malfermajn vojojn estus malpermesita malfortigo. Tiuj tri pruvoj do
@@ -161,12 +161,12 @@ testoj).
 
 La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en debug-reĝimo;
 ĝia tempolimo validas por release. Neniu nova `allow` aŭ ignorata testo estis
-aldonita. La nuna CI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
+aldonita. La nuna DI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
 konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
 **Nuba stato: verda.** GitHub Actions-rulo
 [`44302583687`](https://github.com/makoto-lernanto/versio/actions/runs/44302583687)
-de revizio `580dfb8` sukcese finis `Lint and build` kaj ĉiujn ok
+de revizio `580dfb8` sukcese finis `Kontroli kaj konstrui` kaj ĉiujn ok
 `Kani (...)`-laborojn (2026-11-18). La plej longa pruvo,
 `pruvo_arbo_kanonika`, daŭris 4 minutojn kaj 47 sekundojn; la kunfanda kadro
 daŭris 1 minuton kaj 41 sekundojn, kaj ĉiuj restis sub la 600-sekunda limo.

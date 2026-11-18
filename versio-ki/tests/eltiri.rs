@@ -59,8 +59,8 @@ fn komiti(dosierujo: &Path, noto: &str) {
     certigi_sukceson(&ruli(dosierujo, &["komitu", "--noto", noto]));
 }
 
-fn legi_head(dosierujo: &Path) -> String {
-    std::fs::read_to_string(dosierujo.join(".vs").join("HEAD"))
+fn legi_kapon(dosierujo: &Path) -> String {
+    std::fs::read_to_string(dosierujo.join(".vs").join("KAPO"))
         .unwrap()
         .trim()
         .to_owned()
@@ -75,13 +75,13 @@ fn du_komitoj(prov: &ProvDosierujo) -> (String, String) {
     certigi_sukceson(&ruli(&prov.vojo, &["ini"]));
     std::fs::write(prov.vojo.join("a.txt"), b"unua").unwrap();
     komiti(&prov.vojo, "Unua");
-    let unua = legi_head(&prov.vojo);
+    let unua = legi_kapon(&prov.vojo);
 
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
     std::fs::create_dir(prov.vojo.join("sub")).unwrap();
     std::fs::write(prov.vojo.join("sub").join("nova.txt"), b"nova").unwrap();
     komiti(&prov.vojo, "Dua");
-    let dua = legi_head(&prov.vojo);
+    let dua = legi_kapon(&prov.vojo);
 
     (unua, dua)
 }
@@ -94,7 +94,7 @@ fn testo_eltiri_restarigas_komiton_per_mallonga_haketo() {
     let eligo = ruli(&prov.vojo, &["eltiri", &prefikso(&unua)]);
     certigi_sukceson(&eligo);
 
-    assert_eq!(legi_head(&prov.vojo), unua);
+    assert_eq!(legi_kapon(&prov.vojo), unua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"unua");
     assert!(!prov.vojo.join("sub").join("nova.txt").exists());
     assert!(
@@ -124,11 +124,11 @@ fn testo_eltiri_rifuzas_malpurigitan_laborspacon_kaj_perfortas() {
         String::from_utf8_lossy(&eligo.stderr)
     );
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"malpura");
-    assert_eq!(legi_head(&prov.vojo), unua);
+    assert_eq!(legi_kapon(&prov.vojo), unua);
 
     let eligo = ruli(&prov.vojo, &["eltiri", &prefikso(&dua), "--perforta"]);
     certigi_sukceson(&eligo);
-    assert_eq!(legi_head(&prov.vojo), dua);
+    assert_eq!(legi_kapon(&prov.vojo), dua);
     assert_eq!(std::fs::read(prov.vojo.join("a.txt")).unwrap(), b"dua");
     assert_eq!(
         std::fs::read(prov.vojo.join("sub").join("nova.txt")).unwrap(),

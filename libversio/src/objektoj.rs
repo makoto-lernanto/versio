@@ -14,7 +14,7 @@ use crate::vojo::{MAKSIMA_KOMPONANTO, validi_komponanton};
 pub const MAKSIMAJ_ENSKRIBOJ: usize = 4096;
 
 /// Maksimuma longo de komita mesaĝo en bajtoj.
-pub const MAKSIMA_MESAGXO: usize = 64 * 1024;
+pub const MAKSIMA_MESAĜO: usize = 64 * 1024;
 
 /// Blob: la kruda enhavo de unu dosiero.
 ///
@@ -241,7 +241,7 @@ impl Komito {
         skribi_gepatron(&mut skribilo, self.gepatro.as_ref());
         skribi_gepatron(&mut skribilo, self.dua_gepatro.as_ref());
         let longo = u32::try_from(self.mesaĝo.len()).map_err(|_| Eraro::TrolongaEnigo {
-            maksimumo: MAKSIMA_MESAGXO,
+            maksimumo: MAKSIMA_MESAĜO,
             akirita: self.mesaĝo.len(),
         })?;
         skribilo.u32(longo);
@@ -277,7 +277,7 @@ impl Komito {
                 });
             }
         };
-        let mesaĝo = legilo.limigita_string(MAKSIMA_MESAGXO)?;
+        let mesaĝo = legilo.limigita_string(MAKSIMA_MESAĜO)?;
         let kreita_je = legilo.u64()?;
         if dua_gepatro.is_some() && gepatro.is_none() {
             return Err(Eraro::NevalidaDatumo {
@@ -318,7 +318,7 @@ mod testoj {
         reason = "testa kodo rajtas uzi panikigajn konstrukciojn"
     )]
 
-    use super::{ArbaEnskribo, Arbo, Dosiero, Komito, MAKSIMA_MESAGXO, MAKSIMAJ_ENSKRIBOJ};
+    use super::{ArbaEnskribo, Arbo, Dosiero, Komito, MAKSIMA_MESAĜO, MAKSIMAJ_ENSKRIBOJ};
     use crate::eraroj::Eraro;
     use crate::stokado::{Haketo, haketi};
     use alloc::string::String;
@@ -454,7 +454,7 @@ mod testoj {
         let komito = Komito {
             arbo: haketo(3),
             gepatro: None,
-            mesaĝo: "a".repeat(MAKSIMA_MESAGXO + 1),
+            mesaĝo: "a".repeat(MAKSIMA_MESAĜO + 1),
             kreita_je: 1,
             dua_gepatro: None,
         };
@@ -472,7 +472,7 @@ mod testoj {
                 for mesaĝo in [
                     String::new(),
                     String::from("a\0é𐐀"),
-                    "a".repeat(MAKSIMA_MESAGXO),
+                    "a".repeat(MAKSIMA_MESAĜO),
                 ] {
                     for kreita_je in [0, 127, 128, u64::MAX] {
                         let komito = Komito {

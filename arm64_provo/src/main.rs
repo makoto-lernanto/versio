@@ -4,7 +4,7 @@
 //! `qemu-system-aarch64 -M virt -semihosting`. La eligo iras tra
 //! semihosting, do ne ekzistas gastiga operaciumo aŭ `std`.
 //!
-//! Ĉiu kontrolo uzas la saman publikan API-on kiel la hostaj testoj; se la
+//! Ĉiu kontrolo uzas la saman publikan interfacon kiel la hostaj testoj; se la
 //! binaro eliras kun 0, ĉiuj kontroloj sukcesis sur reala ARM64-paperto.
 
 #![no_std]
@@ -89,7 +89,7 @@ fn kontroli_haketilon(r: &mut Rezultoj) {
     );
 }
 
-/// Enmemora CAS: konservi kaj ricevi, plus difekto-rifuzo.
+/// Enmemora EAS: konservi kaj ricevi, plus difekto-rifuzo.
 fn kontroli_konservilon(r: &mut Rezultoj) {
     let stokejo = MemoraKonservilo::nova();
     let datumoj: &[u8] = b"arm64-saluton";

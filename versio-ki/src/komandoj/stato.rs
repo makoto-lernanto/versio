@@ -1,4 +1,4 @@
-//! `vs stato`: montras la ŝanĝojn de la laborspaco rilate al `HEAD`.
+//! `vs stato`: montras la ŝanĝojn de la laborspaco rilate al `KAPO`.
 
 use std::io::{BufWriter, Write};
 

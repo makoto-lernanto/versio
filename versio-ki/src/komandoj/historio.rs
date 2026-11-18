@@ -1,4 +1,4 @@
-//! `vs historio`: montras la komito-ĉenon ekde `HEAD`.
+//! `vs historio`: montras la komito-ĉenon ekde `KAPO`.
 
 use std::collections::HashSet;
 use std::io::{BufWriter, Write};
@@ -18,7 +18,7 @@ pub(crate) fn plenumi(nombro: Option<usize>) -> anyhow::Result<()> {
     let deponejo =
         Deponejo::malfermi(radiko).context("la nuna dosierujo ne estas Versio-deponejo")?;
 
-    let nuna = deponejo.legi_head().context("malsukcesis legi HEAD")?;
+    let nuna = deponejo.legi_kapon().context("malsukcesis legi KAPO")?;
     let mut eligo = BufWriter::new(std::io::stdout().lock());
     let Some(nuna) = nuna else {
         writeln!(eligo, "Neniu komito ankoraŭ")?;

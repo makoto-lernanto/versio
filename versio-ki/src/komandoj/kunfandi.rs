@@ -16,8 +16,8 @@ pub(crate) fn plenumi(linio: &str) -> anyhow::Result<()> {
         .with_context(|| format!("malsukcesis legi la linion {linio}"))?
         .ok_or_else(|| anyhow::anyhow!("la linio {linio} ne ekzistas"))?;
     let nuna = deponejo
-        .legi_head()
-        .context("malsukcesis legi HEAD")?
+        .legi_kapon()
+        .context("malsukcesis legi KAPO")?
         .ok_or_else(|| anyhow::anyhow!("neniu komito ankoraŭ; faru komiton antaŭ kunfandi"))?;
 
     let stato = deponejo
@@ -40,19 +40,22 @@ pub(crate) fn plenumi(linio: &str) -> anyhow::Result<()> {
     match rezulto {
         Kunfando::Nenio => println!("Nenio farenda: {linio} jam estas kunfandita"),
         Kunfando::Antauen(haketo) => {
-            ĝisdatigi_refs(&deponejo, &haketo)?;
+            ĝisdatigi_referencojn(&deponejo, &haketo)?;
             println!("Antaŭen al {haketo} ({linio})");
         }
         Kunfando::Kunfandita(haketo) => {
-            ĝisdatigi_refs(&deponejo, &haketo)?;
+            ĝisdatigi_referencojn(&deponejo, &haketo)?;
             println!("Kunfanda komito {haketo}");
         }
     }
     Ok(())
 }
 
-/// Movas la nunan linion kaj `HEAD` al la donita komito.
-fn ĝisdatigi_refs(deponejo: &Deponejo, haketo: &libversio::stokado::Haketo) -> anyhow::Result<()> {
+/// Movas la nunan linion kaj `KAPO` al la donita komito.
+fn ĝisdatigi_referencojn(
+    deponejo: &Deponejo,
+    haketo: &libversio::stokado::Haketo,
+) -> anyhow::Result<()> {
     if let Some(nomo) = deponejo
         .nuna_branĉo()
         .context("malsukcesis legi la nunan linion")?
@@ -62,7 +65,7 @@ fn ĝisdatigi_refs(deponejo: &Deponejo, haketo: &libversio::stokado::Haketo) -> 
             .with_context(|| format!("malsukcesis ĝisdatigi la linion {nomo}"))?;
     }
     deponejo
-        .skribi_head(haketo)
-        .context("malsukcesis ĝisdatigi HEAD")?;
+        .skribi_kapon(haketo)
+        .context("malsukcesis ĝisdatigi KAPO")?;
     Ok(())
 }

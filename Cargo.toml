@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["libversio", "versio-cli", "no_std_provo"]
+members = ["libversio", "versio-ki", "no_std_provo"]
 
 [workspace.package]
 edition = "2024"

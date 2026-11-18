@@ -37,8 +37,8 @@ pub(crate) fn plenumi(celo: &str, perforta: bool) -> anyhow::Result<()> {
             .context("malsukcesis forigi la nunan linion")?;
     }
     deponejo
-        .skribi_head(&haketo)
-        .context("malsukcesis ĝisdatigi HEAD")?;
+        .skribi_kapon(&haketo)
+        .context("malsukcesis ĝisdatigi KAPO")?;
 
     if let Some(nomo) = linio {
         println!("Sur linio {nomo} ({haketo})");

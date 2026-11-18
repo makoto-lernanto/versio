@@ -5,14 +5,14 @@ use clap::{CommandFactory, Parser, Subcommand};
 mod komandoj;
 
 /// La helpa ŝablono anstataŭigas la anglajn titolojn de `clap`.
-const HELPA_SXABLONO: &str = "{about-with-newline}\nUzado: {usage}\n\n{all-args}{after-help}";
+const HELPA_ŜABLONO: &str = "{about-with-newline}\nUzado: {usage}\n\n{all-args}{after-help}";
 
 #[derive(Debug, Parser)]
 #[command(
     name = "vs",
     version,
     about = "Versiokontrola sistemo",
-    help_template = HELPA_SXABLONO,
+    help_template = HELPA_ŜABLONO,
     disable_help_flag = true,
     disable_version_flag = true,
     disable_help_subcommand = true,
@@ -27,7 +27,6 @@ struct Argumentoj {
     #[arg(
         short = 'h',
         long = "helpo",
-        alias = "help",
         action = clap::ArgAction::Help,
         global = true
     )]
@@ -36,7 +35,6 @@ struct Argumentoj {
     #[arg(
         short = 'V',
         long = "versio",
-        alias = "version",
         action = clap::ArgAction::Version
     )]
     _versio: Option<bool>,
@@ -45,27 +43,27 @@ struct Argumentoj {
 #[derive(Debug, Subcommand)]
 enum Komando {
     /// Iniciatas novan deponejon en la nuna dosierujo.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Ini,
     /// Registras la nunan staton de la laborspaco kiel novan komiton.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Komitu {
         /// Noto de la komito.
         #[arg(short = 'm', long = "noto", value_name = "NOTO")]
         noto: String,
     },
-    /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al HEAD.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al KAPO.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Stato,
-    /// Montras la komitojn ekde HEAD, la plej nova unue.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    /// Montras la komitojn ekde KAPO, la plej nova unue.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Historio {
         /// Kiom da komitoj montri (defaŭlte ĉiujn).
         #[arg(short = 'n', long = "nombro", value_name = "NOMBRO")]
         nombro: Option<usize>,
     },
     /// Restarigas la laborspacon al la arbo de la donita komito.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Eltiri {
         /// Plena aŭ mallonga haketo de la celata komito.
         #[arg(value_name = "HAKETO")]
@@ -74,28 +72,28 @@ enum Komando {
         #[arg(short = 'f', long = "perforta")]
         perforta: bool,
     },
-    /// Kreas linion ĉe HEAD aŭ ĉe la donita komito.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    /// Kreas linion ĉe KAPO aŭ ĉe la donita komito.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Linio {
         /// Nomo de la nova linio.
         #[arg(value_name = "NOMO")]
         nomo: String,
-        /// Komito, ĉe kiu krei la linion (defaŭlte HEAD).
+        /// Komito, ĉe kiu krei la linion (defaŭlte KAPO).
         #[arg(value_name = "HAKETO")]
         bazo: Option<String>,
     },
     /// Listigas la liniojn kaj markas la nunan.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Linioj,
     /// Kunfandas linion en la nunan linion.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Kunfandi {
         /// Nomo de la linio, kiun kunfandi.
         #[arg(value_name = "LINIO")]
         linio: String,
     },
     /// Montras la ĝeneralan helppanon.
-    #[command(help_template = HELPA_SXABLONO, next_help_heading = "Opcioj")]
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Helpo,
 }
 

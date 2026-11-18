@@ -58,8 +58,8 @@ fn certigi_sukceson(eligo: &Output) {
     );
 }
 
-fn legi_head(dosierujo: &Path) -> Haketo {
-    std::fs::read_to_string(dosierujo.join(".vs").join("HEAD"))
+fn legi_kapon(dosierujo: &Path) -> Haketo {
+    std::fs::read_to_string(dosierujo.join(".vs").join("KAPO"))
         .unwrap()
         .trim()
         .parse()
@@ -92,7 +92,7 @@ fn preparu_diverĝon(prov: &ProvDosierujo) -> (Haketo, Haketo) {
     std::fs::write(prov.vojo.join("konflikta.txt"), b"majstro").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Majstro denove"]));
 
-    let majstro = legi_head(&prov.vojo);
+    let majstro = legi_kapon(&prov.vojo);
     let fonto = Deponejo::malfermi(prov.vojo.clone())
         .unwrap()
         .legi_branĉon("fonto")
@@ -109,7 +109,7 @@ fn testo_kunfandi_kreas_dugepatran_komiton() {
     // Revenigu la konfliktan dosieron al la baza enhavo: nur `fonto` ŝanĝis ĝin.
     std::fs::write(prov.vojo.join("konflikta.txt"), b"bazo").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Majstro pura"]));
-    let majstro = legi_head(&prov.vojo);
+    let majstro = legi_kapon(&prov.vojo);
 
     let eligo = ruli(&prov.vojo, &["kunfandi", "fonto"]);
     certigi_sukceson(&eligo);
@@ -118,7 +118,7 @@ fn testo_kunfandi_kreas_dugepatran_komiton() {
         "mankas konfirmo de la kunfanda komito"
     );
 
-    let kunfando = legi_head(&prov.vojo);
+    let kunfando = legi_kapon(&prov.vojo);
     let deponejo = Deponejo::malfermi(prov.vojo.clone()).unwrap();
     let komito = deponejo.legi_komiton(&kunfando).unwrap();
     assert_eq!(komito.gepatro, Some(majstro));
@@ -151,7 +151,7 @@ fn testo_kunfandi_antaŭenigas() {
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "fonto"]));
     std::fs::write(prov.vojo.join("a.txt"), b"dua").unwrap();
     certigi_sukceson(&ruli(&prov.vojo, &["komitu", "--noto", "Dua"]));
-    let dua = legi_head(&prov.vojo);
+    let dua = legi_kapon(&prov.vojo);
 
     certigi_sukceson(&ruli(&prov.vojo, &["eltiri", "majstro"]));
     let eligo = ruli(&prov.vojo, &["kunfandi", "fonto"]);
@@ -161,7 +161,7 @@ fn testo_kunfandi_antaŭenigas() {
         "mankas konfirmo pri antaŭenigo"
     );
 
-    assert_eq!(legi_head(&prov.vojo), dua);
+    assert_eq!(legi_kapon(&prov.vojo), dua);
     let deponejo = Deponejo::malfermi(prov.vojo.clone()).unwrap();
     assert_eq!(deponejo.legi_branĉon("majstro").unwrap(), Some(dua));
     assert!(deponejo.stato().unwrap().estas_pura());
@@ -180,7 +180,7 @@ fn testo_kunfandi_raportas_konflikton() {
         eraro.contains("kunfanda konflikto") && eraro.contains("konflikta.txt"),
         "la eraro ne raportas la konflikton:\n{eraro}"
     );
-    assert_eq!(legi_head(&prov.vojo), majstro);
+    assert_eq!(legi_kapon(&prov.vojo), majstro);
     assert_eq!(
         std::fs::read(prov.vojo.join("konflikta.txt")).unwrap(),
         b"majstro"

@@ -25,7 +25,7 @@ impl ProvDosierujo {
     fn nova(etikedo: &str) -> Self {
         let nombro = PROVOJ.fetch_add(1, Ordering::Relaxed);
         let vojo = std::env::temp_dir().join(format!(
-            "versio-cli-stato-{etikedo}-{}-{nombro}",
+            "versio-ki-stato-{etikedo}-{}-{nombro}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&vojo);
@@ -91,7 +91,7 @@ fn testo_stato_sen_deponejo_malsukcesas() {
 /// Akceptokriterio de Fazo 3: 10 000 dosieroj, unu ŝanĝita, rezulto < 100 ms.
 ///
 /// La tempolimo koncernas la eldonan binaron; neoptimumigita testa binaro
-/// mezurus alian artefakton. Rulu per `cargo test --release -p versio-cli --test stato`.
+/// mezurus alian artefakton. Rulu per `cargo test --release -p versio-ki --test stato`.
 #[test]
 #[cfg_attr(
     debug_assertions,

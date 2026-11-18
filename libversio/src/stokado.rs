@@ -1,4 +1,4 @@
-//! Enhavadresita stokado (CAS): `konservi` kaj `ricevi`.
+//! Enhavadresita stokado (EAS): `konservi` kaj `ricevi`.
 //!
 //! Ĉiu objekto estas identigita per la `BLAKE3`-haketo de siaj malkunpremitaj
 //! datumoj. La trajto [`Konservilo`] kaj la enmemora [`MemoraKonservilo`]

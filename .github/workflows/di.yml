@@ -1,0 +1,87 @@
+# DI por la laborloko de Versio.
+# Formala pruvado ruliĝas en la nubo, ĉar lokaj Kani-ruloj elĉerpas la memoron
+# kaj malkonektas la maŝinon WSL2.
+name: DI
+
+on:
+  # Ruliĝu ĉe ĉiu puŝo al `main` kaj ĉiu tirpeto.
+  push:
+    branches: [main]
+  pull_request:
+
+# La laborfluo nur legas la deponejon.
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Rapida rimensaĝo: formo, lintoj kaj eldonaj konstruoj.
+  kontroli-kaj-konstrui:
+    name: Kontroli kaj konstrui
+    runs-on: ubuntu-latest
+    steps:
+      - name: Elpreni la deponejon
+        uses: actions/checkout@v4
+
+      # La ago instalas la minimuman profilon, kiu mankas rustfmt kaj
+      # clippy; petu ilin eksplicite kune kun la plata celo.
+      - name: Instali Rust 1.100.0 kun x86_64-unknown-none
+        uses: dtolnay/rust-toolchain@1.100.0
+        with:
+          targets: x86_64-unknown-none
+          components: clippy, rustfmt
+
+      - name: Kontroli la formon
+        run: cargo fmt --all -- --check
+
+      - name: Ruli Clippy
+        run: cargo clippy --workspace --release -- -D warnings
+
+      - name: Konstrui la laborlokon en eldona reĝimo
+        run: cargo build --workspace --release
+
+      # Ekzerci la instalitan platan celon: libversio devas resti no_std.
+      - name: Konstrui la no_std-sentineleton por x86_64-unknown-none
+        run: cargo build -p no_std_provo --target x86_64-unknown-none
+
+  # Formala pruvado, forŝovita al la nubo por eviti lokajn memorforkojn.
+  # Ĉiu pruvo ruliĝas en propra laboro, do malrapida pruvo ne kaŝas la aliajn,
+  # kaj la protokolo de tempolima pruvo ankoraŭ supreniĝas.
+  kani-kontroli:
+    name: Kani (${{ matrix.pruvo }})
+    runs-on: ubuntu-latest
+    needs: kontroli-kaj-konstrui
+    # Instalo, Kani-kodgenerado kaj 10-minuta pruvbuĝeto.
+    timeout-minutes: 30
+    strategy:
+      # Raporti ĉiun pruvon, eĉ post kiam unu el ili trafas la tempolimon.
+      fail-fast: false
+      matrix:
+        pruvo:
+          - pruvo_arbo_kanonika
+          - pruvo_arbo_duplikatoj
+          - pruvo_vojo_sekura
+          - pruvo_legilo_neniam_panikas
+          - pruvo_dekodo_limigita
+          - pruvo_komito_seriigo
+          - pruvo_gepatra_kadro
+          - pruvo_kunfanda_kadro
+    steps:
+      - name: Elpreni la deponejon
+        uses: actions/checkout@v4
+
+      - name: Instali Rust 1.100.0 kun x86_64-unknown-none
+        uses: dtolnay/rust-toolchain@1.100.0
+        with:
+          targets: x86_64-unknown-none
+
+      # La oficiala ago instalas Kani kaj poste rulas la donitan komandon.
+      # `timeout` limigas nur la pruvon, ne la instaladon; SIGKILL evitas
+      # restigi memor-malsatan CBMC-procezon.
+      - name: Kontroli ${{ matrix.pruvo }}
+        uses: model-checking/kani-github-action@v1
+        with:
+          command: timeout
+          args: -s KILL 600 cargo kani -p libversio --harness ${{ matrix.pruvo }}

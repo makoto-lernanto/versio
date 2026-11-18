@@ -1,6 +1,6 @@
 [package]
-name = "versio-cli"
-description = "Komandlinia interfaco de Versio"
+name = "versio-ki"
+description = "Komandliniaj iloj de Versio"
 publish = false
 version.workspace = true
 edition.workspace = true

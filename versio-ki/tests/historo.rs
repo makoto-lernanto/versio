@@ -80,13 +80,13 @@ fn testo_historio_montras_komitojn_unue_la_plej_novan() {
     assert!(linioj[1].ends_with("  Dua"), "malĝusta ordo:\n{teksto}");
     assert!(linioj[2].ends_with("  Unua"), "malĝusta ordo:\n{teksto}");
 
-    let head = std::fs::read_to_string(prov.vojo.join(".vs").join("HEAD")).unwrap();
+    let kapo = std::fs::read_to_string(prov.vojo.join(".vs").join("KAPO")).unwrap();
     let unua_linio = linioj[0];
     let kampoj: Vec<&str> = unua_linio.split("  ").collect();
     assert_eq!(kampoj.len(), 3, "neatendita linia formato:\n{unua_linio}");
     assert_eq!(kampoj[0].len(), 12);
     assert_eq!(kampoj[1].len(), 23);
-    assert!(head.trim().starts_with(kampoj[0]));
+    assert!(kapo.trim().starts_with(kampoj[0]));
 }
 
 #[test]
