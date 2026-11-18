@@ -104,13 +104,16 @@ de tempstampo, do alia rulo ne devas reprodukti tiujn samajn identigilojn.
 
 ## Formala pruvado kaj ĝiaj limoj
 
-La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Aldoniĝas unu
-sendependa CI-laboro por la komita seriigado. La plena komita malkodado restis
-ekster la formala modelo pro mezurita limo de CBMC, priskribita sube.
+La kvin antaŭaj Kani-pruvoj restas sen ŝanĝo de sia amplekso. Aldoniĝas tri
+sendependaj CI-laboroj por la tri kadraj formoj de la komita seriigado. La
+plena komita malkodado restis ekster la formala modelo pro mezurita limo de
+CBMC, priskribita sube.
 
 | Pruvo | Preciza modelo kaj aserto |
 | --- | --- |
-| `pruvo_komito_seriigo` | Simbolikaj radika kaj gepatra haketoj, ambaŭ gepatro-branĉoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 35 kaj 77 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
+| `pruvo_komito_seriigo` | Radika komito sen gepatroj: simbolika radika haketo, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. Seriigo devas sukcesi, la eliglongo resti inter 36 kaj 46 bajtoj, kaj la unuaj 32 bajtoj egali la radikan haketon. |
+| `pruvo_gepatra_kadro` | Unu-gepatra komito: simbolikaj radika kaj gepatra haketoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. La eliglongo devas resti inter 68 kaj 78 bajtoj, kun la radika haketo unue. |
+| `pruvo_kunfanda_kadro` | Kunfanda komito kun du gepatroj: simbolikaj radika, unua kaj dua haketoj, mesaĝo de 0–1 ASCII-bajto kaj ajna `u64`-tempstampo. La eliglongo devas resti inter 100 kaj 110 bajtoj, kun la radika haketo unue. |
 
 Oni provis tri pliajn pruvojn pri `Komito::malseriigi`: rondiron de reprezentaj
 komitoj, ĉiujn gepatro-etikedojn kaj rifuzon de tranĉitaj kadroj. Eĉ kun tute
@@ -123,9 +126,9 @@ kaŝi la malfermajn vojojn estus malpermesita malfortigo. Tiuj tri pruvoj do
 estis forigitaj; la malkodado restas kovrita de la unuoptestoj kaj de
 `pruvo_legilo_neniam_panikas`, kiu legas arbitrajn bajtojn sen paniki.
 
-La malvolva limo de `pruvo_komito_seriigo` estas 40; la malvolvaj asertoj ne
-estas malŝaltitaj. Ĝi havas la saman 600-sekundan komandlimon kaj 30-minutan
-laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
+La malvolva limo de la tri kadraj pruvoj estas 40; la malvolvaj asertoj ne
+estas malŝaltitaj. Ĉiu el ili havas la saman 600-sekundan komandlimon kaj
+30-minutan laborlimon kiel la aliaj. Neniu pruvo estas rulata loke.
 
 Tio estas limigita modelo, ne pruvo por ĉiu arbitra komito, ĉiu UTF-8-mesaĝo,
 ĉiu arbo aŭ por la kriptografia sekureco de BLAKE3. Arbitraj mesaĝoj kaj

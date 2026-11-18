@@ -167,11 +167,35 @@ fn pruvo_legilo_neniam_panikas() {
     let _ = legilo.fino();
 }
 
-/// La seriigilo akceptas simbolikajn kampojn kaj respektas la kadran longon.
+/// Simbola, unu-bajta mesaĝo aŭ malplena mesaĝo.
+fn prova_mesagxo(havas_mesagxon: bool, signo: u8) -> String {
+    if havas_mesagxon {
+        String::from(char::from(signo & 0x7f))
+    } else {
+        String::new()
+    }
+}
+
+/// Kontrolas la sukceson, la longan intervalon kaj la arban prefikson.
+fn kontroli_kadron(komito: &Komito, arbo: &[u8; HAKETA_LONGO], minimumo: usize, maksimumo: usize) {
+    // JUSTIFIKO: `Eraro` enhavas `Vec<String>` por la kunfandaj konfliktoj, kaj
+    // ties forĵeta gluo estas multekosta por la solvilo kvankam ĝi ne apartenas
+    // al la teoremo. `ManuallyDrop` evitigas tiun gluon; la aserto pri sukceso
+    // kaj la kadraj limoj restas plene kontrolataj.
+    let kodita = core::mem::ManuallyDrop::new(komito.seriigi());
+    assert!(kodita.is_ok());
+    if let Ok(bajtoj) = &*kodita {
+        assert!(bajtoj.len() >= minimumo);
+        assert!(bajtoj.len() <= maksimumo);
+        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
+    }
+}
+
+/// Seriigo de la radika komito (sen gepatro).
 ///
-/// Ĉi tiu pruvo kovras ordinarajn komitojn sen dua gepatro. La kunfanda kadro
-/// havas propran pruvon [`pruvo_kunfanda_kadro`], por ke la solvilo ne devu
-/// trakti ambaŭ formojn en unu formulo.
+/// Ĉiu kadra formo havas propran pruvon kun fiksaj gepatroj: se la gepatroj
+/// estus simbolaj buleanoj, la solvilo esplorus ĉiujn formojn en unu formulo.
+/// Kune la tri pruvoj kovras la saman enigan spacon kiel unu sola voko.
 ///
 /// La malkunigo de 40 estas necesa: la haketo estas 32 bajtoj, do la
 /// `memcpy`- kaj `memcmp`-bukloj de la norma biblioteko bezonas pli ol 32
@@ -181,41 +205,49 @@ fn pruvo_legilo_neniam_panikas() {
 #[kani::unwind(40)]
 fn pruvo_komito_seriigo() {
     let arbo: [u8; HAKETA_LONGO] = kani::any();
-    let gepatra: [u8; HAKETA_LONGO] = kani::any();
-    let havas_gepatron: bool = kani::any();
     let havas_mesagxon: bool = kani::any();
     let signo: u8 = kani::any();
     let kreita_je: u64 = kani::any();
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
-        gepatro: havas_gepatron.then_some(Haketo::el_bajtoj(gepatra)),
-        mesagxo: if havas_mesagxon {
-            String::from(char::from(signo & 0x7f))
-        } else {
-            String::new()
-        },
+        gepatro: None,
+        mesagxo: prova_mesagxo(havas_mesagxon, signo),
         kreita_je,
         dua_gepatro: None,
     };
 
-    kani::cover!(havas_gepatron && havas_mesagxon);
-    kani::cover!(!havas_gepatron && !havas_mesagxon);
+    kani::cover!(havas_mesagxon);
+    kani::cover!(!havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
-    // JUSTIFIKO: `Eraro` enhavas `Vec<String>` por la kunfandaj konfliktoj, kaj
-    // ties forĵeta gluo estas multekosta por la solvilo kvankam ĝi ne apartenas
-    // al la teoremo. `ManuallyDrop` evitigas tiun gluon; la aserto pri sukceso
-    // kaj la kadraj limoj restas plene kontrolataj.
-    let kodita = core::mem::ManuallyDrop::new(komito.seriigi());
-    assert!(kodita.is_ok());
-    if let Ok(bajtoj) = &*kodita {
-        assert!(bajtoj.len() >= 36);
-        assert!(bajtoj.len() <= 78);
-        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
-    }
+    kontroli_kadron(&komito, &arbo, 36, 46);
 }
 
-/// Kunfanda kadro kun du gepatroj restas en la difinita longa intervalo.
+/// Seriigo de ordinara komito kun unu gepatro.
+#[kani::proof]
+#[kani::unwind(40)]
+fn pruvo_gepatra_kadro() {
+    let arbo: [u8; HAKETA_LONGO] = kani::any();
+    let gepatra: [u8; HAKETA_LONGO] = kani::any();
+    let havas_mesagxon: bool = kani::any();
+    let signo: u8 = kani::any();
+    let kreita_je: u64 = kani::any();
+    let komito = Komito {
+        arbo: Haketo::el_bajtoj(arbo),
+        gepatro: Some(Haketo::el_bajtoj(gepatra)),
+        mesagxo: prova_mesagxo(havas_mesagxon, signo),
+        kreita_je,
+        dua_gepatro: None,
+    };
+
+    kani::cover!(havas_mesagxon);
+    kani::cover!(!havas_mesagxon);
+    kani::cover!(kreita_je == u64::MAX);
+    kani::cover!(kreita_je == 0);
+    kontroli_kadron(&komito, &arbo, 68, 78);
+}
+
+/// Seriigo de kunfanda komito kun du gepatroj.
 #[kani::proof]
 #[kani::unwind(40)]
 fn pruvo_kunfanda_kadro() {
@@ -228,11 +260,7 @@ fn pruvo_kunfanda_kadro() {
     let komito = Komito {
         arbo: Haketo::el_bajtoj(arbo),
         gepatro: Some(Haketo::el_bajtoj(unua)),
-        mesagxo: if havas_mesagxon {
-            String::from(char::from(signo & 0x7f))
-        } else {
-            String::new()
-        },
+        mesagxo: prova_mesagxo(havas_mesagxon, signo),
         kreita_je,
         dua_gepatro: Some(Haketo::el_bajtoj(dua)),
     };
@@ -241,15 +269,7 @@ fn pruvo_kunfanda_kadro() {
     kani::cover!(!havas_mesagxon);
     kani::cover!(kreita_je == u64::MAX);
     kani::cover!(kreita_je == 0);
-    // JUSTIFIKO: samkiel en `pruvo_komito_seriigo`, la forĵeta gluo de `Eraro`
-    // ne apartenas al la teoremo kaj multe kostas al la solvilo.
-    let kodita = core::mem::ManuallyDrop::new(komito.seriigi());
-    assert!(kodita.is_ok());
-    if let Ok(bajtoj) = &*kodita {
-        assert!(bajtoj.len() >= 100);
-        assert!(bajtoj.len() <= 110);
-        assert!(bajtoj.get(..HAKETA_LONGO) == Some(&arbo[..]));
-    }
+    kontroli_kadron(&komito, &arbo, 100, 110);
 }
 
 /// 5. Deklarita kvanto estas limigita antaŭ ol rezervi memoraĵon.

@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title data-t="meta.titolo">Versio — versiokontrola sistemo en Rust</title>
   <meta name="description" data-t-meta="meta.priskribo"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ses formalaj pruvoj kaj reala importo de MiKerno.">
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ok formalaj pruvoj kaj reala importo de MiKerno.">
   <meta name="theme-color" content="#0A0D1C">
   <meta property="og:title" content="Versio — versiokontrola sistemo en Rust"
     data-t-meta="meta.titolo">
   <meta property="og:description"
-    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ses formalaj pruvoj kaj reala importo de MiKerno."
+    content="Versio estas eta versiokontrola sistemo en Rust: no_std-kerno, entenata stokado, historio, branĉoj kaj kunfandado, ok formalaj pruvoj kaj reala importo de MiKerno."
     data-t-meta="meta.priskribo">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://makoto-lernanto.github.io/versio/">
@@ -98,7 +98,7 @@
           <span class="principo vigla" data-t="hero.principo1">no_std-kerno</span>
           <span class="principo">BLAKE3</span>
           <span class="principo">postcard</span>
-          <span class="principo" data-t="hero.principo4">7 Kani-pruvoj</span>
+          <span class="principo" data-t="hero.principo4">8 Kani-pruvoj</span>
           <span class="principo">MiKerno</span>
         </div>
         <div class="heroo-butonoj">
@@ -179,7 +179,7 @@
         <span data-t="stat.1">fazoj finitaj</span>
       </div>
       <div class="statistikero">
-        <strong>6</strong>
+        <strong>8</strong>
         <span data-t="stat.2">Kani-pruvoj</span>
       </div>
       <div class="statistikero">
@@ -278,9 +278,9 @@
           </span>
           <h3 data-t="karto5.titolo">Formalaj pruvoj</h3>
           <p data-t="karto5.teksto">
-            Sep Kani-pruvoj kovras kanonikan ordon, duplikatojn, vojan sekurecon,
-            arbitrajn bajtojn, dekodajn limojn, ordinarajn komitajn kadrojn kaj
-            la kunfandan kadron.
+            Ok Kani-pruvoj kovras kanonikan ordon, duplikatojn, vojan sekurecon,
+            arbitrajn bajtojn, dekodajn limojn, radikan, unu-gepatran kaj
+            du-gepatran komitajn kadrojn.
           </p>
           <span class="sildeto">Kani · CI</span>
         </article>
@@ -358,7 +358,7 @@
             <h3 data-t="fluo.p4.titolo">Kontroli</h3>
             <p data-t-html="fluo.p4.teksto">
               Loke: formo, Clippy kaj testoj. En CI: <code>no_std</code>-sentineleto
-              kaj la sep Kani-pruvoj.
+              kaj la ok Kani-pruvoj.
             </p>
           </div>
           <span class="sildeto">CI</span>
@@ -706,7 +706,7 @@
         <div>
           <h2 id="pruvoj-titolo" data-t="pruv.titolo">Formala pruvado</h2>
           <p data-t="pruv.teksto">
-            Sep Kani-pruvoj rulas nur en GitHub Actions. La amplekso estas limigita
+            Ok Kani-pruvoj rulas nur en GitHub Actions. La amplekso estas limigita
             kaj dokumentita — neniu pruvo asertas pli ol ĝi kontrolas.
           </p>
         </div>
@@ -800,9 +800,10 @@
           </span>
           <h3 data-t="pruv.k6.titolo">Komitaj kadroj</h3>
           <p data-t-html="pruv.k6.teksto">
-            <code>pruvo_komito_seriigo</code> kaj <code>pruvo_kunfanda_kadro</code>:
-            simbolikaj haketoj, mesaĝo kaj tempstampo produktas 36–78-bajtan
-            ordinaran kadron aŭ 100–110-bajtan kunfandan kadron, kun la radika
+            <code>pruvo_komito_seriigo</code>, <code>pruvo_gepatra_kadro</code> kaj
+            <code>pruvo_kunfanda_kadro</code>: simbolikaj haketoj, mesaĝo kaj
+            tempstampo produktas 36–46-bajtan radikan kadron, 68–78-bajtan
+            unu-gepatran kadron aŭ 100–110-bajtan kunfandan kadron, kun la radika
             haketo unue.
           </p>
           <span class="sildeto">komito</span>
@@ -819,7 +820,7 @@
         </p>
       </div>
       <p class="scena-ligiloj" data-aperu>
-        <span data-t-html="pruv.nuba">La CI-rulo de la branĉa funkcio estis verda: <code>Lint and build</code> kaj ĉiuj sep <code>Kani (...)</code>-laboroj.</span>
+        <span data-t-html="pruv.nuba">La CI-rulo de la branĉa funkcio estis verda: <code>Lint and build</code> kaj ĉiuj ok <code>Kani (...)</code>-laboroj.</span>
         <a href="https://github.com/makoto-lernanto/versio/actions/runs/44261396865">GitHub Actions · 44261396865</a>
       </p>
     </section>
@@ -1016,7 +1017,7 @@
           <dl>
             <div><dt data-t="komenci.dl.plano">Plano</dt><dd>VERSIO.md</dd></div>
             <div><dt data-t="komenci.dl.integro">Integro</dt><dd>MIKERNO_INTEGRO.md</dd></div>
-            <div><dt data-t="komenci.dl.pruvoj">Pruvoj</dt><dd>6 · Kani</dd></div>
+            <div><dt data-t="komenci.dl.pruvoj">Pruvoj</dt><dd>8 · Kani</dd></div>
           </dl>
           <div class="elssxuta-butonoj">
             <a class="buto norma" href="https://github.com/makoto-lernanto/versio/blob/main/VERSIO.md">VERSIO.md</a>
