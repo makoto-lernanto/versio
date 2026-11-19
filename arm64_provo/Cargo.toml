@@ -3,6 +3,7 @@ name = "arm64_provo"
 edition = "2024"
 rust-version = "1.100"
 version = "0.1.0"
+license = "MIT"
 publish = false
 
 # Propra laborspaco: tiu ĉi pakaĵo celas nur aarch64-unknown-none kaj ne

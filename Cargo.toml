@@ -6,6 +6,7 @@ members = ["libversio", "versio-ki", "no_std_provo"]
 edition = "2024"
 rust-version = "1.100"
 version = "0.1.0"
+license = "MIT"
 
 [workspace.dependencies]
 anyhow = "1"
