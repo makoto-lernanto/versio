@@ -10,7 +10,7 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `fadeno` | thread | Neniam uzu `thread`. |
 | `procezo` | process | `Procezo`; neniam uzu `process`. |
 | `IK` | IPC (interproceza komunikado) | La modulo `kerno/ik.rs`; antaŭe `ipc`. |
-| `DI` | Continuous Integration (CI) | Daŭra Integrado: la laborfluo `di.yml` kaj la matrico `kani-kontroli`. |
+| `DI` | Continuous Integration (CI) | Daŭra Integrado: la laborfluo `ci.yml` kaj la matrico `kani-kontroli`. |
 | `KI` | command-line interface (CLI) | Komandliniaj Iloj; en Versio la dosierujo `versio-ki`. |
 | `EAS` | content-addressable storage (CAS) | Enhavadresita Stokado; en Versio `libversio::stokado`. |
 | `dosiera objekto` | blob | La kruda enhavo de unu dosiero; la tipo estas `Dosiero`. Neniam uzu `blob` en tekstoj aŭ identigiloj. |
@@ -386,6 +386,9 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `akiri` | fetch | Fazo 6: ricevi la mankantajn objektojn el malproksima deponejo. |
 | `subskribi` | sign | Fazo 8: Ed25519-subskriboj por komitoj. |
 | `importi` / `eksporti` | import / export | Fazo 9: Git-kongrueco kaj migrado. |
+| `nuda-metala` | bare-metal | Sen operaciuma medio; la memtesto en `arm64_provo`. |
+| `efikecmezuro` | benchmark | Mezuro de rendimento; ne uzu `benchmark` en tekstoj. |
+| `hazardiga testo` | fuzz test | Hazardaj enigoj kontraŭ la malkodado; `hazardiga kampanjo` estas la longa rulo. |
 
 ## FluoU — grafika uzinterfaco
 
@@ -529,3 +532,9 @@ eksteraj protokolaj nomoj:
     diakritojn («paĝado», «paĝa tabelo»). Ne-ASKIAj identigiloj kiel
     `PaĝaTablo` estas permesataj; la limo koncernas nur la aŭtomatan
     modulŝarĝon (E0754).
+13. La fiksaj markiloj de la iloj restas anglaj, ĉar Clippy kaj rustdoc ilin
+    rekonas laŭlitere: `/// # Errors`, `/// # Safety` kaj `// SAFETY:`.
+    Nur la libera teksto post tiuj markiloj tradukiĝas; la valoro de
+    `reason = "..."` estas Esperanta. La ŝlosiloj de GitHub Actions (`on`,
+    `jobs`, `runs-on`, `uses`, `with`, …) kaj la nomoj de agoj restas same
+    netuŝitaj.

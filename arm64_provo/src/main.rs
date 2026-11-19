@@ -1,4 +1,4 @@
-//! Bare-metal memtesto de la pura kerno sur aarch64.
+//! Nuda-metala memtesto de la pura kerno sur aarch64.
 //!
 //! Ĝi estas konstruata por `aarch64-unknown-none` kaj rulata per
 //! `qemu-system-aarch64 -M virt -semihosting`. La eligo iras tra
@@ -40,16 +40,16 @@ impl Rezultoj {
     fn kontroli(&mut self, nomo: &str, kondiĉo: bool) {
         if kondiĉo {
             self.sukcesoj = self.sukcesoj.saturating_add(1);
-            semihosting::println!("  OK   {nomo}");
+            semihosting::println!("  SUKCESO    {nomo}");
         } else {
             self.malsukcesoj = self.malsukcesoj.saturating_add(1);
-            semihosting::println!("  FAIL {nomo}");
+            semihosting::println!("  MALSUKCESO {nomo}");
         }
     }
 }
 
 /// Elirpunkto post la starigo de la stako fare de `_start`.
-fn rust_main() -> ! {
+fn ĉefprogramo() -> ! {
     let mut r = Rezultoj::nova();
 
     semihosting::println!("Versio arm64-memtesto");
@@ -61,10 +61,7 @@ fn rust_main() -> ! {
     kontroli_dekodon(&mut r);
 
     r.kontroli("usize estas 64-bita", core::mem::size_of::<usize>() == 8);
-    r.kontroli(
-        "la celo estas little-endian",
-        cfg!(target_endian = "little"),
-    );
+    r.kontroli("la celo estas etendiana", cfg!(target_endian = "little"));
 
     semihosting::println!(
         "arm64: {} sukcesoj, {} malsukcesoj",
@@ -74,17 +71,17 @@ fn rust_main() -> ! {
     semihosting::process::exit(i32::from(r.malsukcesoj != 0))
 }
 
-/// La reala (pure-Rust) `BLAKE3` funkcias kaj kongruas kun la oficiala vektoro.
+/// La reala pura-Rusta `BLAKE3` funkcias kaj kongruas kun la oficiala vektoro.
 fn kontroli_haketilon(r: &mut Rezultoj) {
     let malplena: Haketo = BLAKE3_MALPLENA
         .parse()
         .unwrap_or_else(|_| Haketo::el_bajtoj([0; 32]));
     r.kontroli(
-        "blake3 malplena enigo kongruas kun la oficiala vektoro",
+        "BLAKE3 malplena enigo kongruas kun la oficiala vektoro",
         haketi(b"") == malplena,
     );
     r.kontroli(
-        "blake3 distingas malsamajn enigojn",
+        "BLAKE3 distingas malsamajn enigojn",
         haketi(b"a") != haketi(b"b"),
     );
 }
@@ -188,14 +185,15 @@ fn paniko(informo: &core::panic::PanicInfo<'_>) -> ! {
     semihosting::process::exit(101)
 }
 
-/// Simpla «bump»-alokilo: la tuta programo estas unu-fadena, la memorujo
+/// Simpla staka alokilo: la tuta programo estas unu-fadena, la memorujo
 /// estas fiksa kaj nenio estas liberigata.
 mod stako {
-    // PERMESO-JUSTIFIKO: bare-metal sen-OS medio ne havas malloc; `GlobalAlloc`
-    // devige estas `unsafe`-trajto, la alokilo estas izolita en ĉi tiu modulo.
+    // PERMESO-JUSTIFIKO: nuda-metala senoperaciuma medio ne havas `malloc`;
+    // `GlobalAlloc` devige estas `unsafe`-trajto, la alokilo estas izolita en
+    // ĉi tiu modulo.
     #![allow(
         unsafe_code,
-        reason = "bare-metal sen-OS medio postulas unsafe GlobalAlloc-realigon"
+        reason = "nuda-metala senoperaciuma medio postulas unsafe GlobalAlloc-realigon"
     )]
     // PERMESO-JUSTIFIKO: la kampo estas alirebla nur per kruda montrilo,
     // do la kompililo ne povas vidi legon de ĝi.
@@ -246,18 +244,18 @@ static ALOKILO: stako::StakaAlokilo = stako::StakaAlokilo;
 
 /// Enirpunkto kaj stakstarigo — la sola platforma gluo de la binaro.
 mod eniro {
-    // PERMESO-JUSTIFIKO: enirpunkto de bare-metal binaro devas uzi
+    // PERMESO-JUSTIFIKO: enirpunkto de nuda-metala binaro devas uzi
     // `global_asm!` kaj `unsafe(export_name)`; la testa logiko restas ekster
     // ĉi tiu modulo kaj plu sub la malpermeso de `unsafe_code`.
     #![allow(
         unsafe_code,
-        reason = "bare-metal enirpunkto postulas global_asm! kaj export_name"
+        reason = "nuda-metala enirpunkto postulas global_asm! kaj export_name"
     )]
 
     /// Vokas la ĉefan testrutinon sub la nomo, kiun atendas `_start`.
     #[unsafe(export_name = "rust_main")]
     pub(crate) fn ekiri() -> ! {
-        super::rust_main()
+        super::ĉefprogramo()
     }
 
     core::arch::global_asm!(

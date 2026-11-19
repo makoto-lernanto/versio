@@ -17,7 +17,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Rapida rimensaĝo: formo, lintoj kaj eldonaj konstruoj.
+  # Rapida rimensaĝo: formo, statika analizo kaj eldonaj konstruoj.
   kontroli-kaj-konstrui:
     name: Kontroli kaj konstrui
     runs-on: ubuntu-latest

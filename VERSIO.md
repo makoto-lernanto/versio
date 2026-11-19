@@ -157,12 +157,12 @@ La jenaj fazoj estas plano, ne promeso; la ordo kaj la amplekso povas ŝanĝiĝi
 1. Evoluigi la indekson al binara, mempriskriba formato kun versio, atomaj ĝisdatigoj kaj difekta kontrolo.
 2. Paraleligi haketadon kaj komparadon per `rayon`, sed limigi la memoruzon per fluado.
 3. Aldoni inkrementan arbokonstruadon: reuzi subarbojn, kies enhavo ne ŝanĝiĝis.
-4. Verki benchmarkojn por `stato`, `komitu`, `eltiri` kaj `historio`; la benchmarkoj ne rulas en la ĉefa DI.
+4. Verki efikecmezurojn por `stato`, `komitu`, `eltiri` kaj `historio`; la efikecmezuroj ne rulas en la ĉefa DI.
 
 **Akceptokriterioj**:
-- [ ] `vs stato` finiĝas en malpli ol 100 ms ĉe 100 000 dosieroj post unu ŝanĝo (release, varma kaŝmemoro).
+- [ ] `vs stato` finiĝas en malpli ol 100 ms ĉe 100 000 dosieroj post unu ŝanĝo (eldona profilo, varma kaŝmemoro).
 - [ ] `vs komitu` uzas malpli ol 256 MiB da memoro ĉe 1 GiB da dosieroj.
-- [ ] Reuzo de subarboj estas pruvita per unuoptesto kaj mezurita per benchmarko.
+- [ ] Reuzo de subarboj estas pruvita per unuoptesto kaj mezurita per efikecmezuro.
 - [ ] Neniu ekzistanta testo aŭ pruvo regresas; la DI-matrico restas verda.
 
 ### Fazo 8: Sekureco, subskriboj kaj daŭripova stokado
@@ -173,12 +173,12 @@ La jenaj fazoj estas plano, ne promeso; la ordo kaj la amplekso povas ŝanĝiĝi
 2. Konservi publikajn ŝlosilojn en `.vs/ŝlosiloj` kaj politikojn en `.vs/agordo`.
 3. Kontroli subskribojn dum `eltiri` kaj `kunfandi`; permesi politikon `postuli-subskribon`.
 4. Certigi, ke `vs rubokolekti` ne forigas subskribitajn objektojn, kiujn la politiko protektas.
-5. Aldoni fuzz-testojn por la malkodado kaj daŭrigi la Kani-pruvojn pri la legilo.
+5. Aldoni hazardigajn testojn por la malkodado kaj daŭrigi la Kani-pruvojn pri la legilo.
 
 **Akceptokriterioj**:
 - [ ] Ŝanĝita komito aŭ arbo estas rifuzata, se ĝia subskribo ne validas.
 - [ ] Subskribo de unu komito validas tra `kunfandi` kaj `eltiri`.
-- [ ] Fuzz-kampanjo de 24 horoj ne trovas panikon en la malkodado.
+- [ ] Hazardiga kampanjo de 24 horoj ne trovas panikon en la malkodado.
 - [ ] La Kani-matrico restas verda kaj neniu `#[allow]` estas aldonita.
 
 ### Fazo 9: Kongrueco kun Git kaj migrado
@@ -271,10 +271,10 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 
 ### 0. Tri neintertrakteblaj feraj reguloj (Neintertrakteblaj Reguloj)
 
-1. **Malpermesite modifi la kontrolon mem por igi ĝin pasi.** Ne aldonu `#[allow(...)]`, ne malaltigu la nivelon de lint, ne forigu aŭ komentu malsukcesajn testojn aŭ pruvojn, ne uzu `kani::assume` por mallarĝigi la enigan spacon por kaŝi kontraŭekzemplojn.
+1. **Malpermesite modifi la kontrolon mem por igi ĝin pasi.** Ne aldonu `#[allow(...)]`, ne malaltigu la nivelon de statika analizo, ne forigu aŭ komentu malsukcesajn testojn aŭ pruvojn, ne uzu `kani::assume` por mallarĝigi la enigan spacon por kaŝi kontraŭekzemplojn.
 2. **Se `#[allow]` vere necesas**, devige skribu justigan komenton kaj aparte listigu ĝin en la respondo, atendante la aprobon de la uzanto:
    ```rust
-   // PERMESO-JUSTIFIKO: la eligformato de blake3 ĉiam estas 32 bajtoj; la tranĉolongo ĉi tie estas garantiita de la tipo
+   // PERMESO-JUSTIFIKO: la eligformato de BLAKE3 ĉiam estas 32 bajtoj; la tranĉolongo ĉi tie estas garantiita de la tipo
    #[allow(clippy::indexing_slicing)]
    ```
 3. **Ĉe livero devige aldonu realajn eligojn de la komandoj** (la finajn resumojn de `cargo clippy` / `test` / `kani`). Sen eligo = ne finita.
@@ -286,7 +286,7 @@ Sekvu la jenajn paŝojn ĉiufoje kiam vi respondas al mia peto kaj generas kodon
 > **Deviga regulo**: La loka maŝino **neniam** rulu `just kani`, `cargo kani` aŭ la plenan `just di`. Kodformo, Clippy, konstruado kaj la formala pruvado per Kani plenumiĝas nur en GitHub Actions, por eviti lokan memorelspezon kaj WSL2-malkonekton.
 
 - **Loka laboro**: redakti kodon kaj ruli nur malpezajn kontrolojn, ekzemple `cargo fmt --all -- --check`, `cargo clippy --workspace --release -- -D warnings` kaj `cargo test --workspace --all-features`.
-- **Aŭtomata DI**: ĉiu `git push` al `main` kaj ĉiu tirpeto rulas `.github/workflows/di.yml`: unue `Kontroli kaj konstrui` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste la matrico `Kani (<pruvo>)`.
+- **Aŭtomata DI**: ĉiu `git push` al `main` kaj ĉiu tirpeto rulas `.github/workflows/ci.yml`: unue `Kontroli kaj konstrui` (formo, Clippy, konstruado kaj la `no_std`-sentineleto), poste la matrico `Kani (<pruvo>)`.
 - **Formala pruvado**: ĉiu pruvo rulas en propra matrica laboro per la oficiala `model-checking/kani-github-action@v1`, kiu instalas Kani kaj rulas `timeout -s KILL 600 cargo kani -p libversio --harness <pruvo>` sur `ubuntu-latest`. `fail-fast: false` certigas, ke ĉiuj pruvoj raportas; 600-sekunda tempolimo kaj 30-minuta laborlimo malebligas, ke unu ŝvebanta pruvo kaŝu la ceterajn aŭ forprenu la protokolojn.
 - **Pruvamplekso**: ok kontroloj — la kvin ekzistantaj pruvoj pri kanonika arbo-ordo, duplikataj vojoj, voja sekureco, legado de nekonfidindaj bajtoj kaj limigo de deklaritaj kvantoj; plus tri komitaj seriigaj pruvoj per la eksplicita `Skribilo` — radika sen-gepatra kadro (36–46 bajtoj), ordinara unu-gepatra kadro (68–78 bajtoj) kaj kunfanda kadro kun du gepatroj (100–110 bajtoj). Ĉiu kadra pruvo havas simbolikan radikan haketon, simbolikan ĉeeston de mesaĝo kaj ajnan `u64`-tempstampon; la gepatroj estas fiksaj, ĉar neniu aserto komparas iliajn bajtojn. La tri kadraj formoj havas proprajn pruvojn, ĉar simbolaj gepatroj unuigus ĉiujn formojn en unu tro multekosta formulo. La kadro metas la fiksajn kampojn (haketoj) antaŭ la varilongajn (mesaĝo, tempstampo), do la 32-bajtaj kopioj okazas ĉe konstantaj pozicioj; la formulo de la kunfanda pruvo tiel restas ĉirkaŭ 1,4 milionoj da klaŭzoj anstataŭ 77 milionoj. Plena malkodado de arbitraj `Komito`-kadroj ne estas pruvita per Kani: la UTF-8- kaj arbo-malkodaj vojoj superas la mezuritan formulbuĝeton de la DI eĉ kun konkretaj kadroj. Tiun kampon kovras unuoptestoj (rondiroj, etikedoj, tranĉoj, varintaj limoj) kaj la arbitraj-bajta pruvo pri la legilo. Vidu `MIKERNO_INTEGRO.md` por la preciza amplekso, la mezuritaj limoj, realaj integratestoj kaj la nuba stato.
 - **Kani-kodo ne kompiliĝas loke**: `libversio/src/pruvoj.rs` estas `#[cfg(kani)]`, do lokaj `fmt`, `Clippy` kaj testoj ne kaptas erarojn en ĝi. Ĉiu ŝanĝo al la pruvoj validas nur post verda DI-matrico.

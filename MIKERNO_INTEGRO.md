@@ -159,10 +159,10 @@ test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 La ceteraj testaroj de la laborloko ankaŭ estis verdaj (3, 5, 4, 4, 6 kaj 8
 testoj).
 
-La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en debug-reĝimo;
-ĝia tempolimo validas por release. Neniu nova `allow` aŭ ignorata testo estis
-aldonita. La nuna DI ne rulas la unuoptestojn; ĝi rulas formon, Clippy,
-konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
+La jam ekzistanta testo por 10 000 dosieroj estas ignorata nur en la sencimiga
+profilo; ĝia tempolimo validas por la eldona profilo. Neniu nova `allow` aŭ
+ignorata testo estis aldonita. La nuna DI ne rulas la unuoptestojn; ĝi rulas
+formon, Clippy, konstruadon, la `no_std`-sentineleton kaj la Kani-matricon.
 
 **Nuba stato: verda.** GitHub Actions-rulo
 [`44302583687`](https://github.com/makoto-lernanto/versio/actions/runs/44302583687)
