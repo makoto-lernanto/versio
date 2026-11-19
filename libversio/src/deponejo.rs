@@ -39,7 +39,7 @@ const NUNA_BRANĈO_DOSIERO: &str = "branĉo";
 /// Nur sufiĉe malnovaj tempstampoj garantias, ke posta ŝanĝo videblas.
 const FREŜA_MARGENO: Duration = Duration::from_secs(2);
 
-static TEMP_NOMBRO: AtomicU64 = AtomicU64::new(0);
+static PROVIZORA_NOMBRO: AtomicU64 = AtomicU64::new(0);
 
 /// La ŝanĝoj de la laborspaco rilate al la arbo de `KAPO`.
 ///
@@ -1014,8 +1014,8 @@ fn skribi_atome(vojo: &Path, datumoj: &[u8]) -> Result<(), Eraro> {
     let nomo = vojo
         .file_name()
         .map_or_else(String::new, |nomo| nomo.to_string_lossy().into_owned());
-    let nombro = TEMP_NOMBRO.fetch_add(1, Ordering::Relaxed);
-    let provizora = dosierujo.join(format!(".{nomo}.{}.{}.tmp", std::process::id(), nombro));
+    let nombro = PROVIZORA_NOMBRO.fetch_add(1, Ordering::Relaxed);
+    let provizora = dosierujo.join(format!(".{nomo}.{}.{}.prov", std::process::id(), nombro));
 
     fs::write(&provizora, datumoj)?;
     if let Err(eraro) = fs::rename(&provizora, vojo) {

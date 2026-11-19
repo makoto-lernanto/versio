@@ -203,12 +203,12 @@ mod dosiera {
 
     const LEGA_BLOKO: usize = 64 * 1024;
 
-    static TEMP_NOMBRO: AtomicU64 = AtomicU64::new(0);
+    static PROVIZORA_NOMBRO: AtomicU64 = AtomicU64::new(0);
 
     /// Forigas la provizoran dosieron, kiam la operacio finiĝas aŭ malsukcesas.
-    struct TempForigilo<'a>(&'a Path);
+    struct ProvizoraForigilo<'a>(&'a Path);
 
-    impl Drop for TempForigilo<'_> {
+    impl Drop for ProvizoraForigilo<'_> {
         fn drop(&mut self) {
             drop(fs::remove_file(self.0));
         }
@@ -269,10 +269,10 @@ mod dosiera {
             self.dosierujo.join(format!("{haketo}.lz4"))
         }
 
-        fn temp_vojo(&self) -> PathBuf {
-            let nombro = TEMP_NOMBRO.fetch_add(1, Ordering::Relaxed);
+        fn provizora_vojo(&self) -> PathBuf {
+            let nombro = PROVIZORA_NOMBRO.fetch_add(1, Ordering::Relaxed);
             self.dosierujo
-                .join(format!(".{}.{}.tmp", std::process::id(), nombro))
+                .join(format!(".{}.{}.prov", std::process::id(), nombro))
         }
 
         /// Legas dosieron kontinuante, kunpremas ĝin kaj konservas ĝin.
@@ -297,8 +297,8 @@ mod dosiera {
         pub fn konservi_fluon<R: Read>(&self, mut legilo: R) -> Result<(Haketo, u64), Eraro> {
             fs::create_dir_all(&self.dosierujo)?;
 
-            let provizora = self.temp_vojo();
-            let forigilo = TempForigilo(&provizora);
+            let provizora = self.provizora_vojo();
+            let forigilo = ProvizoraForigilo(&provizora);
 
             let dosiero = fs::File::create(&provizora)?;
             let mut kodilo = lz4_flex::frame::FrameEncoder::new(dosiero);

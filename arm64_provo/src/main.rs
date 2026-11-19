@@ -214,11 +214,11 @@ mod stako {
     static PLENO: AtomicUsize = AtomicUsize::new(0);
 
     /// La alokilo mem.
-    pub(crate) struct Bump;
+    pub(crate) struct StakaAlokilo;
 
     // SAFETY: la alokilo nur antaŭeniras en unu fadeno kaj neniam liberigas,
     // do du alokoj neniam interkovriĝas.
-    unsafe impl GlobalAlloc for Bump {
+    unsafe impl GlobalAlloc for StakaAlokilo {
         unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
             let masko = layout.align().max(1).saturating_sub(1);
             let nun = PLENO.load(Ordering::Relaxed);
@@ -242,7 +242,7 @@ mod stako {
 }
 
 #[global_allocator]
-static ALOKILO: stako::Bump = stako::Bump;
+static ALOKILO: stako::StakaAlokilo = stako::StakaAlokilo;
 
 /// Enirpunkto kaj stakstarigo — la sola platforma gluo de la binaro.
 mod eniro {

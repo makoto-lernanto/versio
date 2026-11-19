@@ -19,7 +19,7 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `KAPO` | HEAD | La dosiero `.vs/KAPO`; neniam uzu `HEAD` en identigiloj. |
 | `laborspaco` | working tree | La dosierujo ekster `.vs`; `stato` komparas ĝin kun `KAPO`. |
 | `laborspaca indekso` | work-tree index | `.vs/indekso`: metadatumkaŝmemoro por `stato` kaj `komitu`. |
-| `eltiri` | checkout / restore | `vs eltiri <branĉo|haketo>`; restarigas la laborspacon. |
+| `eltiri` | checkout / restore | `vs eltiri <branĉo aŭ haketo>`; restarigas la laborspacon. |
 | `kunfandi` | merge | `vs kunfandi <branĉo>`; tri-voja kunfando. |
 | `momentfoto` | snapshot | La arbo plus la komitaj metadatumoj; ne konfuzu kun `bildo`. |
 | `seriigi` / `malseriigi` | serialize / deserialize | `Komito::seriigi`, `Legilo`; la surdiska kadro. |
@@ -344,13 +344,48 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `DMA-priskribo` | DMA descriptor | `DmaEro`: `kontrolo`, `longo`, `adreso`, ĉiuj grandendianaj. |
 | `kontiguaj kadroj` | contiguous frames | `aloki_kontiguajn(n)`: unua-taŭga serĉo kaj markado de `n` sinsekvaj kadroj. |
 | `piksela fiksaĵo` | pixel fixture | `testi_pikselojn`: gradiento, teksto, haketo; `PikselaRaporto`. |
-| `haketo` | hash | FNV-1a 64 super la videblaj pikseloj; komparebla inter la arkoj. |
+| `haketo (piksela)` | pixel hash | FNV-1a 64 super la videblaj pikseloj; komparebla inter la arkoj. |
 | `PXN` | privileged execute-never | PTE-bito: `EL1` ne plenumas `U=1`-foliojn. |
 | `UXN` | unprivileged execute-never | PTE-bito: `EL0` ne plenumas datumajn foliojn; la kodo havas `UXN = 0`. |
 | `PAN` | privileged access never | `ID_AA64MMFR1_EL1`; `msr pan, #0` malfermas, `#1` fermas la fenestron. |
 | `SPAN` | set PAN | `SCTLR_EL1.SPAN = 0`: ĉiu escepta eniro refermas la `PAN`-fenestron. |
 | `PAN-fenestro` | PAN window | `StacGardo` (arm64): malfermas ĉe profundo 0 kaj refermas per `Drop`. |
 | `PAN-malobservo` | PAN violation | `EC = 0x25` kun `FAR` en la uzanta fenestro; la kerno haltas. |
+
+## Versio — versiokontrola sistemo
+
+| Esperanto | Angla | Rimarko |
+| --- | --- | --- |
+| `deponejo` | repository | La radika dosierujo kun `.vs/`; `Deponejo` en `libversio::deponejo`. |
+| `stokejo` | object store | `.vs/objektoj`; la dosierujo de la EAS-objektoj. |
+| `stokado` | storage | La modulo `libversio::stokado`; `Konservilo` abstranas la subtenilon. |
+| `konservilo` | store backend | `Konservilo`, `DosieraKonservilo`, `MemoraKonservilo`; la operacioj estas `konservi` kaj `ricevi`. |
+| `objekto` | object | Komuna nomo por `Dosiero`, `Arbo` kaj `Komito`. |
+| `arbo` | tree | `Arbo`: ordigita listo de `ArbaEnskribo` sen duplikatoj. |
+| `arba enskribo` | tree entry | `ArbaEnskribo::{Dosiero, Arbo}`: nomo plus `Haketo`. |
+| `noto` | commit message | `vs komitu --noto <teksto>`; la kampo estas `Komito.mesaĝo`. |
+| `gepatro` | parent | `Komito.gepatro`: la antaŭa komito; `None` ĉe la unua komito. |
+| `dua_gepatro` | second parent | La dua gepatro de kunfanda komito; `None` ĉe ordinaraj komitoj. |
+| `referenco` | reference (ref) | `.vs/referencoj`; branĉoj kaj estonte etikedoj. |
+| `nuna branĉo` | current branch | `.vs/branĉo`; `Deponejo::nuna_branĉo`. |
+| `detaĉita KAPO` | detached HEAD | `KAPO` montras rekte al komito, sen aktiva branĉo. |
+| `laborspaca stato` | working-tree status | `Stato` kaj `vs stato`: `modifitaj`, `novaj`, `forigitaj`. |
+| `pura` | clean | `Stato::estas_pura`; neniu ŝanĝo en la laborspaco. |
+| `indeksa versio` | index format version | `INDEKSA_VERSIO = 1`; la unua bajto de `.vs/indekso`. |
+| `antaŭenigo` | fast-forward | `Kunfando::Antauen`: la branĉo simple avancas. |
+| `kunfanda komito` | merge commit | `Kunfando::Kunfandita`: komito kun `gepatro` kaj `dua_gepatro`. |
+| `konflikto` | merge conflict | `Eraro::KunfandaKonflikto`; `kunfandi` ĉesas antaŭ ol ŝanĝi la laborspacon. |
+| `atingebla` | reachable | Fazo 5: `rubokolekti` konservos ĉion atingeblan el `KAPO`, branĉoj, etikedoj kaj movhistorio. |
+| `neatingebla` | unreachable | Fazo 5: nur neatingeblaj objektoj estos forigeblaj. |
+| `provizora` | temporary | `provizora_vojo`, `PROVIZORA_NOMBRO`, `ProvizoraForigilo`; atomaj skriboj. |
+| `atoma` | atomic | `skribi_atome`: skribi al provizora dosiero kaj renomi. |
+| `haketo (Versio)` | content hash (BLAKE3-256) | 64 deksesumaj signoj; la nomo de ĉiu objekto en `.vs/objektoj`. |
+| `etikedo` | tag | Fazo 5: `.vs/referencoj/etikedoj`; `vs etikedi` kaj `vs etikedoj`. |
+| `malproksima deponejo` | remote repository | Fazo 6: `.vs/malproksimoj`; `vs malproksima`. |
+| `publikigi` | push | Fazo 6: sendi la mankantajn objektojn al malproksima deponejo. |
+| `akiri` | fetch | Fazo 6: ricevi la mankantajn objektojn el malproksima deponejo. |
+| `subskribi` | sign | Fazo 8: Ed25519-subskriboj por komitoj. |
+| `importi` / `eksporti` | import / export | Fazo 9: Git-kongrueco kaj migrado. |
 
 ## FluoU — grafika uzinterfaco
 
