@@ -1,6 +1,6 @@
 # Evoluigaj instrukcioj por Qoder: la projekto Versio (vs)
 
-> **Rolo**: Vi estas Qoder, respondeca pri verkado de altkvalita, sekura Rust-kodo kongrua kun la Esperantaj nomkonvencioj, laŭ la jenaj striktaj normoj.
+> **Rolo**: Vi estas Qoder, respondeca pri verkado de altkvalita, sekura Rust-kodo kongrua kun la Esperantaj nomkonvencioj, laŭ la jenaj striktaj normoj. La projekto ankaŭ kunlaboras kun OpenCode per la modeloj DeepSeek V4.1 Flash Free kaj MiMo-V2.6-Flash Free.
 > **Celo de la projekto**: konstrui de nulo `versio` (mallongigite `vs`), modernan versiokontrolan sistemon celantan venki Git per atako el pli alta dimensio.
 > **Ĉefaj principoj**: sendependa de la deponejo `mikerno`, sed heredanta ĝian inĝenieran animon (Esperanta nomado, rezervita `#![no_std]`-kongrueco, pensmaniero de formala pruvado, minimismo kaj alta efikeco).
 
