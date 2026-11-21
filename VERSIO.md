@@ -31,7 +31,7 @@ versio/
 │   └── src/
 │       ├── lib.rs             # Eksportas la publikan interfacon
 │       ├── stokado.rs         # Enhavadresita stokado (EAS: Enhavadresita Stokado)
-│       ├── deponejo.rs        # Deponeja metadatumaro, grafa administrado kaj kunfandado
+│       ├── deponejo.rs        # Deponeja metadatumaro, referencoj, grafa administrado kaj kunfandado
 │       ├── objektoj.rs        # Datumstrukturoj: Dosiero, Arbo, Komito
 │       ├── indekso.rs         # Metadatumkaŝmemoro por `stato` kaj `komitu`
 │       ├── kodigo.rs          # Legado kaj skribado de la postcard-formato
@@ -52,7 +52,14 @@ versio/
 │           ├── linio.rs       # `vs linio` — krei branĉon
 │           ├── linioj.rs      # `vs linioj` — listigi branĉojn
 │           ├── kunfandi.rs    # `vs kunfandi` — kunfandi branĉon
-│           ├── haketo.rs      # komuna haket-solvado
+│           ├── etikedi.rs     # `vs etikedi` — etikedi komiton aŭ etikedon
+│           ├── etikedoj.rs    # `vs etikedoj` — listigi etikedojn
+│           ├── renomi.rs      # `vs renomi` — renomi branĉon
+│           ├── forigi.rs      # `vs forigi` — forigi branĉon
+│           ├── movhistorio.rs # `vs movhistorio` — montri la movhistorian
+│           ├── rubokolekti.rs # `vs rubokolekti` — forigi neatingeblajn objektojn
+│           ├── haketo.rs      # komuna haket- kaj referencsolvado
+│           ├── tempo.rs       # komuna tempstampo-formado
 │           └── komitu.rs      # `vs komitu` — registri komiton
 └── .github/workflows/         # DI/DL (kontrolo, provoj, Clippy)
 ```
@@ -129,10 +136,16 @@ La jenaj fazoj estas plano, ne promeso; la ordo kaj la amplekso povas ŝanĝiĝi
 4. Realigi `vs rubokolekti`: forigi nur objektojn neatingeblajn el `KAPO`, branĉoj, etikedoj kaj movhistorio.
 
 **Akceptokriterioj**:
-- [ ] `vs etikedi v1.0` kaj `vs historio v1.0` funkcias; etikedo povas montri al komito aŭ al alia etikedo.
-- [ ] `vs movhistorio` montras la antaŭajn valorojn de `KAPO` kaj de ĉiu branĉo.
-- [ ] `vs rubokolekti` forigas nur neatingeblajn objektojn; unuoptesto pruvas, ke ĉiuj atingeblaj restas.
+- [x] `vs etikedi v1.0` kaj `vs historio v1.0` funkcias; etikedo povas montri al komito aŭ al alia etikedo.
+- [x] `vs movhistorio` montras la antaŭajn valorojn de `KAPO` kaj de ĉiu branĉo.
+- [x] `vs rubokolekti` forigas nur neatingeblajn objektojn; unuoptesto pruvas, ke ĉiuj atingeblaj restas.
 - [ ] La atingo-kalkulo havas Kani-pruvon aŭ estas kovrita de la ekzistanta pruvo pri la legilo; la DI-matrico restas verda.
+
+La atingo-kalkulo de `rubokolekti` legas ĉiun radikon per `Komito::malseriigi` kaj
+`Arbo::malseriigi`, kiuj delegas al la sama `Legilo`, kiun kontrolas
+`pruvo_legilo_neniam_panikas`; la trairo mem ne uzas indicojn nek nesekurajn
+operaciojn. Tial la ekzistanta pruvo pri la legilo kovras la malkodadon, dum la
+unuoptestoj kaj la integraj testoj fiksas la atingokalkulon.
 
 ### Fazo 6: Reta kunlaboro sen centra servilo
 **Celo**: Ebligi interŝanĝon inter deponejoj per simpla, rekomencigebla kaj aŭtentikigita protokolo, sen postuli specialan servilon.

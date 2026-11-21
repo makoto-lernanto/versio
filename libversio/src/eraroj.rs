@@ -81,6 +81,34 @@ pub enum Eraro {
     #[error("la historioj ne havas komunan antaŭulon")]
     NesamajHistorioj,
 
+    /// La petita branĉo ne ekzistas.
+    #[error("la branĉo «{nomo}» ne ekzistas")]
+    NeekzistantaBranĉo {
+        /// La nomo de la branĉo.
+        nomo: String,
+    },
+
+    /// La branĉo jam ekzistas.
+    #[error("la branĉo «{nomo}» jam ekzistas")]
+    BranĉoEkzistas {
+        /// La nomo de la branĉo.
+        nomo: String,
+    },
+
+    /// La petita etikedo ne ekzistas.
+    #[error("la etikedo «{nomo}» ne ekzistas")]
+    NeekzistantaEtikedo {
+        /// La nomo de la etikedo.
+        nomo: String,
+    },
+
+    /// Etikedoj montras unu al la alia en senfina ciklo.
+    #[error("cikla etikedo ĉe «{nomo}»")]
+    CiklaEtikedo {
+        /// La nomo, ĉe kiu la ciklo fermiĝas.
+        nomo: String,
+    },
+
     /// Seriiga eraro de `postcard`.
     #[error("seriiga eraro: {0}")]
     Seriigo(postcard::Error),

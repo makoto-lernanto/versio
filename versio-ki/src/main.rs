@@ -55,9 +55,12 @@ enum Komando {
     /// Montras la modifitajn, novajn kaj forigitajn dosierojn rilate al KAPO.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Stato,
-    /// Montras la komitojn ekde KAPO, la plej nova unue.
+    /// Montras la komitojn ekde KAPO aŭ la donita celo, la plej nova unue.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Historio {
+        /// Etikedo, branĉo aŭ haketo, de kiu komenci (defaŭlte KAPO).
+        #[arg(value_name = "CELO")]
+        celo: Option<String>,
         /// Kiom da komitoj montri (defaŭlte ĉiujn).
         #[arg(short = 'n', long = "nombro", value_name = "NOMBRO")]
         nombro: Option<usize>,
@@ -92,6 +95,42 @@ enum Komando {
         #[arg(value_name = "NOMO")]
         linio: String,
     },
+    /// Etikedas komiton aŭ alian etikedon.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Etikedi {
+        /// Nomo de la nova etikedo.
+        #[arg(value_name = "NOMO")]
+        nomo: String,
+        /// Komito aŭ etikedo, kiun etikedi (defaŭlte KAPO).
+        #[arg(value_name = "CELO")]
+        celo: Option<String>,
+    },
+    /// Listigas la etikedojn kaj iliajn celojn.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Etikedoj,
+    /// Renomas branĉon.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Renomi {
+        /// Nuna nomo de la branĉo.
+        #[arg(value_name = "MALNOVA")]
+        malnova: String,
+        /// Nova nomo de la branĉo.
+        #[arg(value_name = "NOVA")]
+        nova: String,
+    },
+    /// Forigas branĉon.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Forigi {
+        /// Nomo de la branĉo.
+        #[arg(value_name = "NOMO")]
+        nomo: String,
+    },
+    /// Montras la antaŭajn valorojn de KAPO kaj de la branĉoj.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Movhistorio,
+    /// Forigas objektojn, kiujn neniu referenco atingas.
+    #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
+    Rubokolekti,
     /// Montras la ĝeneralan helppanon.
     #[command(help_template = HELPA_ŜABLONO, next_help_heading = "Opcioj")]
     Helpo,
@@ -122,11 +161,17 @@ fn plenumi() -> anyhow::Result<()> {
         Komando::Ini => komandoj::iniciati::plenumi(),
         Komando::Komitu { noto } => komandoj::komitu::plenumi(&noto),
         Komando::Stato => komandoj::stato::plenumi(),
-        Komando::Historio { nombro } => komandoj::historio::plenumi(nombro),
+        Komando::Historio { celo, nombro } => komandoj::historio::plenumi(nombro, celo.as_deref()),
         Komando::Eltiri { haketo, perforta } => komandoj::eltiri::plenumi(&haketo, perforta),
         Komando::Linio { nomo, bazo } => komandoj::linio::plenumi(&nomo, bazo.as_deref()),
         Komando::Linioj => komandoj::linioj::plenumi(),
         Komando::Kunfandi { linio } => komandoj::kunfandi::plenumi(&linio),
+        Komando::Etikedi { nomo, celo } => komandoj::etikedi::plenumi(&nomo, celo.as_deref()),
+        Komando::Etikedoj => komandoj::etikedoj::plenumi(),
+        Komando::Renomi { malnova, nova } => komandoj::renomi::plenumi(&malnova, &nova),
+        Komando::Forigi { nomo } => komandoj::forigi::plenumi(&nomo),
+        Komando::Movhistorio => komandoj::movhistorio::plenumi(),
+        Komando::Rubokolekti => komandoj::rubokolekti::plenumi(),
         Komando::Helpo => {
             Argumentoj::command().print_help()?;
             println!();

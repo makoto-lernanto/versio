@@ -118,9 +118,10 @@ malpermesitajn anglajn formojn — estas en
 MiKerno-momentfoto estas en [MIKERNO_INTEGRO.md](MIKERNO_INTEGRO.md).
 
 Fazo 1–3 konstruis la fundamenton, la datummodelon kaj la staton; Fazo 4 aldonis
-la ok formalajn pruvojn kaj la integran provon kun MiKerno. Fazaj 5
-(etikedoj, movhistorio, rubokolekto) kaj pli estas en evoluo aŭ planitaj;
-vidu la fazajn sekciojn de `VERSIO.md` por la precizaj kriterioj.
+la ok formalajn pruvojn kaj la integran provon kun MiKerno; Fazo 5 aldonis
+etikedojn, movhistorion, renomadon kaj forigon de branĉoj kaj rubokolekton.
+Fazo 6 kaj pli estas planitaj; vidu la fazajn sekciojn de `VERSIO.md` por la
+precizaj kriterioj.
 
 ## Kontribuado
 

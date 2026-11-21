@@ -29,6 +29,8 @@ pub use vojo::{
 };
 
 #[cfg(feature = "std")]
-pub use deponejo::{Deponejo, Stato};
+pub use deponejo::{
+    Ago, Deponejo, EtikedaCelo, Etikedo, Kunfando, Movhistorio, Movo, Referenco, Rubokolekto, Stato,
+};
 #[cfg(feature = "std")]
 pub use stokado::DosieraKonservilo;

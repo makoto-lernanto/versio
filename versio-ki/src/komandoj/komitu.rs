@@ -3,7 +3,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Context;
-use libversio::deponejo::Deponejo;
+use libversio::deponejo::{Ago, Deponejo};
 use libversio::objektoj::Komito;
 
 /// Plenumas la komandon kun la donita noto.
@@ -42,11 +42,11 @@ pub(crate) fn plenumi(noto: &str) -> anyhow::Result<()> {
         .context("malsukcesis legi la nunan branĉon")?
     {
         deponejo
-            .skribi_branĉon(&nomo, &haketo)
+            .movi_branĉon(&nomo, &haketo, Ago::Komiti)
             .with_context(|| format!("malsukcesis ĝisdatigi la branĉon {nomo}"))?;
     }
     deponejo
-        .skribi_kapon(&haketo)
+        .movi_kapon(&haketo, Ago::Komiti)
         .context("malsukcesis ĝisdatigi KAPO")?;
 
     println!("Komito {haketo}");

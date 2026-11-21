@@ -1,7 +1,7 @@
 //! `vs linio`: kreas branĉon ĉe `KAPO` aŭ ĉe la donita komito.
 
 use anyhow::Context;
-use libversio::deponejo::Deponejo;
+use libversio::deponejo::{Ago, Deponejo};
 
 use super::haketo;
 
@@ -20,7 +20,7 @@ pub(crate) fn plenumi(nomo: &str, bazo: Option<&str>) -> anyhow::Result<()> {
     }
 
     let celo = match bazo {
-        Some(teksto) => haketo::solvi(&deponejo, teksto)?,
+        Some(teksto) => haketo::solvi_referencon(&deponejo, teksto)?,
         None => deponejo
             .legi_kapon()
             .context("malsukcesis legi KAPO")?
@@ -30,7 +30,7 @@ pub(crate) fn plenumi(nomo: &str, bazo: Option<&str>) -> anyhow::Result<()> {
         .legi_komiton(&celo)
         .with_context(|| format!("la komito {celo} ne legeblas"))?;
     deponejo
-        .skribi_branĉon(nomo, &celo)
+        .movi_branĉon(nomo, &celo, Ago::Krei)
         .context("malsukcesis skribi la branĉon")?;
 
     println!("Kreita branĉo {nomo} ĉe {celo}");

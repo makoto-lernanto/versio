@@ -3,6 +3,7 @@
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -30,7 +31,9 @@ pub const INDEKSO_DOSIERO: &str = "indekso";
 
 const REFERENCOJ_DOSIERUJO: &str = "referencoj";
 const BRANĈOJ_DOSIERUJO: &str = "branĉoj";
+const ETIKEDOJ_DOSIERUJO: &str = "etikedoj";
 const NUNA_BRANĈO_DOSIERO: &str = "branĉo";
+const MOVHISTORIO_DOSIERO: &str = "movhistorio";
 
 /// Dosieroj modifitaj malpli ol tiom antaŭ la skanado ne estas kaŝmemorataj.
 ///
@@ -100,6 +103,218 @@ pub enum Kunfando {
     Antauen(Haketo),
     /// Estis kreita nova kunfanda komito kun du gepatroj.
     Kunfandita(Haketo),
+}
+
+/// La celo de etikedo.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EtikedaCelo {
+    /// La etikedo montras rekte al komito.
+    Komito(Haketo),
+    /// La etikedo montras al alia etikedo.
+    Alias(String),
+}
+
+/// Etikedo: nomo kaj la celo, al kiu ĝi montras.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Etikedo {
+    /// La nomo de la etikedo.
+    pub nomo: String,
+    /// La celo de la etikedo.
+    pub celo: EtikedaCelo,
+}
+
+/// Referenco, kies movoj estas registrataj en la movhistorio.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Referenco {
+    /// La pinta referenco `KAPO`.
+    Kapo,
+    /// Branĉo kun la donita nomo.
+    Branĉo(String),
+}
+
+impl Referenco {
+    /// La homa nomo de la referenco.
+    #[must_use]
+    pub fn nomo(&self) -> &str {
+        match self {
+            Self::Kapo => "KAPO",
+            Self::Branĉo(nomo) => nomo,
+        }
+    }
+
+    fn kodi(&self) -> String {
+        match self {
+            Self::Kapo => String::from("kapo"),
+            Self::Branĉo(nomo) => format!("branĉo:{nomo}"),
+        }
+    }
+
+    fn malkodi(teksto: &str) -> Result<Self, Eraro> {
+        if teksto == "kapo" {
+            return Ok(Self::Kapo);
+        }
+        let nomo = teksto
+            .strip_prefix("branĉo:")
+            .ok_or(Eraro::NevalidaDatumo {
+                kialo: "nekonata referenco en la movhistorio",
+            })?;
+        Ok(Self::Branĉo(nomo.to_owned()))
+    }
+}
+
+/// La speco de movo registrita en la movhistorio.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Ago {
+    /// Nova komito sur la nuna branĉo.
+    Komiti,
+    /// Eltiro de komito.
+    Eltiri,
+    /// Kunfando.
+    Kunfandi,
+    /// Kreado de branĉo.
+    Krei,
+    /// Renomo de branĉo.
+    Renomi,
+    /// Forigo de branĉo.
+    Forigi,
+}
+
+impl Ago {
+    /// La homa priskribo de la movo.
+    #[must_use]
+    pub fn priskribo(self) -> &'static str {
+        match self {
+            Self::Komiti => "komito",
+            Self::Eltiri => "eltiro",
+            Self::Kunfandi => "kunfando",
+            Self::Krei => "kreado",
+            Self::Renomi => "renomo",
+            Self::Forigi => "forigo",
+        }
+    }
+
+    fn kodi(self) -> &'static str {
+        match self {
+            Self::Komiti => "komiti",
+            Self::Eltiri => "eltiri",
+            Self::Kunfandi => "kunfandi",
+            Self::Krei => "krei",
+            Self::Renomi => "renomi",
+            Self::Forigi => "forigi",
+        }
+    }
+
+    fn malkodi(teksto: &str) -> Result<Self, Eraro> {
+        match teksto {
+            "komiti" => Ok(Self::Komiti),
+            "eltiri" => Ok(Self::Eltiri),
+            "kunfandi" => Ok(Self::Kunfandi),
+            "krei" => Ok(Self::Krei),
+            "renomi" => Ok(Self::Renomi),
+            "forigi" => Ok(Self::Forigi),
+            _ => Err(Eraro::NevalidaDatumo {
+                kialo: "nekonata movospeco en la movhistorio",
+            }),
+        }
+    }
+}
+
+/// Unu movo de referenco.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Movo {
+    /// Uniksa tempstampo de la movo, en sekundoj.
+    pub tempo: u64,
+    /// La movita referenco.
+    pub celo: Referenco,
+    /// La speco de la movo.
+    pub ago: Ago,
+    /// La antaŭa valoro, se ekzistis.
+    pub malnova: Option<Haketo>,
+    /// La nova valoro, se ĝi restas.
+    pub nova: Option<Haketo>,
+}
+
+/// La movhistorio: apenda listo de referencaj movoj.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Movhistorio {
+    movoj: Vec<Movo>,
+}
+
+impl Movhistorio {
+    /// La registritaj movoj, de la plej malnova al la plej nova.
+    #[must_use]
+    pub fn movoj(&self) -> &[Movo] {
+        &self.movoj
+    }
+
+    fn seriigi(&self) -> String {
+        let mut teksto = String::new();
+        for movo in &self.movoj {
+            let _ = writeln!(
+                teksto,
+                "{} {} {} {} {}",
+                movo.tempo,
+                movo.celo.kodi(),
+                movo.ago.kodi(),
+                kodi_haketon(movo.malnova),
+                kodi_haketon(movo.nova),
+            );
+        }
+        teksto
+    }
+
+    fn malseriigi(teksto: &str) -> Result<Self, Eraro> {
+        let mut movoj = Vec::new();
+        for linio in teksto.lines() {
+            let linio = linio.trim();
+            if linio.is_empty() {
+                continue;
+            }
+            let kampoj: Vec<&str> = linio.split_whitespace().collect();
+            let [tempo, celo, ago, malnova, nova] = kampoj.as_slice() else {
+                return Err(Eraro::NevalidaDatumo {
+                    kialo: "movhistoria linio ne havas kvin kampojn",
+                });
+            };
+            movoj.push(Movo {
+                tempo: tempo.parse().map_err(|_| Eraro::NevalidaDatumo {
+                    kialo: "nevalida tempstampo en la movhistorio",
+                })?,
+                celo: Referenco::malkodi(celo)?,
+                ago: Ago::malkodi(ago)?,
+                malnova: malkodi_haketon(malnova)?,
+                nova: malkodi_haketon(nova)?,
+            });
+        }
+        Ok(Self { movoj })
+    }
+}
+
+fn kodi_haketon(haketo: Option<Haketo>) -> String {
+    haketo.map_or_else(|| String::from("-"), |haketo| haketo.to_string())
+}
+
+fn malkodi_haketon(teksto: &str) -> Result<Option<Haketo>, Eraro> {
+    if teksto == "-" {
+        Ok(None)
+    } else {
+        Ok(Some(teksto.parse()?))
+    }
+}
+
+/// La rezulto de rubokolekto.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Rubokolekto {
+    /// La nombro da forigitaj objektoj.
+    pub forigitaj: usize,
+    /// La nombro da konservitaj objektoj.
+    pub konservitaj: usize,
+}
+
+fn nunaj_sekundoj() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |daŭro| daŭro.as_secs())
 }
 
 /// Versio-deponejo en la loka dosiersistemo.
@@ -212,7 +427,7 @@ impl Deponejo {
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
     pub fn legi_branĉon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
-        validi_branĉan_nomon(nomo)?;
+        validi_referencan_nomon(nomo)?;
         match fs::read_to_string(self.branĉo_vojo(nomo)) {
             Ok(teksto) => Ok(Some(teksto.trim().parse()?)),
             Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -227,7 +442,7 @@ impl Deponejo {
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
     pub fn skribi_branĉon(&self, nomo: &str, haketo: &Haketo) -> Result<(), Eraro> {
-        validi_branĉan_nomon(nomo)?;
+        validi_referencan_nomon(nomo)?;
         fs::create_dir_all(
             self.metadatumoj()
                 .join(REFERENCOJ_DOSIERUJO)
@@ -299,7 +514,7 @@ impl Deponejo {
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
     /// aŭ dosiersisteman eraron.
     pub fn agordi_nunan_branĉon(&self, nomo: &str) -> Result<(), Eraro> {
-        validi_branĉan_nomon(nomo)?;
+        validi_referencan_nomon(nomo)?;
         skribi_atome(
             &self.metadatumoj().join(NUNA_BRANĈO_DOSIERO),
             nomo.as_bytes(),
@@ -317,6 +532,327 @@ impl Deponejo {
             Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(eraro) => Err(eraro.into()),
         }
+    }
+
+    /// Skribas novan `KAPO`-valoron kaj registras la movon.
+    ///
+    /// Ripeta movo al la sama valoro ne registriĝas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman aŭ haketan eraron.
+    pub fn movi_kapon(&self, nova: &Haketo, ago: Ago) -> Result<(), Eraro> {
+        let malnova = self.legi_kapon()?;
+        if malnova.as_ref() == Some(nova) {
+            return Ok(());
+        }
+        self.skribi_kapon(nova)?;
+        self.registri_movon(Movo {
+            tempo: nunaj_sekundoj(),
+            celo: Referenco::Kapo,
+            ago,
+            malnova,
+            nova: Some(*nova),
+        })
+    }
+
+    /// Skribas novan branĉan valoron kaj registras la movon.
+    ///
+    /// Ripeta movo al la sama valoro ne registriĝas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman aŭ haketan eraron.
+    pub fn movi_branĉon(&self, nomo: &str, nova: &Haketo, ago: Ago) -> Result<(), Eraro> {
+        let malnova = self.legi_branĉon(nomo)?;
+        if malnova.as_ref() == Some(nova) {
+            return Ok(());
+        }
+        self.skribi_branĉon(nomo, nova)?;
+        self.registri_movon(Movo {
+            tempo: nunaj_sekundoj(),
+            celo: Referenco::Branĉo(nomo.to_owned()),
+            ago,
+            malnova,
+            nova: Some(*nova),
+        })
+    }
+
+    /// Renomas branĉon, konservante ĝian celon.
+    ///
+    /// Se la renomata branĉo estas la nuna, la nova nomo iĝas la nuna.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NeekzistantaBranĉo`] aŭ [`Eraro::BranĉoEkzistas`],
+    /// se la nomoj ne kongruas kun la stato, aŭ dosiersisteman eraron.
+    pub fn renomi_branĉon(&self, malnova: &str, nova: &str) -> Result<(), Eraro> {
+        validi_referencan_nomon(malnova)?;
+        validi_referencan_nomon(nova)?;
+        if malnova == nova {
+            return Ok(());
+        }
+        let celo = self
+            .legi_branĉon(malnova)?
+            .ok_or_else(|| Eraro::NeekzistantaBranĉo {
+                nomo: malnova.to_owned(),
+            })?;
+        if self.legi_branĉon(nova)?.is_some() {
+            return Err(Eraro::BranĉoEkzistas {
+                nomo: nova.to_owned(),
+            });
+        }
+        fs::rename(self.branĉo_vojo(malnova), self.branĉo_vojo(nova))?;
+        if self.nuna_branĉo()?.as_deref() == Some(malnova) {
+            self.agordi_nunan_branĉon(nova)?;
+        }
+        self.registri_movon(Movo {
+            tempo: nunaj_sekundoj(),
+            celo: Referenco::Branĉo(nova.to_owned()),
+            ago: Ago::Renomi,
+            malnova: Some(celo),
+            nova: Some(celo),
+        })
+    }
+
+    /// Forigas branĉon.
+    ///
+    /// Se la forigata branĉo estis la nuna, `KAPO` restas detaĉita.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NeekzistantaBranĉo`], se la branĉo mankas, aŭ
+    /// dosiersisteman eraron.
+    pub fn forigi_branĉon(&self, nomo: &str) -> Result<(), Eraro> {
+        validi_referencan_nomon(nomo)?;
+        let malnova = self
+            .legi_branĉon(nomo)?
+            .ok_or_else(|| Eraro::NeekzistantaBranĉo {
+                nomo: nomo.to_owned(),
+            })?;
+        fs::remove_file(self.branĉo_vojo(nomo))?;
+        if self.nuna_branĉo()?.as_deref() == Some(nomo) {
+            self.forigi_nunan_branĉon()?;
+        }
+        self.registri_movon(Movo {
+            tempo: nunaj_sekundoj(),
+            celo: Referenco::Branĉo(nomo.to_owned()),
+            ago: Ago::Forigi,
+            malnova: Some(malnova),
+            nova: None,
+        })
+    }
+
+    fn etikedo_vojo(&self, nomo: &str) -> PathBuf {
+        self.metadatumoj()
+            .join(REFERENCOJ_DOSIERUJO)
+            .join(ETIKEDOJ_DOSIERUJO)
+            .join(nomo)
+    }
+
+    /// Legas la celon de etikedo; `None` signifas, ke ĝi ne ekzistas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NevalidaVojaKomponanto`] por malvalida nomo, aŭ
+    /// dosiersisteman aŭ malseriigan eraron.
+    pub fn legi_etikedon(&self, nomo: &str) -> Result<Option<EtikedaCelo>, Eraro> {
+        validi_referencan_nomon(nomo)?;
+        let teksto = match fs::read_to_string(self.etikedo_vojo(nomo)) {
+            Ok(teksto) => teksto,
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(eraro) => return Err(eraro.into()),
+        };
+        let mut kampoj = teksto.split_whitespace();
+        let speco = kampoj.next().ok_or(Eraro::NevalidaDatumo {
+            kialo: "malplena etikeda dosiero",
+        })?;
+        let valoro = kampoj.next().ok_or(Eraro::NevalidaDatumo {
+            kialo: "etikeda dosiero sen celo",
+        })?;
+        if kampoj.next().is_some() {
+            return Err(Eraro::NevalidaDatumo {
+                kialo: "etikeda dosiero kun superfluaj kampoj",
+            });
+        }
+        match speco {
+            "komito" => Ok(Some(EtikedaCelo::Komito(valoro.parse()?))),
+            "etikedo" => {
+                validi_referencan_nomon(valoro)?;
+                Ok(Some(EtikedaCelo::Alias(valoro.to_owned())))
+            }
+            _ => Err(Eraro::NevalidaDatumo {
+                kialo: "nekonata etikedspeco",
+            }),
+        }
+    }
+
+    /// Skribas etikedon; ekzistanta samnoma etikedo estas anstataŭigita.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NevalidaVojaKomponanto`] por malvalida nomo, aŭ
+    /// dosiersisteman eraron.
+    pub fn skribi_etikedon(&self, nomo: &str, celo: &EtikedaCelo) -> Result<(), Eraro> {
+        validi_referencan_nomon(nomo)?;
+        let teksto = match celo {
+            EtikedaCelo::Komito(haketo) => format!("komito {haketo}"),
+            EtikedaCelo::Alias(aliaso) => {
+                validi_referencan_nomon(aliaso)?;
+                format!("etikedo {aliaso}")
+            }
+        };
+        fs::create_dir_all(
+            self.metadatumoj()
+                .join(REFERENCOJ_DOSIERUJO)
+                .join(ETIKEDOJ_DOSIERUJO),
+        )?;
+        skribi_atome(&self.etikedo_vojo(nomo), teksto.as_bytes())
+    }
+
+    /// Listigas la etikedojn, ordigitajn laŭ nomo.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman aŭ malseriigan eraron por difektita etikedo.
+    pub fn etikedoj(&self) -> Result<Vec<Etikedo>, Eraro> {
+        let dosierujo = self
+            .metadatumoj()
+            .join(REFERENCOJ_DOSIERUJO)
+            .join(ETIKEDOJ_DOSIERUJO);
+        let eniroj = match fs::read_dir(&dosierujo) {
+            Ok(eniroj) => eniroj,
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(eraro) => return Err(eraro.into()),
+        };
+        let mut etikedoj = Vec::new();
+        for eniro in eniroj {
+            let eniro = eniro?;
+            if !eniro.file_type()?.is_file() {
+                continue;
+            }
+            let Some(nomo) = eniro.file_name().to_str().map(str::to_owned) else {
+                continue;
+            };
+            if nomo.starts_with('.') {
+                continue;
+            }
+            let Some(celo) = self.legi_etikedon(&nomo)? else {
+                continue;
+            };
+            etikedoj.push(Etikedo { nomo, celo });
+        }
+        etikedoj.sort_unstable_by(|unu, du| unu.nomo.cmp(&du.nomo));
+        Ok(etikedoj)
+    }
+
+    /// Solvas etikedon al komito, sekvante aliaskĉenon.
+    ///
+    /// `None` signifas, ke la etikedo ne ekzistas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::NeekzistantaEtikedo`], se la ĉeno montras al mankanta
+    /// etikedo, [`Eraro::CiklaEtikedo`] por ciklo, aŭ dosiersisteman eraron.
+    pub fn solvi_etikedon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
+        let mut vizititaj = HashSet::new();
+        let mut nuna = nomo.to_owned();
+        loop {
+            if !vizititaj.insert(nuna.clone()) {
+                return Err(Eraro::CiklaEtikedo { nomo: nuna });
+            }
+            let Some(celo) = self.legi_etikedon(&nuna)? else {
+                return if nuna == nomo {
+                    Ok(None)
+                } else {
+                    Err(Eraro::NeekzistantaEtikedo { nomo: nuna })
+                };
+            };
+            match celo {
+                EtikedaCelo::Komito(haketo) => return Ok(Some(haketo)),
+                EtikedaCelo::Alias(sekva) => nuna = sekva,
+            }
+        }
+    }
+
+    /// Legas la movhistorion; mankanta dosiero estas malplena historio.
+    ///
+    /// # Errors
+    ///
+    /// Redonas dosiersisteman aŭ malseriigan eraron.
+    pub fn movhistorio(&self) -> Result<Movhistorio, Eraro> {
+        match fs::read_to_string(self.metadatumoj().join(MOVHISTORIO_DOSIERO)) {
+            Ok(teksto) => Movhistorio::malseriigi(&teksto),
+            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => {
+                Ok(Movhistorio::default())
+            }
+            Err(eraro) => Err(eraro.into()),
+        }
+    }
+
+    fn registri_movon(&self, movo: Movo) -> Result<(), Eraro> {
+        let mut historio = self.movhistorio()?;
+        historio.movoj.push(movo);
+        skribi_atome(
+            &self.metadatumoj().join(MOVHISTORIO_DOSIERO),
+            historio.seriigi().as_bytes(),
+        )
+    }
+
+    /// Forigas ĉiujn objektojn, kiujn neniu referenco atingas.
+    ///
+    /// La radikoj estas `KAPO`, la branĉoj, la etikedoj kaj ambaŭ valoroj de
+    /// ĉiu movhistoria enskribo. La movhistorio do retenas la antaŭajn
+    /// valorojn ĝis la uzanto forigos ĝin permane.
+    ///
+    /// # Errors
+    ///
+    /// Redonas stokejan aŭ dosiersisteman eraron.
+    pub fn rubokolekti(&self) -> Result<Rubokolekto, Eraro> {
+        let mut stako = Vec::new();
+        stako.extend(self.legi_kapon()?);
+        stako.extend(self.branĉoj()?.into_iter().map(|(_, haketo)| haketo));
+        for etikedo in self.etikedoj()? {
+            stako.extend(self.solvi_etikedon(&etikedo.nomo)?);
+        }
+        for movo in self.movhistorio()?.movoj() {
+            stako.extend(movo.malnova);
+            stako.extend(movo.nova);
+        }
+
+        let mut atengaj = HashSet::new();
+        while let Some(haketo) = stako.pop() {
+            if !atengaj.insert(haketo) {
+                continue;
+            }
+            let datumoj = self.stokejo.ricevi(&haketo)?;
+            if let Ok(komito) = Komito::malseriigi(&datumoj) {
+                stako.extend(komito.gepatro);
+                stako.extend(komito.dua_gepatro);
+                stako.push(komito.arbo);
+            } else if let Ok(arbo) = Arbo::malseriigi(&datumoj) {
+                for enskribo in arbo.enskriboj() {
+                    match enskribo {
+                        ArbaEnskribo::Dosiero { haketo, .. }
+                        | ArbaEnskribo::SubArbo { haketo, .. } => stako.push(*haketo),
+                    }
+                }
+            }
+        }
+
+        let mut raporto = Rubokolekto {
+            forigitaj: 0,
+            konservitaj: 0,
+        };
+        for haketo in self.stokejo.haketoj()? {
+            if atengaj.contains(&haketo) {
+                raporto.konservitaj = raporto.konservitaj.saturating_add(1);
+            } else {
+                self.stokejo.forigi(&haketo)?;
+                raporto.forigitaj = raporto.forigitaj.saturating_add(1);
+            }
+        }
+        Ok(raporto)
     }
 
     /// Konservas arbon kaj redonas ĝian haketon.
@@ -803,9 +1339,10 @@ impl Deponejo {
     }
 }
 
-/// Validas branĉan nomon: ĝi estas unu sekura voja komponanto, kiu ne
-/// komenciĝas per punkto (tiel ĝi ne kolizias kun provizoraj dosieroj).
-fn validi_branĉan_nomon(nomo: &str) -> Result<(), Eraro> {
+/// Validas referencan nomon (branĉon aŭ etikedon): ĝi estas unu sekura voja
+/// komponanto, kiu ne komenciĝas per punkto (tiel ĝi ne kolizias kun
+/// provizoraj dosieroj).
+fn validi_referencan_nomon(nomo: &str) -> Result<(), Eraro> {
     validi_komponanton(nomo)?;
     if nomo.starts_with('.') || nomo.chars().any(char::is_whitespace) {
         return Err(Eraro::NevalidaVojaKomponanto);
@@ -1038,7 +1575,8 @@ mod testoj {
     )]
 
     use super::{
-        Deponejo, Eraro, INDEKSO_DOSIERO, KAPO_DOSIERO, Kunfando, OBJEKTUJO, Stato, VS_DOSIERUJO,
+        Ago, Deponejo, Eraro, EtikedaCelo, INDEKSO_DOSIERO, KAPO_DOSIERO, Kunfando, OBJEKTUJO,
+        Referenco, Rubokolekto, Stato, VS_DOSIERUJO,
     };
     use crate::objektoj::{ArbaEnskribo, Komito};
     use crate::stokado::{Haketo, Konservilo};
@@ -1654,5 +2192,235 @@ mod testoj {
                 "la nomo «{malvalida}» devus esti rifuzita"
             );
         }
+    }
+
+    #[test]
+    fn testo_etikedoj_kaj_aliasoj() {
+        let prov = ProvDeponejo::nova("etikedoj");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        komiti(&deponejo);
+        let unua = deponejo.legi_kapon().unwrap().unwrap();
+
+        assert_eq!(deponejo.solvi_etikedon("v1.0").unwrap(), None);
+        deponejo
+            .skribi_etikedon("v1.0", &EtikedaCelo::Komito(unua))
+            .unwrap();
+        deponejo
+            .skribi_etikedon("lasta", &EtikedaCelo::Alias("v1.0".into()))
+            .unwrap();
+        deponejo
+            .skribi_etikedon("ĉena", &EtikedaCelo::Alias("lasta".into()))
+            .unwrap();
+
+        assert_eq!(deponejo.solvi_etikedon("v1.0").unwrap(), Some(unua));
+        assert_eq!(deponejo.solvi_etikedon("lasta").unwrap(), Some(unua));
+        assert_eq!(deponejo.solvi_etikedon("ĉena").unwrap(), Some(unua));
+
+        let etikedoj = deponejo.etikedoj().unwrap();
+        assert_eq!(etikedoj.len(), 3);
+        assert_eq!(etikedoj[0].nomo, "lasta");
+        assert_eq!(etikedoj[2].nomo, "ĉena");
+
+        deponejo
+            .skribi_etikedon("ciklo-a", &EtikedaCelo::Alias("ciklo-b".into()))
+            .unwrap();
+        deponejo
+            .skribi_etikedon("ciklo-b", &EtikedaCelo::Alias("ciklo-a".into()))
+            .unwrap();
+        assert!(matches!(
+            deponejo.solvi_etikedon("ciklo-a"),
+            Err(Eraro::CiklaEtikedo { .. })
+        ));
+
+        deponejo
+            .skribi_etikedon("mankanta", &EtikedaCelo::Alias("nenio".into()))
+            .unwrap();
+        assert!(matches!(
+            deponejo.solvi_etikedon("mankanta"),
+            Err(Eraro::NeekzistantaEtikedo { nomo }) if nomo == "nenio"
+        ));
+
+        assert!(matches!(
+            deponejo.skribi_etikedon("a/b", &EtikedaCelo::Komito(unua)),
+            Err(Eraro::NevalidaVojaKomponanto)
+        ));
+        assert!(matches!(
+            deponejo.skribi_etikedon("fuĝo", &EtikedaCelo::Alias("a/b".into())),
+            Err(Eraro::NevalidaVojaKomponanto)
+        ));
+    }
+
+    #[test]
+    fn testo_renomi_kaj_forigi_branĉon() {
+        let prov = ProvDeponejo::nova("renomi");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        let celo = Haketo::el_bajtoj([5; 32]);
+        deponejo.skribi_branĉon("malnova", &celo).unwrap();
+        deponejo
+            .skribi_branĉon("alia", &Haketo::el_bajtoj([6; 32]))
+            .unwrap();
+        deponejo.agordi_nunan_branĉon("malnova").unwrap();
+
+        deponejo.renomi_branĉon("malnova", "nova").unwrap();
+        assert_eq!(deponejo.legi_branĉon("malnova").unwrap(), None);
+        assert_eq!(deponejo.legi_branĉon("nova").unwrap(), Some(celo));
+        assert_eq!(deponejo.nuna_branĉo().unwrap().as_deref(), Some("nova"));
+        deponejo.renomi_branĉon("nova", "nova").unwrap();
+
+        assert!(matches!(
+            deponejo.renomi_branĉon("nova", "alia"),
+            Err(Eraro::BranĉoEkzistas { nomo }) if nomo == "alia"
+        ));
+        assert!(matches!(
+            deponejo.renomi_branĉon("mankanta", "x"),
+            Err(Eraro::NeekzistantaBranĉo { nomo }) if nomo == "mankanta"
+        ));
+
+        let movoj = deponejo.movhistorio().unwrap().movoj().to_vec();
+        assert_eq!(movoj.len(), 1);
+        assert_eq!(movoj[0].ago, Ago::Renomi);
+        assert_eq!(movoj[0].celo.nomo(), "nova");
+        assert_eq!(movoj[0].malnova, Some(celo));
+        assert_eq!(movoj[0].nova, Some(celo));
+
+        deponejo.forigi_branĉon("nova").unwrap();
+        assert_eq!(deponejo.legi_branĉon("nova").unwrap(), None);
+        assert_eq!(deponejo.nuna_branĉo().unwrap(), None);
+        let movoj = deponejo.movhistorio().unwrap().movoj().to_vec();
+        assert_eq!(movoj.len(), 2);
+        assert_eq!(movoj[1].ago, Ago::Forigi);
+        assert_eq!(movoj[1].malnova, Some(celo));
+        assert_eq!(movoj[1].nova, None);
+        assert!(matches!(
+            deponejo.forigi_branĉon("nova"),
+            Err(Eraro::NeekzistantaBranĉo { .. })
+        ));
+    }
+
+    #[test]
+    fn testo_movhistorio_konservas_antauajn_valorojn() {
+        let prov = ProvDeponejo::nova("movhistorio");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        let unua = deponejo
+            .konservi_komiton(&Komito {
+                arbo: deponejo.kapti_arbon().unwrap(),
+                gepatro: None,
+                mesaĝo: "Unua".into(),
+                kreita_je: 1,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        deponejo.movi_kapon(&unua, Ago::Komiti).unwrap();
+        deponejo.movi_branĉon("ĉefa", &unua, Ago::Krei).unwrap();
+
+        fs::write(prov.radiko.join("a.txt"), b"dua").unwrap();
+        let dua = deponejo
+            .konservi_komiton(&Komito {
+                arbo: deponejo.kapti_arbon().unwrap(),
+                gepatro: Some(unua),
+                mesaĝo: "Dua".into(),
+                kreita_je: 2,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        deponejo.movi_kapon(&dua, Ago::Komiti).unwrap();
+        deponejo.movi_branĉon("ĉefa", &dua, Ago::Komiti).unwrap();
+
+        let historio = deponejo.movhistorio().unwrap();
+        let movoj = historio.movoj();
+        assert_eq!(movoj.len(), 4);
+        assert_eq!(movoj[0].celo, Referenco::Kapo);
+        assert_eq!(movoj[0].malnova, None);
+        assert_eq!(movoj[0].nova, Some(unua));
+        assert_eq!(movoj[1].celo, Referenco::Branĉo("ĉefa".into()));
+        assert_eq!(movoj[1].ago, Ago::Krei);
+        assert_eq!(movoj[1].malnova, None);
+        assert_eq!(movoj[3].malnova, Some(unua));
+        assert_eq!(movoj[3].nova, Some(dua));
+
+        deponejo.movi_kapon(&dua, Ago::Eltiri).unwrap();
+        assert_eq!(deponejo.movhistorio().unwrap().movoj().len(), 4);
+    }
+
+    #[test]
+    fn testo_rubokolekti_forigas_nur_neatingeblajn_objektojn() {
+        let prov = ProvDeponejo::nova("rubokolekto");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        komiti(&deponejo);
+        let unua = deponejo.legi_kapon().unwrap().unwrap();
+        let arbo_unua = deponejo.legi_komiton(&unua).unwrap().arbo;
+        let blobo_unua = match &deponejo.legi_arbon(&arbo_unua).unwrap().enskriboj()[0] {
+            ArbaEnskribo::Dosiero { haketo, .. } => *haketo,
+            ArbaEnskribo::SubArbo { .. } => panic!("atendita dosiero"),
+        };
+
+        fs::write(prov.radiko.join("a.txt"), b"dua").unwrap();
+        komiti(&deponejo);
+        let dua = deponejo.legi_kapon().unwrap().unwrap();
+
+        deponejo
+            .skribi_etikedon("unua", &EtikedaCelo::Komito(unua))
+            .unwrap();
+        deponejo.eltiri(&unua).unwrap();
+        deponejo.skribi_kapon(&unua).unwrap();
+        let rubo = deponejo.stokejo().konservi(b"rubo").unwrap();
+
+        let raporto = deponejo.rubokolekti().unwrap();
+        assert_eq!(raporto.forigitaj, 4);
+        assert_eq!(raporto.konservitaj, 3);
+
+        assert!(deponejo.stokejo().havas(&unua));
+        assert!(deponejo.stokejo().havas(&arbo_unua));
+        assert!(deponejo.stokejo().havas(&blobo_unua));
+        assert!(!deponejo.stokejo().havas(&rubo));
+        assert!(!deponejo.stokejo().havas(&dua));
+        assert_eq!(deponejo.stokejo().ricevi(&blobo_unua).unwrap(), b"unua");
+        assert!(deponejo.stato().unwrap().estas_pura());
+
+        assert_eq!(
+            deponejo.rubokolekti().unwrap(),
+            Rubokolekto {
+                forigitaj: 0,
+                konservitaj: 3
+            }
+        );
+    }
+
+    #[test]
+    fn testo_rubokolekti_konservas_movhistoriajn_valorojn() {
+        let prov = ProvDeponejo::nova("rubokolekto-reflog");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        let unua = deponejo
+            .konservi_komiton(&Komito {
+                arbo: deponejo.kapti_arbon().unwrap(),
+                gepatro: None,
+                mesaĝo: "Unua".into(),
+                kreita_je: 1,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        deponejo.movi_kapon(&unua, Ago::Komiti).unwrap();
+
+        fs::write(prov.radiko.join("a.txt"), b"dua").unwrap();
+        let dua = deponejo
+            .konservi_komiton(&Komito {
+                arbo: deponejo.kapti_arbon().unwrap(),
+                gepatro: Some(unua),
+                mesaĝo: "Dua".into(),
+                kreita_je: 2,
+                dua_gepatro: None,
+            })
+            .unwrap();
+        deponejo.movi_kapon(&dua, Ago::Komiti).unwrap();
+
+        deponejo.skribi_kapon(&unua).unwrap();
+        let raporto = deponejo.rubokolekti().unwrap();
+        assert_eq!(raporto.forigitaj, 0);
+        assert!(deponejo.stokejo().havas(&dua));
+        assert_eq!(deponejo.legi_komiton(&dua).unwrap().gepatro, Some(unua));
     }
 }

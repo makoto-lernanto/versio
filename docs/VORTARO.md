@@ -23,8 +23,8 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `kunfandi` | merge | `vs kunfandi <branĉo>`; tri-voja kunfando. |
 | `momentfoto` | snapshot | La arbo plus la komitaj metadatumoj; ne konfuzu kun `bildo`. |
 | `seriigi` / `malseriigi` | serialize / deserialize | `Komito::seriigi`, `Legilo`; la surdiska kadro. |
-| `movhistorio` | reflog | Fazo 5: la movoj de `KAPO` kaj de branĉoj. |
-| `rubokolekti` | garbage collect | Fazo 5: forigi neatingeblajn objektojn. |
+| `movhistorio` | reflog | `.vs/movhistorio`: la antaŭaj kaj novaj valoroj de `KAPO` kaj de la branĉoj; `vs movhistorio`. |
+| `rubokolekti` | garbage collect | `vs rubokolekti`: forigi nur objektojn neatingeblajn el `KAPO`, branĉoj, etikedoj kaj movhistorio. |
 | `komito` | commit | `Komito`; la komando `vs komitu`. Neniam uzu `commit`. |
 | `tirpeto` | pull request (PR) | `pull_request` restas kiel la nomo de la GitHub-events. |
 | `Cargo-laborloko` | Cargo workspace | La radika `[workspace]` en `Cargo.toml`. |
@@ -366,21 +366,22 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 | `noto` | commit message | `vs komitu --noto <teksto>`; la kampo estas `Komito.mesaĝo`. |
 | `gepatro` | parent | `Komito.gepatro`: la antaŭa komito; `None` ĉe la unua komito. |
 | `dua_gepatro` | second parent | La dua gepatro de kunfanda komito; `None` ĉe ordinaraj komitoj. |
-| `referenco` | reference (ref) | `.vs/referencoj`; branĉoj kaj estonte etikedoj. |
+| `referenco` | reference (ref) | `.vs/referencoj`; branĉoj kaj etikedoj. |
 | `nuna branĉo` | current branch | `.vs/branĉo`; `Deponejo::nuna_branĉo`. |
 | `detaĉita KAPO` | detached HEAD | `KAPO` montras rekte al komito, sen aktiva branĉo. |
+| `renomi` / `forigi` | rename / delete | `vs renomi <malnova> <nova>` kaj `vs forigi <nomo>` por branĉoj. |
 | `laborspaca stato` | working-tree status | `Stato` kaj `vs stato`: `modifitaj`, `novaj`, `forigitaj`. |
 | `pura` | clean | `Stato::estas_pura`; neniu ŝanĝo en la laborspaco. |
 | `indeksa versio` | index format version | `INDEKSA_VERSIO = 1`; la unua bajto de `.vs/indekso`. |
 | `antaŭenigo` | fast-forward | `Kunfando::Antauen`: la branĉo simple avancas. |
 | `kunfanda komito` | merge commit | `Kunfando::Kunfandita`: komito kun `gepatro` kaj `dua_gepatro`. |
 | `konflikto` | merge conflict | `Eraro::KunfandaKonflikto`; `kunfandi` ĉesas antaŭ ol ŝanĝi la laborspacon. |
-| `atingebla` | reachable | Fazo 5: `rubokolekti` konservos ĉion atingeblan el `KAPO`, branĉoj, etikedoj kaj movhistorio. |
-| `neatingebla` | unreachable | Fazo 5: nur neatingeblaj objektoj estos forigeblaj. |
+| `atingebla` | reachable | `rubokolekti` konservos ĉion atingeblan el `KAPO`, branĉoj, etikedoj kaj movhistorio. |
+| `neatingebla` | unreachable | Nur neatingeblaj objektoj estas forigeblaj. |
 | `provizora` | temporary | `provizora_vojo`, `PROVIZORA_NOMBRO`, `ProvizoraForigilo`; atomaj skriboj. |
 | `atoma` | atomic | `skribi_atome`: skribi al provizora dosiero kaj renomi. |
 | `haketo (Versio)` | content hash (BLAKE3-256) | 64 deksesumaj signoj; la nomo de ĉiu objekto en `.vs/objektoj`. |
-| `etikedo` | tag | Fazo 5: `.vs/referencoj/etikedoj`; `vs etikedi` kaj `vs etikedoj`. |
+| `etikedo` | tag | `.vs/referencoj/etikedoj`; `vs etikedi` kaj `vs etikedoj`; celo povas esti komito aŭ alia etikedo. |
 | `malproksima deponejo` | remote repository | Fazo 6: `.vs/malproksimoj`; `vs malproksima`. |
 | `publikigi` | push | Fazo 6: sendi la mankantajn objektojn al malproksima deponejo. |
 | `akiri` | fetch | Fazo 6: ricevi la mankantajn objektojn el malproksima deponejo. |

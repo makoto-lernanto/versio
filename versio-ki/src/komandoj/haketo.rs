@@ -13,6 +13,26 @@ pub(crate) fn mallongigi(haketo: &Haketo) -> String {
     haketo.to_string().chars().take(MALLONGA_LONGO).collect()
 }
 
+/// Solvas referencon: etikedo, branĉo aŭ haketo, laŭ tiu prioritato.
+pub(crate) fn solvi_referencon(deponejo: &Deponejo, teksto: &str) -> anyhow::Result<Haketo> {
+    let teksto = teksto.trim();
+    match deponejo.solvi_etikedon(teksto) {
+        Ok(Some(haketo)) => return Ok(haketo),
+        Ok(None) | Err(Eraro::NevalidaVojaKomponanto) => {}
+        Err(eraro) => return Err(eraro.into()),
+    }
+    match deponejo.legi_branĉon(teksto) {
+        Ok(Some(haketo)) => return Ok(haketo),
+        Ok(None) | Err(Eraro::NevalidaVojaKomponanto) => {}
+        Err(eraro) => return Err(eraro.into()),
+    }
+    if teksto.bytes().all(|bajto| bajto.is_ascii_hexdigit()) {
+        solvi(deponejo, teksto)
+    } else {
+        anyhow::bail!("neniu etikedo nek branĉo nomiĝas «{teksto}»")
+    }
+}
+
 /// Solvas plenan aŭ unikan mallongan haketon en la objektstokejo.
 ///
 /// Nur objektoj, kiuj malseriigeblas kiel komito, estas konsiderataj; tiel

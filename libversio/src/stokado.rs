@@ -238,6 +238,19 @@ mod dosiera {
             &self.dosierujo
         }
 
+        /// Forigas la objekton kun la donita haketo, se ĝi ekzistas.
+        ///
+        /// # Errors
+        ///
+        /// Redonas dosiersisteman eraron, se la dosiero ne forigeblas.
+        pub fn forigi(&self, haketo: &Haketo) -> Result<(), Eraro> {
+            match fs::remove_file(self.vojo(haketo)) {
+                Ok(()) => Ok(()),
+                Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
+                Err(eraro) => Err(eraro.into()),
+            }
+        }
+
         /// Ĉu la objekto kun la donita haketo jam ekzistas en la stokejo.
         #[must_use]
         pub fn havas(&self, haketo: &Haketo) -> bool {

@@ -3,7 +3,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::Context;
-use libversio::deponejo::{Deponejo, Kunfando};
+use libversio::deponejo::{Ago, Deponejo, Kunfando};
 
 /// Plenumas la komandon por la donita branĉo.
 pub(crate) fn plenumi(branĉo: &str) -> anyhow::Result<()> {
@@ -61,11 +61,11 @@ fn ĝisdatigi_referencojn(
         .context("malsukcesis legi la nunan branĉon")?
     {
         deponejo
-            .skribi_branĉon(&nomo, haketo)
+            .movi_branĉon(&nomo, haketo, Ago::Kunfandi)
             .with_context(|| format!("malsukcesis ĝisdatigi la branĉon {nomo}"))?;
     }
     deponejo
-        .skribi_kapon(haketo)
+        .movi_kapon(haketo, Ago::Kunfandi)
         .context("malsukcesis ĝisdatigi KAPO")?;
     Ok(())
 }

@@ -1,8 +1,8 @@
-//! `vs eltiri`: restarigas la laborspacon al komito aŭ branĉo.
+//! `vs eltiri`: restarigas la laborspacon al komito, branĉo aŭ etikedo.
 
 use anyhow::Context;
 use libversio::Eraro;
-use libversio::deponejo::Deponejo;
+use libversio::deponejo::{Ago, Deponejo};
 use libversio::stokado::Haketo;
 
 use super::haketo;
@@ -37,7 +37,7 @@ pub(crate) fn plenumi(celo: &str, perforta: bool) -> anyhow::Result<()> {
             .context("malsukcesis forigi la nunan branĉon")?;
     }
     deponejo
-        .skribi_kapon(&haketo)
+        .movi_kapon(&haketo, Ago::Eltiri)
         .context("malsukcesis ĝisdatigi KAPO")?;
 
     if let Some(nomo) = branĉo {
@@ -48,12 +48,19 @@ pub(crate) fn plenumi(celo: &str, perforta: bool) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Solvas branĉan nomon aŭ komitan haketon; branĉo havas prioritaton.
+/// Solvas branĉan aŭ etikedan nomon aŭ komitan haketon; branĉo havas
+/// prioritaton antaŭ etikedo.
 fn solvi_celon(deponejo: &Deponejo, celo: &str) -> anyhow::Result<(Haketo, Option<String>)> {
     let nomo = celo.trim();
     match deponejo.legi_branĉon(nomo) {
         Ok(Some(haketo)) => return Ok((haketo, Some(nomo.to_owned()))),
-        // Ne ekzistanta aŭ nevalida branĉa nomo signifas, ke la celo estas haketo.
+        // Ne ekzistanta aŭ nevalida branĉa nomo signifas, ke la celo estas
+        // etikedo aŭ haketo.
+        Ok(None) | Err(Eraro::NevalidaVojaKomponanto) => {}
+        Err(eraro) => return Err(eraro.into()),
+    }
+    match deponejo.solvi_etikedon(nomo) {
+        Ok(Some(haketo)) => return Ok((haketo, None)),
         Ok(None) | Err(Eraro::NevalidaVojaKomponanto) => {}
         Err(eraro) => return Err(eraro.into()),
     }
