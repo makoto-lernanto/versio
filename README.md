@@ -10,7 +10,7 @@
 > kontribuo estas la ideo, ne la klavoj.
 
 **Versio** estas eta versiokontrola sistemo verkita en Rust. Ĝi kunigas
-enhavadresitan stokadon, rapidan paralelan sencimigo-kalkulon kaj formalan
+enhavadresitan stokadon, rapidan sencimigo-kalkulon kaj formalan
 pruvadon en unu kohera labortablo: `libversio` (`no_std`-kongrueca kerno),
 `versio-ki` (la komandlinia ilo `vs`) kaj `arm64_provo` (nuda-metala memtesto).
 
@@ -31,7 +31,8 @@ pruvadon en unu kohera labortablo: `libversio` (`no_std`-kongrueca kerno),
 | --- | --- |
 | Enhavadresita stokado bazita sur `BLAKE3`-256 kaj `LZ4`-kunpremo | Funkcias |
 | `no_std`-kongrueca kerno (`libversio`, `#![no_std]` + `alloc`) | Funkcias |
-| Rapido per `rayon`; 10 000-dosiera unuoptesto sub 100 ms en la eldona binaro | Funkcias |
+| Trajtbazita motorego (`Laborspaco`, `Stokejo`, `Horlogo`); 10 000-dosiera unuoptesto sub 100 ms en la eldona binaro | Funkcias |
+| Ignorreguloj: `.git`, `target`, `.vs` kaj `.vsignore` | Funkcias |
 | `vs ini`, `stato`, `komitu`, `historio`, `eltiri` | Funkcias |
 | Branĉoj: `vs linio <nomo> [bazo]`, `vs linioj` | Funkcias |
 | Tri-voja `kunfandi` kun antaŭenigo kaj konfliktdifekto | Funkcias |

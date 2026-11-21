@@ -109,6 +109,17 @@ pub enum Eraro {
         nomo: String,
     },
 
+    /// La petita vojo ne ekzistas en la laborspaco.
+    #[error("neekzistanta vojo: {vojo}")]
+    NeekzistantaVojo {
+        /// La relativa aŭ absoluta vojo, kiun oni provis legi.
+        vojo: String,
+    },
+
+    /// Ĝenerala eraro de la laborspaca tavolo.
+    #[error("laborspaca eraro: {0}")]
+    Laborspaco(String),
+
     /// Seriiga eraro de `postcard`.
     #[error("seriiga eraro: {0}")]
     Seriigo(postcard::Error),

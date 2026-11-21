@@ -9,13 +9,12 @@ license.workspace = true
 
 [features]
 default = []
-std = ["dep:lz4_flex", "dep:rayon", "lz4_flex/frame", "lz4_flex/std", "blake3/std", "thiserror/std"]
+std = ["dep:lz4_flex", "lz4_flex/frame", "lz4_flex/std", "blake3/std", "thiserror/std"]
 
 [dependencies]
 blake3.workspace = true
 lz4_flex = { workspace = true, optional = true }
 postcard.workspace = true
-rayon = { workspace = true, optional = true }
 serde.workspace = true
 thiserror.workspace = true
 

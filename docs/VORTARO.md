@@ -356,7 +356,14 @@ komentoj kaj protokolaj nomoj de ambaŭ projektoj sekvu ĝin.
 
 | Esperanto | Angla | Rimarko |
 | --- | --- | --- |
-| `deponejo` | repository | La radika dosierujo kun `.vs/`; `Deponejo` en `libversio::deponejo`. |
+| `deponejo` | repository | La radika dosierujo kun `.vs/`; `Deponejo` estas la `std`-aliaso de `DeponejoMotor`. |
+| `motorego` | engine | `DeponejoMotor<Laborspaco, Stokejo, Horlogo>`; la tuta deponeja logiko sen `std`. |
+| `laborspaco (trajto)` | working-space abstraction | `Laborspaco`: `listi`, `legi`, `skribi_atome`, `renomi`, `metadatumoj`; `Dosierspaco` (`std`) kaj `Memspaco`. |
+| `memspaco` | in-memory workspace | `Memspaco`: dosiersistemo en `BTreeMap` por testoj kaj `no_std_provo`; sen reala mtempo. |
+| `horlogo` | clock | `Horlogo` provizas la nunan tempon por freŝeckontrolo; `StdaHorlogo`, `FiksaHorlogo`. |
+| `metadatumoj` | metadata | `Metadatumoj { speco, grandeco, mtempo }`; `Speco::{Dosiero, Dosierujo, Alia}`. |
+| `ignoro` | ignore rule | `Ignoro`: implicite `.git`, `target`, `.vs`; plus `.vsignore` en ĉiu skanata dosierujo. |
+| `vsignore` | .vsignore | Ignorregula dosiero: `#` komento, `!` malŝalto, `/` ligilo, `**` trans dosierujojn. |
 | `stokejo` | object store | `.vs/objektoj`; la dosierujo de la EAS-objektoj. |
 | `stokado` | storage | La modulo `libversio::stokado`; `Konservilo` abstranas la subtenilon. |
 | `konservilo` | store backend | `Konservilo`, `DosieraKonservilo`, `MemoraKonservilo`; la operacioj estas `konservi` kaj `ricevi`. |

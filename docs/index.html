@@ -250,8 +250,9 @@
           <h3 data-t="karto3.titolo">no_std-kerno</h3>
           <p data-t-html="karto3.teksto">
             <code>libversio</code> uzas nur <code>core</code> kaj <code>alloc</code>;
-            la samaj datummodeloj funkcias en la <code>no_std</code>-sentineleto por
-            <code>x86_64-unknown-none</code>.
+            la motorego estas trajta (<code>Laborspaco</code>, <code>Stokejo</code>,
+            <code>Horlogo</code>) kaj la sama logiko funkcias en la
+            <code>no_std</code>-sentineleto por <code>x86_64-unknown-none</code>.
           </p>
           <span class="sildeto">core + alloc</span>
         </article>
@@ -1120,10 +1121,12 @@
 
       <div class="elsŝuta-noto" data-aperu>
         <p data-t-html="komenci.noto">
-          Ne rulu <code>vs ini</code> rekte en la origina Git-deponejo: Versio
-          preterlasas nur <code>.vs</code>, ne <code>.git</code>, kaj ne interpretas
-          <code>.gitignore</code>. Ĝi konservas ordinarajn dosierojn kaj arbojn,
-          ne plenumeblajn permesbitojn aŭ simbolajn ligilojn.
+          Vi povas ruli <code>vs ini</code> ankaŭ en la origina Git-deponejo:
+          Versio preterlasas <code>.git</code>, <code>target</code> kaj
+          <code>.vs</code> kaj interpretas <code>.vsignore</code>. Por pliaj
+          ekskludoj uzu <code>.vsignore</code>; <code>.gitignore</code> ne estas
+          interpretata. Ĝi konservas ordinarajn dosierojn kaj arbojn, ne
+          plenumeblajn permesbitojn aŭ simbolajn ligilojn.
         </p>
         <p data-t-html="komenci.komandoj">
           <strong>Ĉiuj komandoj:</strong> <code>ini</code>, <code>stato</code>,

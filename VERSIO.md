@@ -16,7 +16,7 @@
 - **Ŝlosilaj dependaĵoj**:
   - `blake3`: enhavadresita haketado (rapidega kaj kolizio-rezistema).
   - `lz4_flex`: objekta kunpremado.
-  - `rayon`: paralela dosieruja trairado kaj kompara kalkulado.
+  - `rayon` (forigita): la motorego nun estas sinsekva kaj trajta; paraleligo povas reveni poste kiel trajta plibonigo.
   - `clap`: komandlinia analizado (kun la `derive`-trajto ŝaltita).
   - `thiserror` / `anyhow`: erartraktado.
   - `kani`: formala pruvado (enkondukita en Fazo 4, rulata nur en DI — Daŭra Integrado).
@@ -31,7 +31,9 @@ versio/
 │   └── src/
 │       ├── lib.rs             # Eksportas la publikan interfacon
 │       ├── stokado.rs         # Enhavadresita stokado (EAS: Enhavadresita Stokado)
-│       ├── deponejo.rs        # Deponeja metadatumaro, referencoj, grafa administrado kaj kunfandado
+│       ├── deponejo.rs        # Trajta motorego: metadatumaro, referencoj, grafo, kunfandado, skanado
+│       ├── laborspaco.rs      # Trajtoj `Laborspaco` kaj `Horlogo`; `Memspaco` kaj `Dosierspaco`
+│       ├── ignoro.rs          # Ignorreguloj: implicita `.git`/`target`/`.vs`, `.vsignore`
 │       ├── objektoj.rs        # Datumstrukturoj: Dosiero, Arbo, Komito
 │       ├── indekso.rs         # Metadatumkaŝmemoro por `stato` kaj `komitu`
 │       ├── kodigo.rs          # Legado kaj skribado de la postcard-formato
@@ -95,7 +97,7 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 1. Difini en `libversio::objektoj` la `#[repr(C)]`- aŭ serialigajn strukturojn de `Dosiero`, `Arbo` kaj `Komito` (rekomendate uzi `postcard` aŭ `bincode`; konfirmu la `no_std`-subtenon).
 2. Realigi `iniciati()` en `libversio::deponejo`, kiu kreu la dosierujan strukturon `.vs`.
 3. Integrigi `clap` en `versio-ki` kaj realigi `vs ini` kaj `vs komitu --noto "..."`.
-4. Logiko de `komitu`: paralele skani la nunan dosierujon per `rayon`, preterlasi `.vs`, kalkuli aŭ reuzi (per la indekso) la haketojn de la dosieroj, konstrui `Arbo`-n, krei `Komito`-n montrantan al tiu `Arbo`, kaj ĝisdatigi la referencon `KAPO`.
+4. Logiko de `komitu`: skani la nunan dosierujon tra la trajto `Laborspaco`, preterlasi `.vs` kaj la regulojn de `Ignoro` (implicite `.git`, `target`, `.vs`, plus `.vsignore`), kalkuli aŭ reuzi (per la indekso) la haketojn de la dosieroj, konstrui `Arbo`-n, krei `Komito`-n montrantan al tiu `Arbo`, kaj ĝisdatigi la referencon `KAPO`.
 
 **Akceptokriterioj**:
 - [ ] Post rulo de `vs ini`, la nuna dosierujo enhavas `.vs/` kun la dosiero `KAPO`.
@@ -107,7 +109,7 @@ Bonvolu plenumi la fazojn **strikte laŭ ordo**. Post kompletigo de ĉiu fazo, d
 **Taskoj**:
 1. Realigi `libversio::deponejo::stato()`.
 2. Optimumigi la logikon: unue komparu dosierajn metadatumojn (modiftempo, grando) kaj rekalkulu la BLAKE3-haketon nur por ŝanĝitaj dosieroj.
-3. Fari paralelan komparadon (`rayon::par_iter`) inter la laborspaca arbo kaj la `Arbo` montrata de `KAPO`.
+3. Fari senhalton komparadon inter la laborspaca arbo kaj la `Arbo` montrata de `KAPO`.
 4. KI-eligo: klare listigu la dosierojn `Modifitaj`, `Novaj` kaj `Forigitaj`.
 
 **Akceptokriterioj**:
@@ -168,7 +170,7 @@ unuoptestoj kaj la integraj testoj fiksas la atingokalkulon.
 
 **Taskoj**:
 1. Evoluigi la indekson al binara, mempriskriba formato kun versio, atomaj ĝisdatigoj kaj difekta kontrolo.
-2. Paraleligi haketadon kaj komparadon per `rayon`, sed limigi la memoruzon per fluado.
+2. Paraleligi haketadon kaj komparadon per trajta etendaĵo, se la efikecmezuro montras bezonon, sed limigi la memoruzon per fluado.
 3. Aldoni inkrementan arbokonstruadon: reuzi subarbojn, kies enhavo ne ŝanĝiĝis.
 4. Verki efikecmezurojn por `stato`, `komitu`, `eltiri` kaj `historio`; la efikecmezuroj ne rulas en la ĉefa DI.
 
@@ -251,9 +253,9 @@ Kiel AI, vi devige evitu la jenajn oftajn kaptilojn kiam vi generas kodon:
 2. **Blinda fido pri haketaj kolizioj**:
    - ❌ Ne supozu, ke datumoj ne difektiĝos post skribo al disko.
    - ✅ Antaŭ ol redoni datumojn, la funkcio `ricevi` devige rekalkulu la BLAKE3 de la legitaj datumoj kaj komparu ĝin kun la petita `Haketo`; se ili malkongruas, redonu `Eraro::DatumoDifektita`.
-3. **Paralelismaj kaptiloj (Rayon)**:
-   - ❌ Ne ŝlosu ofte (`Mutex`) en paralelaj iteracioj; tio degradigus la efikecon al seria.
-   - ✅ Uzu senŝlosajn datumstrukturojn, aŭ unuece kolektu rezultojn post la paralela kalkulado (ekz. `par_iter().map().collect()`).
+3. **Trajtaj limoj de la motorego**:
+   - ❌ Ne aldonu `std`-tipojn (`Path`, `File`, `Instant`) al `DeponejoMotor` aŭ al ties publikaj metodoj.
+   - ✅ Uzu `Laborspaco`, `Stokejo` kaj `Horlogo`; la `std`-realigoj restu malantaŭ la trajto `std`.
 4. **Literumaj eraroj en Esperanto**:
    - ❌ Ne miksigu la anglan kaj Esperanton (ekz. `fn get_hash()` aŭ `fn ricevi_hash()`).
    - ✅ Strikte uzu: `Haketo`, `Deponejo`, `Dosiero`, `Arbo`, `Komito`, `Kunfandi`.

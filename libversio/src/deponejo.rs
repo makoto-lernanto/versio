@@ -1,21 +1,32 @@
-//! Deponeja metadatumaro kaj grafa administrado (nur kun `std`).
+//! Deponeja metadatumaro kaj grafa administrado.
+//!
+//! La motoro estas `no_std`-kongrueca: ĝi aliras la laborspacon nur per la
+//! trajtoj [`Laborspaco`] kaj [`Horlogo`], kaj la objektojn per [`Stokejo`].
+//! La normbibliotekaj adaptiloj [`Dosierspaco`], [`DosieraKonservilo`] kaj
+//! [`StdaHorlogo`] estas aldonataj nur per la trajto `std`.
 
+use alloc::borrow::ToOwned;
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::format;
 use alloc::string::{String, ToString};
+use alloc::vec;
 use alloc::vec::Vec;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::fmt::Write as _;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-
-use rayon::prelude::*;
+use core::fmt::Write as _;
 
 use crate::eraroj::Eraro;
+use crate::ignoro::Ignoro;
 use crate::indekso::{IndeksEnskribo, Indekso};
+use crate::laborspaco::{Horlogo, Laborspaco, Speco};
 use crate::objektoj::{ArbaEnskribo, Arbo, Komito};
-use crate::stokado::{DosieraKonservilo, Haketo, Konservilo, haketi_dosieron};
+use crate::stokado::{Haketo, Stokejo};
 use crate::vojo::{MAKSIMA_VOJO, validi_komponanton};
+
+#[cfg(feature = "std")]
+use crate::laborspaco::{Dosierspaco, StdaHorlogo};
+#[cfg(feature = "std")]
+use crate::stokado::DosieraKonservilo;
+#[cfg(feature = "std")]
+use std::path::PathBuf;
 
 /// Nomo de la metadatumuja dosierujo.
 pub const VS_DOSIERUJO: &str = ".vs";
@@ -40,9 +51,7 @@ const MOVHISTORIO_DOSIERO: &str = "movhistorio";
 /// Konkurenca Git-problemo: dosiersistemaj tempstampoj havas krudan precizecon, do
 /// dua skribo en la sama tempero povus konservi la saman mtempo kaj grandecon.
 /// Nur sufiĉe malnovaj tempstampoj garantias, ke posta ŝanĝo videblas.
-const FREŜA_MARGENO: Duration = Duration::from_secs(2);
-
-static PROVIZORA_NOMBRO: AtomicU64 = AtomicU64::new(0);
+const FREŜA_MARGENO_NS: u64 = 2_000_000_000;
 
 /// La ŝanĝoj de la laborspaco rilate al la arbo de `KAPO`.
 ///
@@ -67,7 +76,6 @@ impl Stato {
 
 struct LaborDosiero {
     vojo: String,
-    absoluta: PathBuf,
     grandeco: u64,
     mtempo: Option<u64>,
 }
@@ -76,7 +84,7 @@ struct LaborDosiero {
 #[derive(Default)]
 struct Nodo {
     dosieroj: Vec<(String, Haketo, u64)>,
-    subarboj: HashMap<String, Nodo>,
+    subarboj: BTreeMap<String, Nodo>,
 }
 
 struct HaketitaDosiero {
@@ -85,13 +93,6 @@ struct HaketitaDosiero {
     grandeco: u64,
     /// `(mtempo, grandeco)`, se la dosiero estas sufiĉe malnova por la kaŝmemoro.
     kaŝebla: Option<(u64, u64)>,
-}
-
-#[derive(Clone, Copy)]
-enum Speco {
-    Dosierujo,
-    Dosiero,
-    Alia,
 }
 
 /// La rezulto de kunfando.
@@ -114,7 +115,7 @@ pub enum EtikedaCelo {
     Alias(String),
 }
 
-/// Etikedo: nomo kaj la celo, al kiu ĝi montras.
+/// Etikedo: nomo kaj la celo, al kiun ĝi montras.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Etikedo {
     /// La nomo de la etikedo.
@@ -311,87 +312,85 @@ pub struct Rubokolekto {
     pub konservitaj: usize,
 }
 
-fn nunaj_sekundoj() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |daŭro| daŭro.as_secs())
+/// Deponeja motoro super ajna [`Laborspaco`], [`Stokejo`] kaj [`Horlogo`].
+pub struct DeponejoMotor<L, K, H> {
+    laborspaco: L,
+    stokejo: K,
+    horlogo: H,
 }
 
-/// Versio-deponejo en la loka dosiersistemo.
-pub struct Deponejo {
-    radiko: PathBuf,
-    stokejo: DosieraKonservilo,
-}
+/// La norma dosiersistema deponejo.
+#[cfg(feature = "std")]
+pub type Deponejo = DeponejoMotor<Dosierspaco, DosieraKonservilo, StdaHorlogo>;
 
-impl Deponejo {
-    /// Iniciatas deponejon en la donita radika dosierujo.
+impl<L, K, H> DeponejoMotor<L, K, H>
+where
+    L: Laborspaco,
+    K: Stokejo,
+    H: Horlogo,
+{
+    /// Kreas motoron el jam pretaj laborspaco, stokejo kaj horloĝo.
     ///
-    /// La operacio estas idempotenta: ekzistanta `.vs`-strukturo ne estas
-    /// forviŝita, kaj nur mankantaj partoj estas kreataj.
-    ///
-    /// # Errors
-    ///
-    /// Redonas dosiersisteman eraron, se la strukturo ne kreeblas.
-    pub fn iniciati(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
-        let radiko = radiko.into();
-        let metadatumoj = radiko.join(VS_DOSIERUJO);
-        fs::create_dir_all(metadatumoj.join(OBJEKTUJO))?;
-
-        let kapo = metadatumoj.join(KAPO_DOSIERO);
-        if !kapo.exists() {
-            skribi_atome(&kapo, b"")?;
+    /// La konstruanto ne kreas `.vs`-strukturon; por tio uzu
+    /// [`Deponejo::iniciati`] aŭ kreu la metadatumojn mem.
+    #[must_use]
+    pub fn nova(laborspaco: L, stokejo: K, horlogo: H) -> Self {
+        Self {
+            laborspaco,
+            stokejo,
+            horlogo,
         }
-
-        Ok(Self {
-            stokejo: DosieraKonservilo::nova(metadatumoj.join(OBJEKTUJO)),
-            radiko,
-        })
-    }
-
-    /// Malfermas ekzistantan deponejon.
-    ///
-    /// # Errors
-    ///
-    /// Redonas [`Eraro::Nedeponejo`], se la dosierujo ne enhavas `.vs`, aŭ
-    /// dosiersisteman eraron.
-    pub fn malfermi(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
-        let radiko = radiko.into();
-        let metadatumoj = radiko.join(VS_DOSIERUJO);
-        if !metadatumoj.is_dir() || !metadatumoj.join(KAPO_DOSIERO).is_file() {
-            return Err(Eraro::Nedeponejo);
-        }
-        fs::create_dir_all(metadatumoj.join(OBJEKTUJO))?;
-
-        Ok(Self {
-            stokejo: DosieraKonservilo::nova(metadatumoj.join(OBJEKTUJO)),
-            radiko,
-        })
     }
 
     /// La radika dosierujo de la deponejo.
     #[must_use]
-    pub fn radiko(&self) -> &Path {
-        &self.radiko
+    pub fn radiko(&self) -> &str {
+        self.laborspaco.radiko()
     }
 
     /// La objektstokejo de la deponejo.
     #[must_use]
-    pub fn stokejo(&self) -> &DosieraKonservilo {
+    pub fn stokejo(&self) -> &K {
         &self.stokejo
     }
 
-    fn metadatumoj(&self) -> PathBuf {
-        self.radiko.join(VS_DOSIERUJO)
+    /// La laborspaco de la deponejo.
+    #[must_use]
+    pub fn laborspaco(&self) -> &L {
+        &self.laborspaco
+    }
+
+    /// La horloĝo de la deponejo.
+    #[must_use]
+    pub fn horlogo(&self) -> &H {
+        &self.horlogo
+    }
+
+    fn meta(relativa: &str) -> String {
+        format!("{VS_DOSIERUJO}/{relativa}")
+    }
+
+    fn skribi_atome(&self, vojo: &str, datumoj: &[u8]) -> Result<(), Eraro> {
+        self.laborspaco.skribi_atome(vojo, datumoj)
+    }
+
+    fn limo(&self) -> Option<u64> {
+        self.horlogo
+            .nunaj_nanosekundoj()
+            .and_then(|nunaj| nunaj.checked_sub(FREŜA_MARGENO_NS))
     }
 
     /// Legas la haketon en `KAPO`; `None` signifas, ke ankoraŭ ne ekzistas komito.
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron aŭ [`Eraro::NevalidaHaketo`], se `KAPO`
+    /// Redonas laborspacan eraron aŭ [`Eraro::NevalidaHaketo`], se `KAPO`
     /// enhavas nevalidan tekston.
     pub fn legi_kapon(&self) -> Result<Option<Haketo>, Eraro> {
-        let teksto = fs::read_to_string(self.metadatumoj().join(KAPO_DOSIERO))?;
+        let vojo = Self::meta(KAPO_DOSIERO);
+        let Some(teksto) = self.laborspaco.legi_tekston(&vojo)? else {
+            return Ok(None);
+        };
         let teksto = teksto.trim();
         if teksto.is_empty() {
             Ok(None)
@@ -404,19 +403,15 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron.
+    /// Redonas laborspacan eraron.
     pub fn skribi_kapon(&self, haketo: &Haketo) -> Result<(), Eraro> {
-        skribi_atome(
-            &self.metadatumoj().join(KAPO_DOSIERO),
-            haketo.to_string().as_bytes(),
-        )
+        self.skribi_atome(&Self::meta(KAPO_DOSIERO), haketo.to_string().as_bytes())
     }
 
-    fn branĉo_vojo(&self, nomo: &str) -> PathBuf {
-        self.metadatumoj()
-            .join(REFERENCOJ_DOSIERUJO)
-            .join(BRANĈOJ_DOSIERUJO)
-            .join(nomo)
+    fn branĉo_vojo(nomo: &str) -> String {
+        Self::meta(&format!(
+            "{REFERENCOJ_DOSIERUJO}/{BRANĈOJ_DOSIERUJO}/{nomo}"
+        ))
     }
 
     /// Legas la celan komiton de la donita branĉo; `None` signifas, ke ĝi
@@ -425,13 +420,12 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
-    /// aŭ dosiersisteman eraron.
+    /// aŭ laborspacan eraron.
     pub fn legi_branĉon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
         validi_referencan_nomon(nomo)?;
-        match fs::read_to_string(self.branĉo_vojo(nomo)) {
-            Ok(teksto) => Ok(Some(teksto.trim().parse()?)),
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
-            Err(eraro) => Err(eraro.into()),
+        match self.laborspaco.legi_tekston(&Self::branĉo_vojo(nomo))? {
+            Some(teksto) => Ok(Some(teksto.trim().parse()?)),
+            None => Ok(None),
         }
     }
 
@@ -440,48 +434,32 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
-    /// aŭ dosiersisteman eraron.
+    /// aŭ laborspacan eraron.
     pub fn skribi_branĉon(&self, nomo: &str, haketo: &Haketo) -> Result<(), Eraro> {
         validi_referencan_nomon(nomo)?;
-        fs::create_dir_all(
-            self.metadatumoj()
-                .join(REFERENCOJ_DOSIERUJO)
-                .join(BRANĈOJ_DOSIERUJO),
-        )?;
-        skribi_atome(&self.branĉo_vojo(nomo), haketo.to_string().as_bytes())
+        self.laborspaco.krei_dosierujon(&Self::meta(&format!(
+            "{REFERENCOJ_DOSIERUJO}/{BRANĈOJ_DOSIERUJO}"
+        )))?;
+        self.skribi_atome(&Self::branĉo_vojo(nomo), haketo.to_string().as_bytes())
     }
 
     /// Listigas la branĉojn kaj iliajn celajn komitojn, ordigitajn laŭ nomo.
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman aŭ haketan eraron por difektita referenco.
+    /// Redonas laborspacan aŭ haketan eraron por difektita referenco.
     pub fn branĉoj(&self) -> Result<Vec<(String, Haketo)>, Eraro> {
-        let dosierujo = self
-            .metadatumoj()
-            .join(REFERENCOJ_DOSIERUJO)
-            .join(BRANĈOJ_DOSIERUJO);
-        let eniroj = match fs::read_dir(&dosierujo) {
-            Ok(eniroj) => eniroj,
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(eraro) => return Err(eraro.into()),
-        };
-
+        let dosierujo = Self::meta(&format!("{REFERENCOJ_DOSIERUJO}/{BRANĈOJ_DOSIERUJO}"));
         let mut branĉoj = Vec::new();
-        for eniro in eniroj {
-            let eniro = eniro?;
-            if !eniro.file_type()?.is_file() {
+        for ero in self.laborspaco.listi(&dosierujo)? {
+            if ero.speco != Speco::Dosiero || ero.nomo.starts_with('.') {
                 continue;
             }
-            let Some(nomo) = eniro.file_name().to_str().map(str::to_owned) else {
+            let vojo = kunigi(&dosierujo, &ero.nomo)?;
+            let Some(teksto) = self.laborspaco.legi_tekston(&vojo)? else {
                 continue;
             };
-            // Provizoraj dosieroj de la atoma skribo komenciĝas per punkto.
-            if nomo.starts_with('.') {
-                continue;
-            }
-            let haketo = fs::read_to_string(eniro.path())?.trim().parse()?;
-            branĉoj.push((nomo, haketo));
+            branĉoj.push((ero.nomo, teksto.trim().parse()?));
         }
         branĉoj.sort_unstable_by(|unu, du| unu.0.cmp(&du.0));
         Ok(branĉoj)
@@ -491,10 +469,13 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron.
+    /// Redonas laborspacan eraron.
     pub fn nuna_branĉo(&self) -> Result<Option<String>, Eraro> {
-        match fs::read_to_string(self.metadatumoj().join(NUNA_BRANĈO_DOSIERO)) {
-            Ok(teksto) => {
+        match self
+            .laborspaco
+            .legi_tekston(&Self::meta(NUNA_BRANĈO_DOSIERO))?
+        {
+            Some(teksto) => {
                 let nomo = teksto.trim();
                 if nomo.is_empty() {
                     Ok(None)
@@ -502,8 +483,7 @@ impl Deponejo {
                     Ok(Some(nomo.to_owned()))
                 }
             }
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(None),
-            Err(eraro) => Err(eraro.into()),
+            None => Ok(None),
         }
     }
 
@@ -512,26 +492,19 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`], se la nomo estas malvalida,
-    /// aŭ dosiersisteman eraron.
+    /// aŭ laborspacan eraron.
     pub fn agordi_nunan_branĉon(&self, nomo: &str) -> Result<(), Eraro> {
         validi_referencan_nomon(nomo)?;
-        skribi_atome(
-            &self.metadatumoj().join(NUNA_BRANĈO_DOSIERO),
-            nomo.as_bytes(),
-        )
+        self.skribi_atome(&Self::meta(NUNA_BRANĈO_DOSIERO), nomo.as_bytes())
     }
 
     /// Forigas la memoron pri la nuna branĉo (detaĉita `KAPO`).
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron, escepte de mankanta dosiero.
+    /// Redonas laborspacan eraron, escepte de mankanta dosiero.
     pub fn forigi_nunan_branĉon(&self) -> Result<(), Eraro> {
-        match fs::remove_file(self.metadatumoj().join(NUNA_BRANĈO_DOSIERO)) {
-            Ok(()) => Ok(()),
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(eraro) => Err(eraro.into()),
-        }
+        self.laborspaco.forigi(&Self::meta(NUNA_BRANĈO_DOSIERO))
     }
 
     /// Skribas novan `KAPO`-valoron kaj registras la movon.
@@ -540,7 +513,7 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman aŭ haketan eraron.
+    /// Redonas laborspacan aŭ haketan eraron.
     pub fn movi_kapon(&self, nova: &Haketo, ago: Ago) -> Result<(), Eraro> {
         let malnova = self.legi_kapon()?;
         if malnova.as_ref() == Some(nova) {
@@ -548,7 +521,7 @@ impl Deponejo {
         }
         self.skribi_kapon(nova)?;
         self.registri_movon(Movo {
-            tempo: nunaj_sekundoj(),
+            tempo: self.horlogo.nunaj_sekundoj(),
             celo: Referenco::Kapo,
             ago,
             malnova,
@@ -562,7 +535,7 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman aŭ haketan eraron.
+    /// Redonas laborspacan aŭ haketan eraron.
     pub fn movi_branĉon(&self, nomo: &str, nova: &Haketo, ago: Ago) -> Result<(), Eraro> {
         let malnova = self.legi_branĉon(nomo)?;
         if malnova.as_ref() == Some(nova) {
@@ -570,7 +543,7 @@ impl Deponejo {
         }
         self.skribi_branĉon(nomo, nova)?;
         self.registri_movon(Movo {
-            tempo: nunaj_sekundoj(),
+            tempo: self.horlogo.nunaj_sekundoj(),
             celo: Referenco::Branĉo(nomo.to_owned()),
             ago,
             malnova,
@@ -585,7 +558,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NeekzistantaBranĉo`] aŭ [`Eraro::BranĉoEkzistas`],
-    /// se la nomoj ne kongruas kun la stato, aŭ dosiersisteman eraron.
+    /// se la nomoj ne kongruas kun la stato, aŭ laborspacan eraron.
     pub fn renomi_branĉon(&self, malnova: &str, nova: &str) -> Result<(), Eraro> {
         validi_referencan_nomon(malnova)?;
         validi_referencan_nomon(nova)?;
@@ -602,12 +575,13 @@ impl Deponejo {
                 nomo: nova.to_owned(),
             });
         }
-        fs::rename(self.branĉo_vojo(malnova), self.branĉo_vojo(nova))?;
+        self.laborspaco
+            .renomi(&Self::branĉo_vojo(malnova), &Self::branĉo_vojo(nova))?;
         if self.nuna_branĉo()?.as_deref() == Some(malnova) {
             self.agordi_nunan_branĉon(nova)?;
         }
         self.registri_movon(Movo {
-            tempo: nunaj_sekundoj(),
+            tempo: self.horlogo.nunaj_sekundoj(),
             celo: Referenco::Branĉo(nova.to_owned()),
             ago: Ago::Renomi,
             malnova: Some(celo),
@@ -622,7 +596,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NeekzistantaBranĉo`], se la branĉo mankas, aŭ
-    /// dosiersisteman eraron.
+    /// laborspacan eraron.
     pub fn forigi_branĉon(&self, nomo: &str) -> Result<(), Eraro> {
         validi_referencan_nomon(nomo)?;
         let malnova = self
@@ -630,12 +604,12 @@ impl Deponejo {
             .ok_or_else(|| Eraro::NeekzistantaBranĉo {
                 nomo: nomo.to_owned(),
             })?;
-        fs::remove_file(self.branĉo_vojo(nomo))?;
+        self.laborspaco.forigi(&Self::branĉo_vojo(nomo))?;
         if self.nuna_branĉo()?.as_deref() == Some(nomo) {
             self.forigi_nunan_branĉon()?;
         }
         self.registri_movon(Movo {
-            tempo: nunaj_sekundoj(),
+            tempo: self.horlogo.nunaj_sekundoj(),
             celo: Referenco::Branĉo(nomo.to_owned()),
             ago: Ago::Forigi,
             malnova: Some(malnova),
@@ -643,11 +617,10 @@ impl Deponejo {
         })
     }
 
-    fn etikedo_vojo(&self, nomo: &str) -> PathBuf {
-        self.metadatumoj()
-            .join(REFERENCOJ_DOSIERUJO)
-            .join(ETIKEDOJ_DOSIERUJO)
-            .join(nomo)
+    fn etikedo_vojo(nomo: &str) -> String {
+        Self::meta(&format!(
+            "{REFERENCOJ_DOSIERUJO}/{ETIKEDOJ_DOSIERUJO}/{nomo}"
+        ))
     }
 
     /// Legas la celon de etikedo; `None` signifas, ke ĝi ne ekzistas.
@@ -655,13 +628,11 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`] por malvalida nomo, aŭ
-    /// dosiersisteman aŭ malseriigan eraron.
+    /// laborspacan aŭ malseriigan eraron.
     pub fn legi_etikedon(&self, nomo: &str) -> Result<Option<EtikedaCelo>, Eraro> {
         validi_referencan_nomon(nomo)?;
-        let teksto = match fs::read_to_string(self.etikedo_vojo(nomo)) {
-            Ok(teksto) => teksto,
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(None),
-            Err(eraro) => return Err(eraro.into()),
+        let Some(teksto) = self.laborspaco.legi_tekston(&Self::etikedo_vojo(nomo))? else {
+            return Ok(None);
         };
         let mut kampoj = teksto.split_whitespace();
         let speco = kampoj.next().ok_or(Eraro::NevalidaDatumo {
@@ -692,7 +663,7 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NevalidaVojaKomponanto`] por malvalida nomo, aŭ
-    /// dosiersisteman eraron.
+    /// laborspacan eraron.
     pub fn skribi_etikedon(&self, nomo: &str, celo: &EtikedaCelo) -> Result<(), Eraro> {
         validi_referencan_nomon(nomo)?;
         let teksto = match celo {
@@ -702,45 +673,30 @@ impl Deponejo {
                 format!("etikedo {aliaso}")
             }
         };
-        fs::create_dir_all(
-            self.metadatumoj()
-                .join(REFERENCOJ_DOSIERUJO)
-                .join(ETIKEDOJ_DOSIERUJO),
-        )?;
-        skribi_atome(&self.etikedo_vojo(nomo), teksto.as_bytes())
+        self.laborspaco.krei_dosierujon(&Self::meta(&format!(
+            "{REFERENCOJ_DOSIERUJO}/{ETIKEDOJ_DOSIERUJO}"
+        )))?;
+        self.skribi_atome(&Self::etikedo_vojo(nomo), teksto.as_bytes())
     }
 
     /// Listigas la etikedojn, ordigitajn laŭ nomo.
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman aŭ malseriigan eraron por difektita etikedo.
+    /// Redonas laborspacan aŭ malseriigan eraron por difektita etikedo.
     pub fn etikedoj(&self) -> Result<Vec<Etikedo>, Eraro> {
-        let dosierujo = self
-            .metadatumoj()
-            .join(REFERENCOJ_DOSIERUJO)
-            .join(ETIKEDOJ_DOSIERUJO);
-        let eniroj = match fs::read_dir(&dosierujo) {
-            Ok(eniroj) => eniroj,
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(eraro) => return Err(eraro.into()),
-        };
+        let dosierujo = Self::meta(&format!("{REFERENCOJ_DOSIERUJO}/{ETIKEDOJ_DOSIERUJO}"));
         let mut etikedoj = Vec::new();
-        for eniro in eniroj {
-            let eniro = eniro?;
-            if !eniro.file_type()?.is_file() {
+        for ero in self.laborspaco.listi(&dosierujo)? {
+            if ero.speco != Speco::Dosiero || ero.nomo.starts_with('.') {
                 continue;
             }
-            let Some(nomo) = eniro.file_name().to_str().map(str::to_owned) else {
-                continue;
-            };
-            if nomo.starts_with('.') {
-                continue;
+            if let Some(celo) = self.legi_etikedon(&ero.nomo)? {
+                etikedoj.push(Etikedo {
+                    nomo: ero.nomo,
+                    celo,
+                });
             }
-            let Some(celo) = self.legi_etikedon(&nomo)? else {
-                continue;
-            };
-            etikedoj.push(Etikedo { nomo, celo });
         }
         etikedoj.sort_unstable_by(|unu, du| unu.nomo.cmp(&du.nomo));
         Ok(etikedoj)
@@ -753,9 +709,9 @@ impl Deponejo {
     /// # Errors
     ///
     /// Redonas [`Eraro::NeekzistantaEtikedo`], se la ĉeno montras al mankanta
-    /// etikedo, [`Eraro::CiklaEtikedo`] por ciklo, aŭ dosiersisteman eraron.
+    /// etikedo, [`Eraro::CiklaEtikedo`] por ciklo, aŭ laborspacan eraron.
     pub fn solvi_etikedon(&self, nomo: &str) -> Result<Option<Haketo>, Eraro> {
-        let mut vizititaj = HashSet::new();
+        let mut vizititaj = BTreeSet::new();
         let mut nuna = nomo.to_owned();
         loop {
             if !vizititaj.insert(nuna.clone()) {
@@ -779,22 +735,22 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman aŭ malseriigan eraron.
+    /// Redonas laborspacan aŭ malseriigan eraron.
     pub fn movhistorio(&self) -> Result<Movhistorio, Eraro> {
-        match fs::read_to_string(self.metadatumoj().join(MOVHISTORIO_DOSIERO)) {
-            Ok(teksto) => Movhistorio::malseriigi(&teksto),
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => {
-                Ok(Movhistorio::default())
-            }
-            Err(eraro) => Err(eraro.into()),
+        match self
+            .laborspaco
+            .legi_tekston(&Self::meta(MOVHISTORIO_DOSIERO))?
+        {
+            Some(teksto) => Movhistorio::malseriigi(&teksto),
+            None => Ok(Movhistorio::default()),
         }
     }
 
     fn registri_movon(&self, movo: Movo) -> Result<(), Eraro> {
         let mut historio = self.movhistorio()?;
         historio.movoj.push(movo);
-        skribi_atome(
-            &self.metadatumoj().join(MOVHISTORIO_DOSIERO),
+        self.skribi_atome(
+            &Self::meta(MOVHISTORIO_DOSIERO),
             historio.seriigi().as_bytes(),
         )
     }
@@ -807,7 +763,7 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas stokejan aŭ dosiersisteman eraron.
+    /// Redonas stokejan aŭ laborspacan eraron.
     pub fn rubokolekti(&self) -> Result<Rubokolekto, Eraro> {
         let mut stako = Vec::new();
         stako.extend(self.legi_kapon()?);
@@ -820,7 +776,7 @@ impl Deponejo {
             stako.extend(movo.nova);
         }
 
-        let mut atengaj = HashSet::new();
+        let mut atengaj = BTreeSet::new();
         while let Some(haketo) = stako.pop() {
             if !atengaj.insert(haketo) {
                 continue;
@@ -901,24 +857,23 @@ impl Deponejo {
     ///
     /// # Errors
     ///
-    /// Redonas stokejan, malseriigan aŭ dosiersisteman eraron.
+    /// Redonas stokejan, malseriigan aŭ laborspacan eraron.
     pub fn eltiri(&self, komito: &Haketo) -> Result<(), Eraro> {
         let arbo = self.legi_komiton(komito)?.arbo;
-        let celo: HashMap<String, Haketo> = self
+        let celo: BTreeMap<String, Haketo> = self
             .platigi_arbon(&arbo, "")?
             .into_iter()
             .map(|(vojo, haketo, _)| (vojo, haketo))
             .collect();
 
-        let limo = SystemTime::now()
-            .checked_sub(FREŜA_MARGENO)
-            .and_then(nanosekundoj);
+        let limo = self.limo();
         let indekso = self.legi_indekson()?;
-        let laboraj = skani(&self.radiko, "")?
-            .into_par_iter()
-            .map(|dosiero| haketi_laboran(dosiero, &indekso, limo))
+        let laboraj = self
+            .skani("")?
+            .into_iter()
+            .map(|dosiero| self.haketi_laboran(dosiero, &indekso, limo))
             .collect::<Result<Vec<_>, Eraro>>()?;
-        let nunaj: HashMap<&str, Haketo> = laboraj
+        let nunaj: BTreeMap<&str, Haketo> = laboraj
             .iter()
             .map(|dosiero| (dosiero.vojo.as_str(), dosiero.haketo))
             .collect();
@@ -929,34 +884,22 @@ impl Deponejo {
             if celo.contains_key(&dosiero.vojo) {
                 continue;
             }
-            match fs::remove_file(self.radiko.join(&dosiero.vojo)) {
-                Ok(()) => {}
-                Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => {}
-                Err(eraro) => return Err(eraro.into()),
+            self.laborspaco.forigi(&dosiero.vojo)?;
+        }
+        self.forigi_malplenajn_dosierujojn("", &Ignoro::defaŭlta())?;
+
+        for (vojo, haketo) in &celo {
+            if nunaj.get(vojo.as_str()) == Some(haketo) {
+                continue;
             }
+            let datumoj = self.stokejo.ricevi(haketo)?;
+            if let Some(parent) = parento(vojo) {
+                self.laborspaco.krei_dosierujon(parent)?;
+            }
+            self.laborspaco.skribi_atome(vojo, &datumoj)?;
         }
-        forigi_malplenajn_dosierujojn(&self.radiko)?;
 
-        celo.par_iter()
-            .map(|(vojo, haketo)| {
-                if nunaj.get(vojo.as_str()) == Some(haketo) {
-                    return Ok(());
-                }
-                let datumoj = self.stokejo.ricevi(haketo)?;
-                let absoluta = self.radiko.join(vojo);
-                if let Some(parent) = absoluta.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                fs::write(&absoluta, datumoj)?;
-                Ok(())
-            })
-            .collect::<Result<Vec<()>, Eraro>>()?;
-
-        match fs::remove_file(self.metadatumoj().join(INDEKSO_DOSIERO)) {
-            Ok(()) => Ok(()),
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(()),
-            Err(eraro) => Err(eraro.into()),
-        }
+        self.laborspaco.forigi(&Self::meta(INDEKSO_DOSIERO))
     }
 
     /// Kunfandas la celan komiton en la nunan.
@@ -971,7 +914,7 @@ impl Deponejo {
     ///
     /// Redonas [`Eraro::KunfandaKonflikto`], se ambaŭ flankoj malsame ŝanĝis
     /// la saman vojon, [`Eraro::NesamajHistorioj`], se mankas komuna antaŭulo,
-    /// aŭ stokejan, malseriigan aŭ dosiersisteman eraron.
+    /// aŭ stokejan, malseriigan aŭ laborspacan eraron.
     pub fn kunfandi(
         &self,
         nuna: &Haketo,
@@ -1006,7 +949,7 @@ impl Deponejo {
     /// Ĉu `antaŭulo` estas atingebla ekde `posteulo` sekvante gepatrojn.
     fn estas_antaŭulo(&self, antaŭulo: &Haketo, posteulo: &Haketo) -> Result<bool, Eraro> {
         let mut stako = vec![*posteulo];
-        let mut vizititaj = HashSet::new();
+        let mut vizititaj = BTreeSet::new();
         while let Some(haketo) = stako.pop() {
             if &haketo == antaŭulo {
                 return Ok(true);
@@ -1023,7 +966,7 @@ impl Deponejo {
 
     /// Trovas komunan antaŭulon de la du komitoj, se ĝi ekzistas.
     fn komuna_gepatro(&self, unua: &Haketo, dua: &Haketo) -> Result<Option<Haketo>, Eraro> {
-        let mut antaŭuloj = HashSet::new();
+        let mut antaŭuloj = BTreeSet::new();
         let mut stako = vec![*unua];
         while let Some(haketo) = stako.pop() {
             if !antaŭuloj.insert(haketo) {
@@ -1034,7 +977,7 @@ impl Deponejo {
             stako.extend(komito.dua_gepatro);
         }
 
-        let mut vizititaj = HashSet::new();
+        let mut vizititaj = BTreeSet::new();
         let mut stako = vec![*dua];
         while let Some(haketo) = stako.pop() {
             if antaŭuloj.contains(&haketo) {
@@ -1114,7 +1057,7 @@ impl Deponejo {
     }
 
     /// Legas arbon kiel mapon de vojoj al dosieraj haketoj kaj grandecoj.
-    fn plata_arbaro(&self, haketo: &Haketo) -> Result<HashMap<String, (Haketo, u64)>, Eraro> {
+    fn plata_arbaro(&self, haketo: &Haketo) -> Result<BTreeMap<String, (Haketo, u64)>, Eraro> {
         Ok(self
             .platigi_arbon(haketo, "")?
             .into_iter()
@@ -1124,25 +1067,24 @@ impl Deponejo {
 
     /// Kaptas la nunan laborspacon kaj redonas la haketon de la radika arbo.
     ///
-    /// La skanado, la haketado kaj la arba konstruo okazas paralele. Dosieroj,
-    /// kies mtempo kaj grandeco kongruas kun la indekso kaj kies objekto jam
-    /// ekzistas en la stokejo, estas reuzataj sen relegado; nur ŝanĝitaj aŭ
-    /// novaj dosieroj estas relegataj kaj kunpremataj. Post la kaptado la
-    /// indekso estas ĝisdatigita, same kiel ĉe [`Deponejo::stato`].
+    /// Dosieroj, kies mtempo kaj grandeco kongruas kun la indekso kaj kies
+    /// objekto jam ekzistas en la stokejo, estas reuzataj sen relegado; nur
+    /// ŝanĝitaj aŭ novaj dosieroj estas relegataj kaj kunpremataj. Post la
+    /// kaptado la indekso estas ĝisdatigita, same kiel ĉe
+    /// [`DeponejoMotor::stato`]. `.git`, `target`, `.vs` kaj la reguloj de
+    /// `.vsignore` estas preterlasataj.
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron, [`Eraro::NevalidaDosiernomo`],
+    /// Redonas laborspacan eraron, [`Eraro::NevalidaDosiernomo`],
     /// [`Eraro::NevalidaVojaKomponanto`] aŭ [`Eraro::NesubtenitaDosiertipo`]
     /// por la laborspaco, aŭ stokejan eraron.
     pub fn kapti_arbon(&self) -> Result<Haketo, Eraro> {
-        let limo = SystemTime::now()
-            .checked_sub(FREŜA_MARGENO)
-            .and_then(nanosekundoj);
-
+        let limo = self.limo();
         let malnova = self.legi_indekson()?;
-        let haketitaj = skani(&self.radiko, "")?
-            .into_par_iter()
+        let haketitaj = self
+            .skani("")?
+            .into_iter()
             .map(|dosiero| self.konservi_laboran(dosiero, &malnova, limo))
             .collect::<Result<Vec<_>, Eraro>>()?;
         self.ĝisdatigi_indekson(&malnova, &haketitaj)?;
@@ -1178,7 +1120,12 @@ impl Deponejo {
             });
         }
 
-        let (haketo, grandeco) = self.stokejo.konservi_dosieron(&dosiero.absoluta)?;
+        let datumoj = self.laborspaco.legi(&dosiero.vojo)?;
+        let haketo = self.stokejo.konservi(&datumoj)?;
+        let grandeco = u64::try_from(datumoj.len()).map_err(|_| Eraro::TrolongaEnigo {
+            maksimumo: usize::MAX,
+            akirita: datumoj.len(),
+        })?;
         let kaŝebla = mtempo
             .filter(|_| grandeco == dosiero.grandeco)
             .map(|mtempo| (mtempo, grandeco));
@@ -1190,7 +1137,7 @@ impl Deponejo {
         })
     }
 
-    /// Konservas la arbon de unu dosieruja nodo kaj ĝiajn subarbojn paralele.
+    /// Konservas la arbon de unu dosieruja nodo kaj ĝiajn subarbojn.
     fn konservi_nodon(&self, nodo: &Nodo) -> Result<Haketo, Eraro> {
         let mut enskriboj =
             Vec::with_capacity(nodo.dosieroj.len().saturating_add(nodo.subarboj.len()));
@@ -1201,62 +1148,47 @@ impl Deponejo {
                 grandeco: *grandeco,
             });
         }
-        let subaj = nodo
-            .subarboj
-            .par_iter()
-            .map(|(nomo, sub)| {
-                Ok(ArbaEnskribo::SubArbo {
-                    nomo: nomo.clone(),
-                    haketo: self.konservi_nodon(sub)?,
-                })
-            })
-            .collect::<Result<Vec<_>, Eraro>>()?;
-        enskriboj.extend(subaj);
+        for (nomo, sub) in &nodo.subarboj {
+            enskriboj.push(ArbaEnskribo::SubArbo {
+                nomo: nomo.clone(),
+                haketo: self.konservi_nodon(sub)?,
+            });
+        }
         self.konservi_arbon(&Arbo::el_enskriboj(enskriboj)?)
     }
 
     /// Komparas la laborspacon kun la arbo de `KAPO`.
     ///
     /// Haketo estas rekalkulata nur por dosieroj, kies mtempo aŭ grandeco
-    /// diferencas de la indekso; la ceteraj reuzas la memoritan haketon. La
-    /// skanado, la haketado kaj la komparo okazas paralele. Se la kaŝmemoro
-    /// ŝanĝiĝis, la indekso estas atome reskribita.
+    /// diferencas de la indekso; la ceteraj reuzas la memoritan haketon. Se la
+    /// kaŝmemoro ŝanĝiĝis, la indekso estas atome reskribita.
     ///
     /// # Errors
     ///
-    /// Redonas dosiersisteman eraron, [`Eraro::NevalidaDosiernomo`],
+    /// Redonas laborspacan eraron, [`Eraro::NevalidaDosiernomo`],
     /// [`Eraro::NevalidaVojaKomponanto`] aŭ [`Eraro::NesubtenitaDosiertipo`]
     /// por la laborspaco, aŭ stokejan eraron por la arbo de `KAPO`.
     pub fn stato(&self) -> Result<Stato, Eraro> {
-        let limo = SystemTime::now()
-            .checked_sub(FREŜA_MARGENO)
-            .and_then(nanosekundoj);
+        let limo = self.limo();
+        let malnova = self.legi_indekson()?;
+        let haketitaj = self
+            .skani("")?
+            .into_iter()
+            .map(|dosiero| self.haketi_laboran(dosiero, &malnova, limo))
+            .collect::<Result<Vec<_>, Eraro>>()?;
+        self.ĝisdatigi_indekson(&malnova, &haketitaj)?;
 
-        let (haketitaj, kapo) = rayon::join(
-            || -> Result<Vec<HaketitaDosiero>, Eraro> {
-                let malnova = self.legi_indekson()?;
-                let haketitaj = skani(&self.radiko, "")?
-                    .into_par_iter()
-                    .map(|dosiero| haketi_laboran(dosiero, &malnova, limo))
-                    .collect::<Result<Vec<_>, Eraro>>()?;
-                self.ĝisdatigi_indekson(&malnova, &haketitaj)?;
-                Ok(haketitaj)
-            },
-            || -> Result<HashMap<String, Haketo>, Eraro> {
-                match self.legi_kapon()? {
-                    Some(komito) => {
-                        let arbo = self.legi_komiton(&komito)?.arbo;
-                        Ok(self
-                            .platigi_arbon(&arbo, "")?
-                            .into_iter()
-                            .map(|(vojo, haketo, _)| (vojo, haketo))
-                            .collect())
-                    }
-                    None => Ok(HashMap::new()),
-                }
-            },
-        );
-        Ok(kompari(&kapo?, &haketitaj?))
+        let kapo = match self.legi_kapon()? {
+            Some(komito) => {
+                let arbo = self.legi_komiton(&komito)?.arbo;
+                self.platigi_arbon(&arbo, "")?
+                    .into_iter()
+                    .map(|(vojo, haketo, _)| (vojo, haketo))
+                    .collect()
+            }
+            None => BTreeMap::new(),
+        };
+        Ok(kompari(&kapo, &haketitaj))
     }
 
     /// Reskribas la indekson, se la kaŝeblaj enskriboj ŝanĝiĝis.
@@ -1268,11 +1200,11 @@ impl Deponejo {
         // La vojoj estas unikaj, do egala nombro kaj kongruo de ĉiu kaŝebla
         // dosiero signifas egalan indekson; tiel la kutima kazo evitas rekonstruon.
         let kaŝeblaj = haketitaj
-            .par_iter()
+            .iter()
             .filter(|dosiero| dosiero.kaŝebla.is_some())
             .count();
         let sama = kaŝeblaj == malnova.enskriboj().len()
-            && haketitaj.par_iter().all(|dosiero| {
+            && haketitaj.iter().all(|dosiero| {
                 dosiero.kaŝebla.is_none_or(|(mtempo, grandeco)| {
                     malnova.trovi(&dosiero.vojo).is_some_and(|enskribo| {
                         enskribo.mtempo == mtempo
@@ -1298,21 +1230,21 @@ impl Deponejo {
                 })
                 .collect(),
         )?;
-        skribi_atome(&self.metadatumoj().join(INDEKSO_DOSIERO), &nova.seriigi()?)
+        self.skribi_atome(&Self::meta(INDEKSO_DOSIERO), &nova.seriigi()?)
     }
 
     /// Legas la indekson; manka aŭ difektita indekso estas malplena kaŝmemoro.
     fn legi_indekson(&self) -> Result<Indekso, Eraro> {
-        match fs::read(self.metadatumoj().join(INDEKSO_DOSIERO)) {
+        match self.laborspaco.legi(&Self::meta(INDEKSO_DOSIERO)) {
             // La indekso estas nur kaŝmemoro: difektita indekso estas rekonstruata
             // per plena haketado, do ĝia eraro ne devas haltigi la komandon.
             Ok(bajtoj) => Ok(Indekso::malseriigi(&bajtoj).unwrap_or_default()),
-            Err(eraro) if eraro.kind() == std::io::ErrorKind::NotFound => Ok(Indekso::default()),
-            Err(eraro) => Err(eraro.into()),
+            Err(Eraro::NeekzistantaVojo { .. }) => Ok(Indekso::default()),
+            Err(eraro) => Err(eraro),
         }
     }
 
-    /// Paralele legas la arbon kaj ĝiajn subarbojn en platan liston de dosieroj.
+    /// Legas la arbon kaj ĝiajn subarbojn en platan liston de dosieroj.
     fn platigi_arbon(
         &self,
         haketo: &Haketo,
@@ -1320,22 +1252,182 @@ impl Deponejo {
     ) -> Result<Vec<(String, Haketo, u64)>, Eraro> {
         let arbo = self.legi_arbon(haketo)?;
         let mut dosieroj = Vec::new();
-        let mut subarboj = Vec::new();
         for enskribo in arbo.enskriboj() {
             let vojo = kunigi(prefikso, enskribo.nomo())?;
             match enskribo {
                 ArbaEnskribo::Dosiero {
                     haketo, grandeco, ..
                 } => dosieroj.push((vojo, *haketo, *grandeco)),
-                ArbaEnskribo::SubArbo { haketo, .. } => subarboj.push((vojo, *haketo)),
+                ArbaEnskribo::SubArbo { haketo, .. } => {
+                    dosieroj.extend(self.platigi_arbon(haketo, &vojo)?);
+                }
             }
         }
-        let subaj = subarboj
-            .par_iter()
-            .map(|(vojo, haketo)| self.platigi_arbon(haketo, vojo))
-            .collect::<Result<Vec<_>, Eraro>>()?;
-        dosieroj.extend(subaj.into_iter().flatten());
         Ok(dosieroj)
+    }
+
+    /// Prenas la haketon el la indekso, se la metadatumoj kongruas, alie relegas.
+    fn haketi_laboran(
+        &self,
+        dosiero: LaborDosiero,
+        indekso: &Indekso,
+        limo: Option<u64>,
+    ) -> Result<HaketitaDosiero, Eraro> {
+        let mtempo = dosiero
+            .mtempo
+            .filter(|mtempo| limo.is_some_and(|limo| *mtempo < limo));
+
+        if let Some(mtempo) = mtempo
+            && let Some(haketo) = indekso.kaŝita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
+        {
+            return Ok(HaketitaDosiero {
+                vojo: dosiero.vojo,
+                haketo,
+                grandeco: dosiero.grandeco,
+                kaŝebla: Some((mtempo, dosiero.grandeco)),
+            });
+        }
+
+        let datumoj = self.laborspaco.legi(&dosiero.vojo)?;
+        let haketo = crate::stokado::haketi(&datumoj);
+        let grandeco = u64::try_from(datumoj.len()).map_err(|_| Eraro::TrolongaEnigo {
+            maksimumo: usize::MAX,
+            akirita: datumoj.len(),
+        })?;
+        // Se la grandeco ŝanĝiĝis inter `stat` kaj legado, la dosiero estas
+        // ankoraŭ skribata; ĝi ne estas kaŝmemorata.
+        let kaŝebla = mtempo
+            .filter(|_| grandeco == dosiero.grandeco)
+            .map(|mtempo| (mtempo, grandeco));
+        Ok(HaketitaDosiero {
+            vojo: dosiero.vojo,
+            haketo,
+            grandeco,
+            kaŝebla,
+        })
+    }
+
+    /// Listigas la regulajn dosierojn sub la radiko, preterlasante ignoritajn.
+    fn skani(&self, prefikso: &str) -> Result<Vec<LaborDosiero>, Eraro> {
+        let mut ignoro = Ignoro::defaŭlta();
+        self.skani_en(prefikso, &mut ignoro)
+    }
+
+    fn skani_en(&self, dosierujo: &str, ignoro: &mut Ignoro) -> Result<Vec<LaborDosiero>, Eraro> {
+        let signo = kunigi(dosierujo, ".vsignore")?;
+        if let Some(enhavo) = self.laborspaco.legi_tekston(&signo)? {
+            ignoro.aldoni(dosierujo, &enhavo);
+        }
+
+        let mut rezulto = Vec::new();
+        let mut eroj = self.laborspaco.listi(dosierujo)?;
+        eroj.sort_unstable_by(|unu, du| unu.nomo.cmp(&du.nomo));
+        for ero in eroj {
+            if ero.nomo == VS_DOSIERUJO {
+                continue;
+            }
+            validi_komponanton(&ero.nomo)?;
+            let vojo = kunigi(dosierujo, &ero.nomo)?;
+            match ero.speco {
+                Speco::Dosierujo => {
+                    if ignoro.ignorata(&vojo, true) {
+                        continue;
+                    }
+                    let mut suba = ignoro.clone();
+                    rezulto.extend(self.skani_en(&vojo, &mut suba)?);
+                }
+                Speco::Dosiero => {
+                    if ignoro.ignorata(&vojo, false) {
+                        continue;
+                    }
+                    let metadatumoj = self.laborspaco.metadatumoj(&vojo)?;
+                    if metadatumoj.speco != Speco::Dosiero {
+                        return Err(Eraro::NesubtenitaDosiertipo {
+                            vojo: format!("{}/{vojo}", self.laborspaco.radiko()),
+                        });
+                    }
+                    rezulto.push(LaborDosiero {
+                        vojo,
+                        grandeco: metadatumoj.grandeco,
+                        mtempo: metadatumoj.mtempo,
+                    });
+                }
+                Speco::Alia => {
+                    return Err(Eraro::NesubtenitaDosiertipo {
+                        vojo: format!("{}/{vojo}", self.laborspaco.radiko()),
+                    });
+                }
+            }
+        }
+        Ok(rezulto)
+    }
+
+    /// Rekursie forprenas malplenajn dosierujojn, preterlasante ignoritajn.
+    fn forigi_malplenajn_dosierujojn(&self, dosierujo: &str, ignoro: &Ignoro) -> Result<(), Eraro> {
+        let mut loka = ignoro.clone();
+        let signo = kunigi(dosierujo, ".vsignore")?;
+        if let Some(enhavo) = self.laborspaco.legi_tekston(&signo)? {
+            loka.aldoni(dosierujo, &enhavo);
+        }
+        for ero in self.laborspaco.listi(dosierujo)? {
+            if ero.speco != Speco::Dosierujo {
+                continue;
+            }
+            let sub = kunigi(dosierujo, &ero.nomo)?;
+            if sub == VS_DOSIERUJO || loka.ignorata(&sub, true) {
+                continue;
+            }
+            self.forigi_malplenajn_dosierujojn(&sub, &loka)?;
+            if self.laborspaco.listi(&sub)?.is_empty() {
+                self.laborspaco.forigi_dosierujon(&sub)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(feature = "std")]
+impl DeponejoMotor<Dosierspaco, DosieraKonservilo, StdaHorlogo> {
+    /// Iniciatas deponejon en la donita radika dosierujo.
+    ///
+    /// La operacio estas idempotenta: ekzistanta `.vs`-strukturo ne estas
+    /// forviŝita, kaj nur mankantaj partoj estas kreataj.
+    ///
+    /// # Errors
+    ///
+    /// Redonas laborspacan eraron, se la strukturo ne kreeblas.
+    pub fn iniciati(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
+        let radiko = radiko.into();
+        let spaco = Dosierspaco::nova(radiko.clone());
+        spaco.krei_dosierujon(&format!("{VS_DOSIERUJO}/{OBJEKTUJO}"))?;
+
+        let stokejo = DosieraKonservilo::nova(radiko.join(VS_DOSIERUJO).join(OBJEKTUJO));
+        let deponejo = Self::nova(spaco, stokejo, StdaHorlogo);
+        let kapo = Self::meta(KAPO_DOSIERO);
+        if !deponejo.laborspaco.ekzistas(&kapo)? {
+            deponejo.skribi_atome(&kapo, b"")?;
+        }
+        Ok(deponejo)
+    }
+
+    /// Malfermas ekzistantan deponejon.
+    ///
+    /// # Errors
+    ///
+    /// Redonas [`Eraro::Nedeponejo`], se la dosierujo ne enhavas `.vs`, aŭ
+    /// laborspacan eraron.
+    pub fn malfermi(radiko: impl Into<PathBuf>) -> Result<Self, Eraro> {
+        let radiko = radiko.into();
+        let spaco = Dosierspaco::nova(radiko.clone());
+        let meta = String::from(VS_DOSIERUJO);
+        let kapo = format!("{meta}/{KAPO_DOSIERO}");
+        if !spaco.ekzistas(&meta)? || !spaco.ekzistas(&kapo)? {
+            return Err(Eraro::Nedeponejo);
+        }
+        spaco.krei_dosierujon(&format!("{meta}/{OBJEKTUJO}"))?;
+
+        let stokejo = DosieraKonservilo::nova(radiko.join(VS_DOSIERUJO).join(OBJEKTUJO));
+        Ok(Self::nova(spaco, stokejo, StdaHorlogo))
     }
 }
 
@@ -1366,6 +1458,10 @@ fn kunigi(prefikso: &str, nomo: &str) -> Result<String, Eraro> {
     Ok(vojo)
 }
 
+fn parento(vojo: &str) -> Option<&str> {
+    vojo.rsplit_once('/').map(|(parento, _)| parento)
+}
+
 /// Ĉu du arbaroj havas la saman dosieran enhavon ĉe la sama vojo.
 fn sama_enhavo(unua: Option<&(Haketo, u64)>, dua: Option<&(Haketo, u64)>) -> bool {
     match (unua, dua) {
@@ -1392,112 +1488,10 @@ fn nodo_el_dosieroj<'a>(dosieroj: impl IntoIterator<Item = (&'a str, Haketo, u64
     radiko
 }
 
-fn nanosekundoj(tempo: SystemTime) -> Option<u64> {
-    let daŭro = tempo.duration_since(UNIX_EPOCH).ok()?;
-    u64::try_from(daŭro.as_nanos()).ok()
-}
-
-/// Rekursie forprenas malplenajn dosierujojn, preterlasante `.vs`.
-fn forigi_malplenajn_dosierujojn(dosierujo: &Path) -> Result<(), Eraro> {
-    for eniro in fs::read_dir(dosierujo)? {
-        let eniro = eniro?;
-        if !eniro.file_type()?.is_dir() || eniro.file_name().to_string_lossy() == VS_DOSIERUJO {
-            continue;
-        }
-        let vojo = eniro.path();
-        forigi_malplenajn_dosierujojn(&vojo)?;
-        if fs::read_dir(&vojo)?.next().is_none() {
-            fs::remove_dir(&vojo)?;
-        }
-    }
-    Ok(())
-}
-
-/// Rekursie kaj paralele listigas la regulajn dosierojn sub `dosierujo`.
-fn skani(dosierujo: &Path, prefikso: &str) -> Result<Vec<LaborDosiero>, Eraro> {
-    let mut dosieroj = Vec::new();
-    let mut subdosierujoj = Vec::new();
-    for eniro in fs::read_dir(dosierujo)? {
-        let eniro = eniro?;
-        let nomo = eniro
-            .file_name()
-            .into_string()
-            .map_err(|_| Eraro::NevalidaDosiernomo)?;
-        if nomo == VS_DOSIERUJO {
-            continue;
-        }
-        validi_komponanton(&nomo)?;
-        let vojo = kunigi(prefikso, &nomo)?;
-        match speco_de(eniro.file_type()?) {
-            Speco::Dosierujo => subdosierujoj.push((eniro.path(), vojo)),
-            Speco::Dosiero => dosieroj.push((eniro, vojo)),
-            Speco::Alia => {
-                return Err(Eraro::NesubtenitaDosiertipo {
-                    vojo: eniro.path().display().to_string(),
-                });
-            }
-        }
-    }
-
-    let mut rezulto = dosieroj
-        .into_par_iter()
-        .map(|(eniro, vojo)| {
-            let metadatumoj = eniro.metadata()?;
-            Ok(LaborDosiero {
-                vojo,
-                absoluta: eniro.path(),
-                grandeco: metadatumoj.len(),
-                mtempo: metadatumoj.modified().ok().and_then(nanosekundoj),
-            })
-        })
-        .collect::<Result<Vec<_>, Eraro>>()?;
-    let subaj = subdosierujoj
-        .par_iter()
-        .map(|(absoluta, vojo)| skani(absoluta, vojo))
-        .collect::<Result<Vec<_>, Eraro>>()?;
-    rezulto.extend(subaj.into_iter().flatten());
-    Ok(rezulto)
-}
-
-/// Prenas la haketon el la indekso, se la metadatumoj kongruas, alie relegas.
-fn haketi_laboran(
-    dosiero: LaborDosiero,
-    indekso: &Indekso,
-    limo: Option<u64>,
-) -> Result<HaketitaDosiero, Eraro> {
-    let mtempo = dosiero
-        .mtempo
-        .filter(|mtempo| limo.is_some_and(|limo| *mtempo < limo));
-
-    if let Some(mtempo) = mtempo
-        && let Some(haketo) = indekso.kaŝita_haketo(&dosiero.vojo, mtempo, dosiero.grandeco)
-    {
-        return Ok(HaketitaDosiero {
-            vojo: dosiero.vojo,
-            haketo,
-            grandeco: dosiero.grandeco,
-            kaŝebla: Some((mtempo, dosiero.grandeco)),
-        });
-    }
-
-    let (haketo, grandeco) = haketi_dosieron(&dosiero.absoluta)?;
-    // Se la grandeco ŝanĝiĝis inter `stat` kaj legado, la dosiero estas
-    // ankoraŭ skribata; ĝi ne estas kaŝmemorata.
-    let kaŝebla = mtempo
-        .filter(|_| grandeco == dosiero.grandeco)
-        .map(|mtempo| (mtempo, grandeco));
-    Ok(HaketitaDosiero {
-        vojo: dosiero.vojo,
-        haketo,
-        grandeco,
-        kaŝebla,
-    })
-}
-
-/// Paralele klasas la laborspacajn dosierojn rilate al la plata `KAPO`-arbo.
-fn kompari(kapo: &HashMap<String, Haketo>, laboraj: &[HaketitaDosiero]) -> Stato {
+/// Klasas la laborspacajn dosierojn rilate al la plata `KAPO`-arbo.
+fn kompari(kapo: &BTreeMap<String, Haketo>, laboraj: &[HaketitaDosiero]) -> Stato {
     let mut modifitaj: Vec<String> = laboraj
-        .par_iter()
+        .iter()
         .filter(|dosiero| {
             kapo.get(&dosiero.vojo)
                 .is_some_and(|haketo| *haketo != dosiero.haketo)
@@ -1505,7 +1499,7 @@ fn kompari(kapo: &HashMap<String, Haketo>, laboraj: &[HaketitaDosiero]) -> Stato
         .map(|dosiero| dosiero.vojo.clone())
         .collect();
     let mut novaj: Vec<String> = laboraj
-        .par_iter()
+        .iter()
         .filter(|dosiero| !kapo.contains_key(&dosiero.vojo))
         .map(|dosiero| dosiero.vojo.clone())
         .collect();
@@ -1516,50 +1510,24 @@ fn kompari(kapo: &HashMap<String, Haketo>, laboraj: &[HaketitaDosiero]) -> Stato
     let mut forigitaj: Vec<String> = if kongruaj == kapo.len() {
         Vec::new()
     } else {
-        let ekzistantaj: HashSet<&str> = laboraj
+        let ekzistantaj: BTreeSet<&str> = laboraj
             .iter()
             .map(|dosiero| dosiero.vojo.as_str())
             .collect();
-        kapo.par_iter()
+        kapo.iter()
             .filter(|(vojo, _)| !ekzistantaj.contains(vojo.as_str()))
             .map(|(vojo, _)| vojo.clone())
             .collect()
     };
 
-    modifitaj.par_sort_unstable();
-    novaj.par_sort_unstable();
-    forigitaj.par_sort_unstable();
+    modifitaj.sort_unstable();
+    novaj.sort_unstable();
+    forigitaj.sort_unstable();
     Stato {
         modifitaj,
         novaj,
         forigitaj,
     }
-}
-
-fn speco_de(speco: fs::FileType) -> Speco {
-    if speco.is_dir() {
-        Speco::Dosierujo
-    } else if speco.is_file() {
-        Speco::Dosiero
-    } else {
-        Speco::Alia
-    }
-}
-
-fn skribi_atome(vojo: &Path, datumoj: &[u8]) -> Result<(), Eraro> {
-    let dosierujo = vojo.parent().unwrap_or_else(|| Path::new("."));
-    let nomo = vojo
-        .file_name()
-        .map_or_else(String::new, |nomo| nomo.to_string_lossy().into_owned());
-    let nombro = PROVIZORA_NOMBRO.fetch_add(1, Ordering::Relaxed);
-    let provizora = dosierujo.join(format!(".{nomo}.{}.{}.prov", std::process::id(), nombro));
-
-    fs::write(&provizora, datumoj)?;
-    if let Err(eraro) = fs::rename(&provizora, vojo) {
-        drop(fs::remove_file(&provizora));
-        return Err(eraro.into());
-    }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -1575,17 +1543,36 @@ mod testoj {
     )]
 
     use super::{
-        Ago, Deponejo, Eraro, EtikedaCelo, INDEKSO_DOSIERO, KAPO_DOSIERO, Kunfando, OBJEKTUJO,
-        Referenco, Rubokolekto, Stato, VS_DOSIERUJO,
+        Ago, Deponejo, DeponejoMotor, Eraro, EtikedaCelo, INDEKSO_DOSIERO, KAPO_DOSIERO, Kunfando,
+        OBJEKTUJO, Referenco, Rubokolekto, Stato, VS_DOSIERUJO,
     };
+    use crate::FiksaHorlogo;
+    use crate::laborspaco::{Laborspaco, Memspaco};
     use crate::objektoj::{ArbaEnskribo, Komito};
-    use crate::stokado::{Haketo, Konservilo};
+    use crate::stokado::{Haketo, Konservilo, MemoraKonservilo};
     use std::fs;
     use std::path::{Path, PathBuf};
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::time::{Duration, SystemTime};
 
+    type MemDeponejo = DeponejoMotor<Memspaco, MemoraKonservilo, FiksaHorlogo>;
+
     static PROVOJ: AtomicU64 = AtomicU64::new(0);
+
+    fn memdeponejo() -> MemDeponejo {
+        let spaco = Memspaco::nova();
+        spaco
+            .krei_dosierujon(&format!("{VS_DOSIERUJO}/{OBJEKTUJO}"))
+            .unwrap();
+        spaco
+            .skribi_atome(&format!("{VS_DOSIERUJO}/{KAPO_DOSIERO}"), b"")
+            .unwrap();
+        DeponejoMotor::nova(
+            spaco,
+            MemoraKonservilo::nova(),
+            FiksaHorlogo::nova(10_000_000_000),
+        )
+    }
 
     struct ProvDeponejo {
         radiko: PathBuf,
@@ -2422,5 +2409,112 @@ mod testoj {
         assert_eq!(raporto.forigitaj, 0);
         assert!(deponejo.stokejo().havas(&dua));
         assert_eq!(deponejo.legi_komiton(&dua).unwrap().gepatro, Some(unua));
+    }
+
+    fn arbo_kiel_vojoj(deponejo: &Deponejo, haketo: &Haketo) -> Vec<String> {
+        let mut vojoj: Vec<String> = deponejo
+            .platigi_arbon(haketo, "")
+            .unwrap()
+            .into_iter()
+            .map(|(vojo, _, _)| vojo)
+            .collect();
+        vojoj.sort_unstable();
+        vojoj
+    }
+
+    #[test]
+    fn testo_defaule_ignoras_git_target_kaj_vs() {
+        let prov = ProvDeponejo::nova("ignoro-defaule");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::create_dir_all(prov.radiko.join(".git").join("objektoj")).unwrap();
+        fs::write(prov.radiko.join(".git").join("konfigo"), b"git").unwrap();
+        fs::create_dir_all(prov.radiko.join("target").join("debug")).unwrap();
+        fs::write(prov.radiko.join("target").join("debug").join("bin"), b"bin").unwrap();
+        fs::create_dir(prov.radiko.join("src")).unwrap();
+        fs::write(prov.radiko.join("src").join("lib.rs"), b"kodo").unwrap();
+
+        let arbo = deponejo.kapti_arbon().unwrap();
+        assert_eq!(arbo_kiel_vojoj(&deponejo, &arbo), ["src/lib.rs"]);
+        assert_eq!(deponejo.stato().unwrap().novaj, ["src/lib.rs"]);
+    }
+
+    #[test]
+    fn testo_vsignore_kaj_nestitaj_reguloj() {
+        let prov = ProvDeponejo::nova("ignoro-vsignore");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join(".vsignore"), b"*.log\n!grava.log\nsub/\n").unwrap();
+        fs::write(prov.radiko.join("a.log"), b"a").unwrap();
+        fs::write(prov.radiko.join("grava.log"), b"g").unwrap();
+        fs::write(prov.radiko.join("konservu.txt"), b"k").unwrap();
+        fs::create_dir(prov.radiko.join("sub")).unwrap();
+        fs::write(prov.radiko.join("sub").join("x.txt"), b"x").unwrap();
+        fs::create_dir(prov.radiko.join("dok")).unwrap();
+        fs::write(prov.radiko.join("dok").join(".vsignore"), b"*.tmp\n").unwrap();
+        fs::write(prov.radiko.join("dok").join("a.tmp"), b"t").unwrap();
+        fs::write(prov.radiko.join("dok").join("b.txt"), b"b").unwrap();
+
+        let arbo = deponejo.kapti_arbon().unwrap();
+        assert_eq!(
+            arbo_kiel_vojoj(&deponejo, &arbo),
+            [
+                ".vsignore",
+                "dok/.vsignore",
+                "dok/b.txt",
+                "grava.log",
+                "konservu.txt"
+            ]
+        );
+    }
+
+    #[test]
+    fn testo_eltiri_konservas_ignoritajn_dosierojn() {
+        let prov = ProvDeponejo::nova("ignoro-eltiri");
+        let deponejo = Deponejo::iniciati(prov.radiko.clone()).unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"unua").unwrap();
+        komiti(&deponejo);
+        let unua = deponejo.legi_kapon().unwrap().unwrap();
+
+        fs::create_dir(prov.radiko.join("target")).unwrap();
+        fs::write(
+            prov.radiko.join("target").join("kaŝu"),
+            "ne tuŝu".as_bytes(),
+        )
+        .unwrap();
+        fs::write(prov.radiko.join("a.txt"), b"dua").unwrap();
+        komiti(&deponejo);
+
+        deponejo.eltiri(&unua).unwrap();
+        assert_eq!(fs::read(prov.radiko.join("a.txt")).unwrap(), b"unua");
+        assert_eq!(
+            fs::read(prov.radiko.join("target").join("kaŝu")).unwrap(),
+            "ne tuŝu".as_bytes()
+        );
+    }
+
+    #[test]
+    fn testo_memora_motoro_funkcias_sen_std() {
+        let deponejo = memdeponejo();
+        deponejo
+            .laborspaco()
+            .skribi_atome("saluton.txt", b"saluton")
+            .unwrap();
+
+        let arbo = deponejo.kapti_arbon().unwrap();
+        let komito = Komito {
+            arbo,
+            gepatro: None,
+            mesaĝo: "Enmemora".into(),
+            kreita_je: 1,
+            dua_gepatro: None,
+        };
+        let haketo = deponejo.konservi_komiton(&komito).unwrap();
+        deponejo.skribi_kapon(&haketo).unwrap();
+
+        assert!(deponejo.stato().unwrap().estas_pura());
+        assert_eq!(deponejo.legi_kapon().unwrap(), Some(haketo));
+        assert_eq!(
+            deponejo.laborspaco().legi("saluton.txt").unwrap(),
+            b"saluton"
+        );
     }
 }

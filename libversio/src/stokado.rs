@@ -139,6 +139,29 @@ pub trait Konservilo {
     fn ricevi(&self, haketo: &Haketo) -> Result<Vec<u8>, Eraro>;
 }
 
+/// Plenigita [`Konservilo`], kiu kapablas listigi kaj forigi objektojn.
+///
+/// La deponeja motoro bezonas tiujn operaciojn por la rubokolekto; la simpla
+/// [`Konservilo`] restas sufiĉa por la formala pruvado kaj por legantoj.
+pub trait Stokejo: Konservilo {
+    /// Ĉu la objekto kun la donita haketo ekzistas.
+    fn havas(&self, haketo: &Haketo) -> bool;
+
+    /// Forigas la objekton, se ĝi ekzistas.
+    ///
+    /// # Errors
+    ///
+    /// Redonas la eraron de la suba stokejo.
+    fn forigi(&self, haketo: &Haketo) -> Result<(), Eraro>;
+
+    /// Listigas ĉiujn konservitajn haketojn, ordigitajn.
+    ///
+    /// # Errors
+    ///
+    /// Redonas la eraron de la suba stokejo.
+    fn haketoj(&self) -> Result<Vec<Haketo>, Eraro>;
+}
+
 /// Konservilo, kiu tenas la objektojn en memoro.
 ///
 /// Ĝi funkcias sen `std` kaj servas al testoj, pruvoj kaj al la estonta
@@ -189,6 +212,28 @@ impl Konservilo for MemoraKonservilo {
             .ok_or(Eraro::NeekzistantaObjekto { haketo: *haketo })?;
         kontroli(datumoj, haketo)?;
         Ok(datumoj.clone())
+    }
+}
+
+impl Stokejo for MemoraKonservilo {
+    fn havas(&self, haketo: &Haketo) -> bool {
+        self.objektoj.borrow().iter().any(|(h, _)| h == haketo)
+    }
+
+    fn forigi(&self, haketo: &Haketo) -> Result<(), Eraro> {
+        self.objektoj.borrow_mut().retain(|(h, _)| h != haketo);
+        Ok(())
+    }
+
+    fn haketoj(&self) -> Result<Vec<Haketo>, Eraro> {
+        let mut haketoj: Vec<Haketo> = self
+            .objektoj
+            .borrow()
+            .iter()
+            .map(|(haketo, _)| *haketo)
+            .collect();
+        haketoj.sort_unstable();
+        Ok(haketoj)
     }
 }
 
@@ -396,6 +441,20 @@ mod dosiera {
             lz4_flex::frame::FrameDecoder::new(dosiero).read_to_end(&mut datumoj)?;
             kontroli(&datumoj, haketo)?;
             Ok(datumoj)
+        }
+    }
+
+    impl super::Stokejo for DosieraKonservilo {
+        fn havas(&self, haketo: &Haketo) -> bool {
+            DosieraKonservilo::havas(self, haketo)
+        }
+
+        fn forigi(&self, haketo: &Haketo) -> Result<(), Eraro> {
+            DosieraKonservilo::forigi(self, haketo)
+        }
+
+        fn haketoj(&self) -> Result<Vec<Haketo>, Eraro> {
+            DosieraKonservilo::haketoj(self)
         }
     }
 }

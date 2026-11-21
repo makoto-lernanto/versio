@@ -13,9 +13,11 @@ kiel `export-ignore` kaj `export-subst` povas influi la eksporton; submoduloj
 ne estas rekursive eksportataj. La testita momentfoto ne enhavis simbolajn
 ligilojn aŭ submodulojn.
 
-Ne rulu `vs ini` rekte en la origina Git-deponejo: nun Versio preterlasas
-nur `.vs`, ne `.git`, kaj ne interpretas `.gitignore`. Ĝi konservas ordinarajn
-dosierojn kaj arbojn, ne plenumeblajn permesbitojn aŭ simbolajn ligilojn.
+`vs ini` povas esti rulata ankaŭ en la origina Git-deponejo: nun Versio
+preterlasas `.git`, `target` kaj `.vs` kaj interpretas `.vsignore`. Ĝi tamen ne
+interpretas `.gitignore`; por ekskludi pliajn dosierojn, uzu `.vsignore`.
+Ĝi konservas ordinarajn dosierojn kaj arbojn, ne plenumeblajn permesbitojn aŭ
+simbolajn ligilojn.
 
 ## Ripetebla importo
 

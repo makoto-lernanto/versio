@@ -14,7 +14,6 @@ blake3 = { version = "1", default-features = false, features = ["pure"] }
 clap = { version = "4", features = ["derive"] }
 lz4_flex = { version = "0.11", default-features = false, features = ["safe-encode", "safe-decode"] }
 postcard = { version = "=1.0.7", default-features = false, features = ["alloc"] }
-rayon = "1"
 serde = { version = "1", default-features = false, features = ["alloc", "derive"] }
 thiserror = { version = "2", default-features = false }
 

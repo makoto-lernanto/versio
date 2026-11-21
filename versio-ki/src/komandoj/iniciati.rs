@@ -10,9 +10,9 @@ pub(crate) fn plenumi() -> anyhow::Result<()> {
     let deponejo = Deponejo::iniciati(radiko).context("malsukcesis iniciati la deponejon")?;
 
     if jam {
-        println!("Deponejo jam ekzistas ĉe {}", deponejo.radiko().display());
+        println!("Deponejo jam ekzistas ĉe {}", deponejo.radiko());
     } else {
-        println!("Iniciatita deponejo ĉe {}", deponejo.radiko().display());
+        println!("Iniciatita deponejo ĉe {}", deponejo.radiko());
     }
 
     Ok(())
