@@ -139,7 +139,7 @@ La jenaj fazoj estas plano, ne promeso; la ordo kaj la amplekso povas ŝanĝiĝi
 - [x] `vs etikedi v1.0` kaj `vs historio v1.0` funkcias; etikedo povas montri al komito aŭ al alia etikedo.
 - [x] `vs movhistorio` montras la antaŭajn valorojn de `KAPO` kaj de ĉiu branĉo.
 - [x] `vs rubokolekti` forigas nur neatingeblajn objektojn; unuoptesto pruvas, ke ĉiuj atingeblaj restas.
-- [ ] La atingo-kalkulo havas Kani-pruvon aŭ estas kovrita de la ekzistanta pruvo pri la legilo; la DI-matrico restas verda.
+- [x] La atingo-kalkulo havas Kani-pruvon aŭ estas kovrita de la ekzistanta pruvo pri la legilo; la DI-matrico restas verda.
 
 La atingo-kalkulo de `rubokolekti` legas ĉiun radikon per `Komito::malseriigi` kaj
 `Arbo::malseriigi`, kiuj delegas al la sama `Legilo`, kiun kontrolas
