@@ -506,15 +506,16 @@
         <div class="tavolo">
           <span class="tavola-numero" aria-hidden="true">06</span>
           <div>
-            <h3 data-t="hist.p6.titolo">Etikedoj kaj movhistorio</h3>
+            <h3 data-t="hist.p6.titolo">Etikedoj, branĉoj kaj movhistorio</h3>
             <p data-t-html="hist.p6.teksto">
               <code>vs etikedi &lt;nomo&gt; [celo]</code> markas komiton aŭ alian
-              etikedon; <code>vs etikedoj</code> ilin listigas. <code>vs
+              etikedon; <code>vs etikedoj</code> listigas ilin. <code>vs renomi</code>
+              kaj <code>vs forigi</code> administras branĉojn, kaj <code>vs
               movhistorio</code> montras la antaŭajn valorojn de <code>KAPO</code>
               kaj de ĉiu branĉo.
             </p>
           </div>
-          <span class="sildeto">vs etikedi · etikedoj · movhistorio</span>
+          <span class="sildeto">etikedi · etikedoj · renomi · forigi · movhistorio</span>
         </div>
         <div class="tavolo">
           <span class="tavola-numero" aria-hidden="true">07</span>
@@ -538,7 +539,7 @@
               <span class="sildeto">REF</span>
             </div>
             <div class="terminala-centro">
-              <span class="terminala-titolo" data-t="hist.fenestro.titolo">Historio, branĉoj, etikedoj kaj rubokolekto</span>
+              <span class="terminala-titolo" data-t="hist.fenestro.titolo">Referencoj: etikedoj, movhistorio kaj rubokolekto</span>
             </div>
             <div class="terminala-dekstro">
               <span class="terminala-stato">REALA</span>
@@ -571,11 +572,11 @@
             </div>
           </div>
           <div class="terminala-korpo">
-            <pre class="log" id="historiaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/versio-demo</span><span class="linio"><span class="akcento">$</span> printf 'unua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua"</span><span class="linio sukceso">Komito 01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649</span><span class="linio"><span class="akcento">$</span> vs linio ĉefa</span><span class="linio sukceso">Kreita branĉo ĉefa ĉe 01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649</span><span class="linio"><span class="akcento">$</span> vs eltiri ĉefa</span><span class="linio sukceso">Sur branĉo ĉefa (01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649)</span><span class="linio"><span class="akcento">$</span> vs linio eksperimento</span><span class="linio sukceso">Kreita branĉo eksperimento ĉe 01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649</span><span class="linio"><span class="akcento">$</span> printf 'dua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Dua"</span><span class="linio sukceso">Komito 0658573f40f511fc2a81808f1fb45867db3acc4372e8103aeee9e10549c4cc26</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">  eksperimento  01b5e408cfad</span><span class="linio">* ĉefa  0658573f40f5</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">0658573f40f5  2026-11-21 14:57:55 UTC  Dua</span><span class="linio">01b5e408cfad  2026-11-21 14:57:55 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs eltiri eksperimento</span><span class="linio sukceso">Sur branĉo eksperimento (01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649)</span><span class="linio"><span class="akcento">$</span> cat noto.txt</span><span class="linio">unua</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">* eksperimento  01b5e408cfad</span><span class="linio">  ĉefa  0658573f40f5</span><span class="linio"><span class="akcento">$</span> vs etikedi v1.0</span><span class="linio sukceso">Etikedis v1.0 ĉe 01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649</span><span class="linio"><span class="akcento">$</span> vs etikedi ripeto v1.0</span><span class="linio sukceso">Etikedis ripeto ĉe 01b5e408cfadd36661c4dad40688bfab2ee9a89c2dae80b819ab437b0b143649</span><span class="linio"><span class="akcento">$</span> vs etikedoj</span><span class="linio">ripeto  01b5e408cfad  -&gt; v1.0</span><span class="linio">v1.0  01b5e408cfad</span><span class="linio"><span class="akcento">$</span> vs historio ripeto</span><span class="linio">01b5e408cfad  2026-11-21 14:57:55 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs movhistorio</span><span class="linio">2026-11-21 14:57:55 UTC  KAPO  0658573f40f5 -&gt; 01b5e408cfad  eltiro</span><span class="linio">2026-11-21 14:57:55 UTC  KAPO  01b5e408cfad -&gt; 0658573f40f5  komito</span><span class="linio">2026-11-21 14:57:55 UTC  ĉefa  01b5e408cfad -&gt; 0658573f40f5  komito</span><span class="linio">2026-11-21 14:57:55 UTC  eksperimento  - -&gt; 01b5e408cfad  kreado</span><span class="linio">2026-11-21 14:57:55 UTC  ĉefa  - -&gt; 01b5e408cfad  kreado</span><span class="linio">2026-11-21 14:57:55 UTC  KAPO  - -&gt; 01b5e408cfad  komito</span><span class="linio"><span class="akcento">$</span> vs rubokolekti</span><span class="linio">Forigis 0 objektojn, konservis 6 objektojn.</span></pre>
+            <pre class="log" id="historiaEligo" lang="eo"><span class="linio"><span class="akcento">$</span> vs ini</span><span class="linio sukceso">Iniciatita deponejo ĉe /tmp/versio-demo</span><span class="linio"><span class="akcento">$</span> printf 'unua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Unua"</span><span class="linio sukceso">Komito 9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae</span><span class="linio"><span class="akcento">$</span> vs linio ĉefa</span><span class="linio sukceso">Kreita branĉo ĉefa ĉe 9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae</span><span class="linio"><span class="akcento">$</span> vs eltiri ĉefa</span><span class="linio sukceso">Sur branĉo ĉefa (9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae)</span><span class="linio"><span class="akcento">$</span> vs linio eksperimento</span><span class="linio sukceso">Kreita branĉo eksperimento ĉe 9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae</span><span class="linio"><span class="akcento">$</span> printf 'dua\n' &gt; noto.txt</span><span class="linio"><span class="akcento">$</span> vs komitu --noto "Dua"</span><span class="linio sukceso">Komito 0b3b13954149b0804a9f9ff90916f4beac2afd22d040a64ba4eb24fe144db721</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">  eksperimento  9c13741aa817</span><span class="linio">* ĉefa  0b3b13954149</span><span class="linio"><span class="akcento">$</span> vs historio</span><span class="linio">0b3b13954149  2026-11-21 15:08:12 UTC  Dua</span><span class="linio">9c13741aa817  2026-11-21 15:08:12 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs eltiri eksperimento</span><span class="linio sukceso">Sur branĉo eksperimento (9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae)</span><span class="linio"><span class="akcento">$</span> cat noto.txt</span><span class="linio">unua</span><span class="linio"><span class="akcento">$</span> vs etikedi v1.0</span><span class="linio sukceso">Etikedis v1.0 ĉe 9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae</span><span class="linio"><span class="akcento">$</span> vs etikedi ripeto v1.0</span><span class="linio sukceso">Etikedis ripeto ĉe 9c13741aa817e2353f53733c58d28de6045e81d3b91efa6c3fca5b09b9791bae</span><span class="linio"><span class="akcento">$</span> vs etikedoj</span><span class="linio">ripeto  9c13741aa817  -&gt; v1.0</span><span class="linio">v1.0  9c13741aa817</span><span class="linio"><span class="akcento">$</span> vs historio ripeto</span><span class="linio">9c13741aa817  2026-11-21 15:08:12 UTC  Unua</span><span class="linio"><span class="akcento">$</span> vs renomi eksperimento provo</span><span class="linio sukceso">Renomis branĉon eksperimento al provo</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">* provo  9c13741aa817</span><span class="linio">  ĉefa  0b3b13954149</span><span class="linio"><span class="akcento">$</span> vs forigi provo</span><span class="linio sukceso">Forigis branĉon provo (KAPO nun estas detaĉita)</span><span class="linio"><span class="akcento">$</span> vs linioj</span><span class="linio">  ĉefa  0b3b13954149</span><span class="linio"><span class="akcento">$</span> vs movhistorio</span><span class="linio">2026-11-21 15:08:12 UTC  provo  9c13741aa817 -&gt; -  forigo</span><span class="linio">2026-11-21 15:08:12 UTC  provo  9c13741aa817 -&gt; 9c13741aa817  renomo</span><span class="linio">2026-11-21 15:08:12 UTC  KAPO  0b3b13954149 -&gt; 9c13741aa817  eltiro</span><span class="linio">2026-11-21 15:08:12 UTC  KAPO  9c13741aa817 -&gt; 0b3b13954149  komito</span><span class="linio">2026-11-21 15:08:12 UTC  ĉefa  9c13741aa817 -&gt; 0b3b13954149  komito</span><span class="linio">2026-11-21 15:08:12 UTC  eksperimento  - -&gt; 9c13741aa817  kreado</span><span class="linio">2026-11-21 15:08:12 UTC  ĉefa  - -&gt; 9c13741aa817  kreado</span><span class="linio">2026-11-21 15:08:12 UTC  KAPO  - -&gt; 9c13741aa817  komito</span><span class="linio"><span class="akcento">$</span> vs rubokolekti</span><span class="linio">Forigis 0 objektojn, konservis 6 objektojn.</span></pre>
           </div>
           <div class="terminala-piedo">
             <span class="stato-punkto" aria-hidden="true"></span>
-            <span data-t="hist.fenestro.noto">La eligoj venas el reala deponejo kun du branĉoj kaj du etikedoj.</span>
+            <span data-t="hist.fenestro.noto">La eligoj venas el reala deponejo kun etikedoj, renomado kaj movhistorio.</span>
             <button class="buto malgranda subtila" type="button" data-kopii="historiaEligo"
               data-t="hist.kopii">Kopii la sesion</button>
             <span class="sildeto">REALA</span>
@@ -667,7 +668,10 @@
             <p data-t-html="ark.t1.teksto">
               Komandlinia enirpunkto: <code>ini</code>, <code>stato</code>,
               <code>historio</code>, <code>komitu</code>, <code>eltiri</code>,
-              <code>linio</code>, <code>linioj</code>, <code>kunfandi</code>, <code>helpo</code>;
+              <code>linio</code>, <code>linioj</code>, <code>kunfandi</code>,
+              <code>etikedi</code>, <code>etikedoj</code>, <code>renomi</code>,
+              <code>forigi</code>, <code>movhistorio</code>,
+              <code>rubokolekti</code> kaj <code>helpo</code>;
               ĉiu eligo estas Esperanta.
             </p>
           </div>
@@ -711,9 +715,11 @@
           <div>
             <h3>.vs/</h3>
             <p data-t-html="ark.t5.teksto">
-              <code>KAPO</code>, <code>branĉo</code>, <code>referencoj/branĉoj/</code>,
-              <code>indekso</code> kaj <code>objektoj/</code> — la tuta stato de la
-              deponejo en unu dosierujo.
+              <code>KAPO</code>, <code>branĉo</code>,
+              <code>referencoj/branĉoj/</code>, <code>referencoj/etikedoj/</code>,
+              <code>movhistorio</code>, <code>indekso</code> kaj
+              <code>objektoj/</code> — la tuta stato de la deponejo en unu
+              dosierujo.
             </p>
           </div>
           <span class="sildeto">EAS</span>
@@ -1118,6 +1124,15 @@
           preterlasas nur <code>.vs</code>, ne <code>.git</code>, kaj ne interpretas
           <code>.gitignore</code>. Ĝi konservas ordinarajn dosierojn kaj arbojn,
           ne plenumeblajn permesbitojn aŭ simbolajn ligilojn.
+        </p>
+        <p data-t-html="komenci.komandoj">
+          <strong>Ĉiuj komandoj:</strong> <code>ini</code>, <code>stato</code>,
+          <code>komitu</code>, <code>historio</code>, <code>eltiri</code>,
+          <code>linio</code>, <code>linioj</code>, <code>kunfandi</code>,
+          <code>etikedi</code>, <code>etikedoj</code>, <code>renomi</code>,
+          <code>forigi</code>, <code>movhistorio</code>, <code>rubokolekti</code>
+          kaj <code>helpo</code>; la plenaj priskriboj estas en
+          <code>vs --helpo</code>.
         </p>
       </div>
     </section>
